@@ -245,7 +245,8 @@ function setupBridge(iframe) {
           const msgPayload = {
             message: payload?.message,
             project_id: pId,
-            lovable_token: auth.token
+            lovable_token: auth.token,
+            license_key: licenseKey
           };
 
           // Include files if provided (base64 array from remote-ui)
