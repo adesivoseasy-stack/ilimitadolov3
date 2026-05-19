@@ -740,17 +740,87 @@ async function sendDirectLovableMessage(messageText) {
     throw new Error('Abra um projeto do Lovable na aba ativa primeiro.');
   }
 
-  const result = await new Promise((resolve) => {
-    chrome.tabs.sendMessage(tab.id, {
-      action: 'injectChatMessage',
-      message: messageText,
-    }, (response) => {
-      if (chrome.runtime.lastError) {
-        resolve({ success: false, error: 'Recarregue a aba do Lovable e tente novamente.' });
-        return;
+  const [{ result }] = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: async (msg) => {
+      const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+      const getComposer = () => {
+        const textarea = document.querySelector('textarea[placeholder]') || document.querySelector('textarea');
+        if (textarea) return textarea;
+        return document.querySelector('[contenteditable="true"][role="textbox"]') || document.querySelector('[contenteditable="true"]');
+      };
+
+      const setComposerValue = (composer, value) => {
+        composer.focus();
+
+        if (composer instanceof HTMLTextAreaElement || composer instanceof HTMLInputElement) {
+          const proto = composer instanceof HTMLTextAreaElement
+            ? HTMLTextAreaElement.prototype
+            : HTMLInputElement.prototype;
+          const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+          if (setter) setter.call(composer, value);
+          else composer.value = value;
+          composer.dispatchEvent(new Event('input', { bubbles: true }));
+          composer.dispatchEvent(new Event('change', { bubbles: true }));
+          return;
+        }
+
+        composer.textContent = value;
+        composer.dispatchEvent(new InputEvent('input', {
+          bubbles: true,
+          cancelable: true,
+          data: value,
+          inputType: 'insertText'
+        }));
+      };
+
+      const getSendButton = () => {
+        const selectors = [
+          'button[data-testid="chat-send-button"]',
+          'button[aria-label*="Send"]',
+          'button[aria-label*="Enviar"]',
+          'form button[type="submit"]',
+          'button[type="submit"]'
+        ];
+
+        return selectors
+          .map((selector) => document.querySelector(selector))
+          .find((button) => button && !button.disabled);
+      };
+
+      const composer = getComposer();
+      if (!composer) return { success: false, error: 'Campo do chat não encontrado.' };
+
+      setComposerValue(composer, msg);
+      await wait(120);
+
+      const sendButton = getSendButton();
+      if (sendButton) {
+        sendButton.click();
+        return { success: true };
       }
-      resolve(response || { success: false, error: 'Sem resposta da aba do Lovable.' });
-    });
+
+      composer.dispatchEvent(new KeyboardEvent('keydown', {
+        key: 'Enter',
+        code: 'Enter',
+        keyCode: 13,
+        which: 13,
+        bubbles: true,
+        cancelable: true
+      }));
+      composer.dispatchEvent(new KeyboardEvent('keyup', {
+        key: 'Enter',
+        code: 'Enter',
+        keyCode: 13,
+        which: 13,
+        bubbles: true,
+        cancelable: true
+      }));
+
+      return { success: true };
+    },
+    args: [messageText]
   });
 
   if (!result?.success) {
