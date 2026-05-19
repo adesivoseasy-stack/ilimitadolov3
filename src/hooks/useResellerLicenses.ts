@@ -95,12 +95,16 @@ export function useResellerCreateLicense() {
       if (keyError) throw keyError;
       const licenseKey = isTestLicense ? `TESTE-${keyData}` : keyData as string;
 
+      // Todas as chaves pagas são mensais (30 dias). Wildcard mantém duração longa.
+      const effectiveDurationDays = isTestLicense
+        ? durationDays
+        : (isWildcard ? Math.max(durationDays, 36500) : 30);
       const expiresAt = new Date();
       if (isTestLicense) {
         // Test licenses: 10 minutes duration, fallback expiry 1 hour
         expiresAt.setTime(expiresAt.getTime() + 60 * 60 * 1000);
       } else {
-        expiresAt.setTime(expiresAt.getTime() + durationDays * 24 * 60 * 60 * 1000);
+        expiresAt.setTime(expiresAt.getTime() + effectiveDurationDays * 24 * 60 * 60 * 1000);
       }
 
       const testDurationHours = 10 / 60; // ~0.1667 (10 minutes)
