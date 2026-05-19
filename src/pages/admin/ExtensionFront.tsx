@@ -408,7 +408,7 @@ body {
     </button>
   </div>
 </header>
-<div class="banner"><img src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/public-assets/extension-banner.png?v=2" alt="Banner" /></div>
+<div class="banner"><img src="https://wvelcefgihlxcnrmslul.supabase.co/storage/v1/object/public/public-assets/extension-banner.png?v=3" alt="Banner" /></div>
 <div class="tab-bar">
   <button class="tab-btn active" id="tabChat" data-tab="chat">Chat</button>
   <button class="tab-btn" id="tabTemplates" data-tab="templates">Templates</button>
