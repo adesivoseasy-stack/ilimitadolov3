@@ -66,8 +66,49 @@ window.addEventListener('message', (e) => {
     addMessage('bot', '💬 ' + payload.content);
     return;
   }
+  if (command === 'lovable.suggestions' && Array.isArray(payload?.items)) {
+    renderQuickSuggestions(payload.items);
+    return;
+  }
   bridge._handleResponse(e);
 });
+
+function renderQuickSuggestions(items) {
+  const wrap = document.getElementById('quickSuggestions');
+  if (!wrap) return;
+  if (!items.length) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+  // Dedup by text and cap at 8
+  const seen = new Set();
+  const list = [];
+  for (const it of items) {
+    const t = (it?.text || '').trim();
+    if (!t || seen.has(t)) continue;
+    seen.add(t); list.push(t);
+    if (list.length >= 8) break;
+  }
+  const prev = wrap.dataset.signature || '';
+  const sig = list.join('|');
+  if (sig === prev) return;
+  wrap.dataset.signature = sig;
+  wrap.innerHTML = '';
+  for (const t of list) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'qs-chip';
+    b.textContent = t;
+    b.title = t;
+    b.addEventListener('click', () => {
+      const m = document.getElementById('message');
+      if (!m) return;
+      m.value = t;
+      m.style.height = 'auto';
+      m.style.height = Math.min(m.scrollHeight, 200) + 'px';
+      m.focus();
+    });
+    wrap.appendChild(b);
+  }
+  wrap.style.display = 'flex';
+}
 
 let history = [];
 let pendingFiles = [];
