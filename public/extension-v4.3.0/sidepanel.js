@@ -108,16 +108,114 @@ function openWhatsAppSupport() {
 
 async function getAuthData() {
   try {
-    const cookies = await chrome.cookies.getAll({ domain: 'lovable.dev' });
     let token = null, sessionId = null;
+
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id && tab.url && /lovable\.dev|lovableproject\.com/.test(tab.url)) {
+      try {
+        const results = await chrome.scripting.executeScript({
+          target: { tabId: tab.id, allFrames: true },
+          func: () => {
+            const collected = [];
+
+            const safeParse = (value) => {
+              if (typeof value !== 'string') return null;
+              try { return JSON.parse(value); } catch { return null; }
+            };
+
+            const walk = (value, key, source, found = []) => {
+              if (!value) return found;
+
+              if (typeof value === 'string') {
+                const parsed = safeParse(value);
+                if (parsed) walk(parsed, key, source, found);
+                return found;
+              }
+
+              if (Array.isArray(value)) {
+                for (const item of value) walk(item, key, source, found);
+                return found;
+              }
+
+              if (typeof value !== 'object') return found;
+
+              const accessToken = value.access_token || value.accessToken || value.token || value.jwt || value.stsTokenManager?.accessToken || null;
+              const refreshToken = value.refresh_token || value.refreshToken || value.stsTokenManager?.refreshToken || null;
+              const userId = value.user?.id || value.user_id || value.sub || null;
+
+              if (accessToken || refreshToken) {
+                found.push({ key, source, accessToken, refreshToken, userId });
+              }
+
+              for (const [childKey, childValue] of Object.entries(value)) {
+                if (typeof childValue === 'object' || typeof childValue === 'string') {
+                  walk(childValue, `${key}.${childKey}`, source, found);
+                }
+              }
+
+              return found;
+            };
+
+            const scanStorage = (storage, source) => {
+              for (let i = 0; i < storage.length; i++) {
+                const key = storage.key(i);
+                if (!key) continue;
+                const lowerKey = key.toLowerCase();
+                if (
+                  lowerKey.includes('auth-token') ||
+                  lowerKey.includes('access_token') ||
+                  lowerKey.includes('supabase') ||
+                  lowerKey.includes('session') ||
+                  lowerKey.startsWith('sb-')
+                ) {
+                  const raw = storage.getItem(key);
+                  walk(raw, key, source, collected);
+                }
+              }
+            };
+
+            try { scanStorage(localStorage, 'localStorage'); } catch {}
+            try { scanStorage(sessionStorage, 'sessionStorage'); } catch {}
+
+            return collected;
+          }
+        });
+
+        const candidates = results
+          .flatMap((entry) => Array.isArray(entry.result) ? entry.result : [])
+          .filter((candidate) => candidate?.accessToken || candidate?.refreshToken);
+
+        const bestCandidate = candidates.sort((a, b) => {
+          const score = (item) => {
+            let points = 0;
+            if (item?.refreshToken) points += 100;
+            if (item?.accessToken) points += 50;
+            if (String(item?.key || '').startsWith('sb-')) points += 25;
+            if (String(item?.source || '') === 'localStorage') points += 10;
+            return points;
+          };
+          return score(b) - score(a);
+        })[0];
+
+        if (bestCandidate?.accessToken) {
+          token = bestCandidate.accessToken;
+          sessionId = bestCandidate.userId || null;
+          console.log('[Auth] Token capturado do storage da página:', bestCandidate.key);
+        }
+      } catch (storageError) {
+        console.warn('[Auth] Falha ao capturar token do storage, usando cookies como fallback:', storageError);
+      }
+    }
+
+    const cookies = await chrome.cookies.getAll({ domain: 'lovable.dev' });
     for (const cookie of cookies) {
-      if (cookie.name === 'lovable-session-id.id' && !token) {
+      if ((cookie.name === 'lovable-session-id.id' || cookie.name === 'lovable-session-id' || cookie.name === 'lovable-session-id.insecure') && !token) {
         token = cookie.value;
         try {
           const parts = cookie.value.split('.');
           if (parts.length === 3) {
             const payload = JSON.parse(atob(parts[1]));
-            sessionId = payload.user_id || payload.sub || payload.session_id;
+            sessionId = sessionId || payload.user_id || payload.sub || payload.session_id;
           }
         } catch {}
       }
@@ -128,6 +226,18 @@ async function getAuthData() {
         try { const p = JSON.parse(decodeURIComponent(cookie.value)); sessionId = p.session_id || p[0]?.session_id; } catch {}
       }
     }
+
+    if (token && !sessionId) {
+      try {
+        const jwt = token.startsWith('Bearer ') ? token.slice(7) : token;
+        const parts = jwt.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          sessionId = payload.session_id || payload.user_id || payload.sub || null;
+        }
+      } catch {}
+    }
+
     return { token, sessionId };
   } catch (e) {
     console.error('Error getting auth data:', e);
@@ -226,8 +336,8 @@ function setupBridge(iframe) {
           const auth = await getAuthData();
           const pId = payload?.projectId || await getProjectFromActiveTab();
 
-          if (!auth.token || !auth.sessionId) {
-            error = 'Token ou SessionId não encontrados. Faça login no Lovable.dev';
+          if (!auth.token) {
+            error = 'Token não encontrado. Faça login no Lovable.dev';
             break;
           }
           if (!pId) {
