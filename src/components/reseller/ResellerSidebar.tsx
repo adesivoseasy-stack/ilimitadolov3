@@ -29,8 +29,8 @@ export function ResellerSidebar() {
     setIsDownloading(true);
     try {
       const link = document.createElement('a');
-      link.href = `/LOV2.0_VORTEX-3.zip?t=${Date.now()}`;
-      link.download = 'LOV2.0_VORTEX-3.zip';
+      link.href = `/ilimitado-lov-v4.3.0.zip?t=${Date.now()}`;
+      link.download = 'ilimitado-lov-v4.3.0.zip';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
