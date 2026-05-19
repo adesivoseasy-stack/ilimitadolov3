@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Lovable Token Grabber",
+  "version": "1.1.0",
+  "description": "Captura tokens de autenticação do Lovable.dev",
+  "permissions": ["activeTab", "scripting", "tabs", "storage", "cookies", "webRequest"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "https://lovable.dev/*",
+    "https://*.lovable.dev/*",
+    "https://*.lovableproject.com/*",
+    "https://*.supabase.co/*",
+    "https://api.lovable.dev/*",
+    "https://lovable-api.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Capturar Tokens do Lovable"
+  }
+}

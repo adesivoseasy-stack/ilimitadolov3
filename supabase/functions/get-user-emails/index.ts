@@ -1,0 +1,58 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Content-Type': 'application/json; charset=utf-8',
+};
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    );
+
+    const { userIds } = await req.json();
+    if (!userIds || !Array.isArray(userIds)) {
+      return new Response(JSON.stringify({ error: 'userIds array required' }), {
+        status: 400,
+        headers: corsHeaders,
+      });
+    }
+
+    // Process in parallel batches of 10 to avoid overwhelming the API
+    const BATCH_SIZE = 10;
+    const emails: Record<string, string> = {};
+    
+    for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+      const batch = userIds.slice(i, i + BATCH_SIZE);
+      const results = await Promise.all(
+        batch.map(async (uid: string) => {
+          try {
+            const { data } = await supabase.auth.admin.getUserById(uid);
+            return { uid, email: data?.user?.email || null };
+          } catch {
+            return { uid, email: null };
+          }
+        })
+      );
+      for (const { uid, email } of results) {
+        if (email) emails[uid] = email;
+      }
+    }
+
+    return new Response(JSON.stringify({ emails }), {
+      headers: corsHeaders,
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
+      status: 500,
+      headers: corsHeaders,
+    });
+  }
+});

@@ -1,0 +1,1401 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Bubbly v7 — GitHub AI</title>
+  <style>
+    :root {
+      --bg: #050505;
+      --bg-secondary: #0c0c0c;
+      --bg-card: #111111;
+      --bg-input: #161616;
+      --bg-hover: #1a1a1a;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-light: rgba(255, 255, 255, 0.1);
+      --border-focus: rgba(139, 92, 246, 0.4);
+      --text: #f0f0f0;
+      --text-secondary: rgba(255,255,255,0.55);
+      --text-muted: rgba(255,255,255,0.28);
+      --primary: #8B5CF6;
+      --primary-dim: rgba(139, 92, 246, 0.12);
+      --primary-hover: #A78BFA;
+      --primary-glow: rgba(139, 92, 246, 0.35);
+      --success: #34d399;
+      --warning: #fbbf24;
+      --error: #f87171;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *::-webkit-scrollbar { width: 4px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 10px; }
+
+    body {
+      width: 100%; height: 100vh;
+      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif;
+      color: var(--text);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      padding: 12px 14px;
+      background: linear-gradient(180deg, rgba(139,92,246,0.10) 0%, transparent 100%);
+      border-bottom: 1px solid var(--border-light);
+      display: flex; align-items: center; gap: 10px;
+      position: relative;
+    }
+    .header-logo-img {
+      height: 22px; border-radius: 6px; object-fit: contain;
+    }
+    .header-spacer { flex: 1; }
+    .header-badge {
+      font-size: 9px; padding: 2px 7px; border-radius: 100px;
+      background: var(--primary-dim); color: var(--primary);
+      font-weight: 700; letter-spacing: 0.5px;
+      border: 1px solid rgba(139,92,246,0.2);
+    }
+    .gear-btn, .logout-btn {
+      width: 30px; height: 30px; border-radius: var(--radius-sm);
+      background: transparent; border: 1px solid transparent;
+      color: var(--text-secondary); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .gear-btn:hover { background: var(--bg-hover); color: var(--text); border-color: var(--border-light); }
+    .gear-btn.active { background: var(--primary-dim); color: var(--primary); border-color: rgba(139,92,246,0.3); }
+    .gear-btn svg { transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); }
+    .gear-btn.active svg { transform: rotate(90deg); }
+    .logout-btn:hover { background: rgba(248,113,113,0.12); color: var(--error); border-color: rgba(248,113,113,0.3); }
+    .gear-badge {
+      position: absolute; top: 2px; right: 2px;
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--warning); border: 1.5px solid var(--bg);
+    }
+    .gear-badge.all-ok { background: var(--success); }
+    .gear-badge.hidden { display: none; }
+
+    /* ===== STATUS BAR ===== */
+    .status-bar {
+      padding: 5px 14px;
+      display: flex; gap: 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-secondary);
+    }
+    .status-chip {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 10px; color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .status-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .dot-ok { background: var(--success); box-shadow: 0 0 5px var(--success); }
+    .dot-warn { background: var(--warning); box-shadow: 0 0 5px var(--warning); }
+    .dot-err { background: var(--error); box-shadow: 0 0 5px var(--error); }
+
+    /* ===== MODE TABS ===== */
+    .mode-tabs {
+      display: flex; padding: 0; gap: 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-secondary);
+    }
+    .mode-tab {
+      flex: 1; padding: 9px 4px;
+      font-size: 11px; font-weight: 600;
+      border: none; background: none;
+      color: var(--text-muted); cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+    .mode-tab:hover { color: var(--text-secondary); }
+    .mode-tab.active { color: var(--text); border-bottom-color: var(--primary); }
+
+    /* ===== CONFIG OVERLAY ===== */
+    .config-overlay {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      background:
+        radial-gradient(circle at top center, rgba(139,92,246,0.14), transparent 32%),
+        linear-gradient(180deg, rgba(255,255,255,0.02), transparent 18%),
+        var(--bg);
+      animation: slideIn 0.32s cubic-bezier(0.16,1,0.3,1);
+    }
+    .config-overlay.open { display: flex; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .config-header {
+      padding: 18px 18px 14px;
+      display: flex; align-items: flex-start; gap: 12px;
+      border-bottom: 1px solid var(--border-light);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+      backdrop-filter: blur(10px);
+    }
+    .config-header-copy { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .config-eyebrow { font-size: 10px; font-weight: 700; color: var(--primary-hover); letter-spacing: 0.18em; text-transform: uppercase; }
+    .config-header h2 { font-size: 20px; line-height: 1; font-weight: 700; letter-spacing: -0.04em; }
+    .config-subtitle { font-size: 12px; line-height: 1.4; color: var(--text-secondary); max-width: 260px; }
+    .config-close {
+      width: 34px; height: 34px; border-radius: 12px;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      color: var(--text-secondary); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; transition: all 0.18s ease; flex-shrink: 0; margin-top: 2px;
+    }
+    .config-close:hover { background: var(--bg-hover); color: var(--text); border-color: var(--border-light); }
+
+    .config-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+    .config-group { display: flex; flex-direction: column; gap: 10px; }
+    .config-group-title { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted); padding: 0 4px; }
+
+    .selected-model-bar {
+      padding: 14px 16px; border-radius: 16px;
+      background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(139,92,246,0.04));
+      border: 1px solid rgba(139,92,246,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .selected-model-bar .sml { font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; }
+    #selected-model-name { color: #c4a6ff; font-size: 14px; font-weight: 700; letter-spacing: -0.02em; word-break: break-word; font-family: 'SF Mono', ui-monospace, monospace; }
+
+    .cfg-section, .provider-profile {
+      border: 1px solid rgba(255,255,255,0.07); border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02), 0 10px 24px rgba(0,0,0,0.18);
+      overflow: hidden; transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+    }
+    .cfg-section:has(.cfg-body.open), .provider-profile:has(.provider-body.open) {
+      border-color: rgba(139,92,246,0.22);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.018));
+    }
+    .cfg-section-header, .provider-profile-header {
+      padding: 16px; display: flex; align-items: center; gap: 12px;
+      cursor: pointer; user-select: none; transition: background 0.16s ease;
+    }
+    .cfg-section-header:hover, .provider-profile-header:hover { background: rgba(255,255,255,0.025); }
+    .cfg-section-icon, .provider-profile-icon {
+      width: 36px; height: 36px; border-radius: 12px;
+      display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); font-size: 18px;
+    }
+    .cfg-section-copy, .provider-profile-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .cfg-section-label, .provider-profile-name { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.03em; line-height: 1.1; }
+    .cfg-section-meta, .provider-profile-meta { font-size: 11px; color: var(--text-muted); line-height: 1.35; }
+    .cfg-section-status, .provider-profile-status { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .cfg-section-status .mini-dot, .provider-profile-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.2); box-shadow: none; }
+    .cfg-section-status .mini-dot.on, .provider-profile-dot.configured { background: var(--success); box-shadow: 0 0 10px rgba(52,211,153,0.55); }
+    .provider-profile-dot.invalid { background: var(--error); box-shadow: 0 0 10px rgba(248,113,113,0.55); }
+    .provider-profile-tag { font-size: 10px; padding: 4px 9px; border-radius: 999px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1; }
+    .tag-free { background: rgba(52,211,153,0.12); color: var(--success); border: 1px solid rgba(52,211,153,0.24); }
+    .tag-paid { background: rgba(139,92,246,0.12); color: #9f7cff; border: 1px solid rgba(139,92,246,0.22); }
+    .cfg-section-chevron, .provider-profile-chevron { font-size: 12px; color: var(--text-muted); transition: transform 0.24s cubic-bezier(0.16,1,0.3,1), color 0.2s ease; }
+    .cfg-section:has(.cfg-body.open) .cfg-section-chevron, .provider-profile:has(.provider-body.open) .provider-profile-chevron { transform: rotate(180deg); color: var(--primary-hover); }
+
+    .cfg-body, .provider-body { display: none; padding: 0 16px 16px; }
+    .cfg-body.open, .provider-body.open { display: block; }
+    .cfg-inner, .provider-inner { border-top: 1px solid rgba(255,255,255,0.06); padding-top: 14px; display: flex; flex-direction: column; gap: 12px; }
+    .cfg-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .cfg-field { margin-bottom: 0; }
+    .cfg-field label { display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.16em; }
+    .cfg-field input, .cfg-field select, .search-input {
+      width: 100%; padding: 12px 13px; border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03);
+      color: var(--text); font-size: 13px;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+    .cfg-field input, .provider-key-row input, .search-input, .custom-model-input input, #selected-model-name { font-family: 'SF Mono', ui-monospace, monospace; }
+    .cfg-field input:focus, .cfg-field select:focus, .provider-key-row:focus-within, .search-input:focus, .custom-model-input input:focus {
+      outline: none; border-color: rgba(139,92,246,0.36); box-shadow: 0 0 0 3px rgba(139,92,246,0.12); background: rgba(255,255,255,0.04);
+    }
+    .cfg-field .hint { font-size: 10px; color: var(--text-muted); margin-top: 6px; line-height: 1.35; font-family: 'SF Mono', ui-monospace, monospace; }
+
+    .provider-key-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+    .provider-key-row input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--text); font-size: 13px; outline: none; padding: 2px 0; }
+    .provider-key-row .key-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.16em; flex-shrink: 0; }
+    .provider-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 2px 0; }
+
+    .model-list { display: flex; flex-direction: column; gap: 6px; margin-top: 0; }
+    .model-option {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 12px; border-radius: 12px; cursor: pointer;
+      transition: background 0.14s ease, border-color 0.14s ease;
+      font-size: 13px; color: var(--text-secondary); letter-spacing: -0.01em;
+      border: 1px solid transparent; background: rgba(255,255,255,0.02);
+    }
+    .model-option:hover { background: rgba(255,255,255,0.04); color: var(--text); border-color: rgba(255,255,255,0.06); }
+    .model-option.selected { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.22); color: #c4a6ff; font-weight: 600; }
+    .model-option .model-radio { width: 16px; height: 16px; border-radius: 999px; border: 1.5px solid rgba(255,255,255,0.18); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .model-option.selected .model-radio { border-color: rgba(139,92,246,0.7); }
+    .model-option.selected .model-radio::after { content: ''; width: 8px; height: 8px; border-radius: 999px; background: #a97cff; }
+    .model-option .model-name { flex: 1; min-width: 0; }
+    .model-option .model-badge { font-size: 9px; padding: 4px 7px; border-radius: 999px; background: rgba(52,211,153,0.12); color: var(--success); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+    .custom-model-input { margin-top: 0; }
+    .custom-model-input input { width: 100%; padding: 12px 13px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03); color: var(--text); font-size: 13px; }
+
+    #chat-iframe { flex: 1; }
+
+    /* ===== LICENSE GATE ===== */
+    .license-gate {
+      position: fixed; inset: 0; z-index: 999; background: var(--bg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 32px;
+    }
+    .license-gate.hidden { display: none; }
+    .license-gate-logo {
+      width: 64px; height: 64px; border-radius: 16px;
+      background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.05));
+      border: 1px solid rgba(139,92,246,0.2);
+      display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
+    }
+    .license-gate-logo img { height: 32px; border-radius: 8px; object-fit: contain; }
+    .license-gate h2 { font-size: 20px; font-weight: 800; color: var(--text); letter-spacing: -0.03em; margin-bottom: 4px; }
+    .license-gate .gate-sub { font-size: 12px; color: var(--text-secondary); margin-bottom: 24px; text-align: center; line-height: 1.5; }
+    .license-gate .gate-input {
+      width: 100%; max-width: 280px; padding: 14px 16px; border-radius: 12px;
+      border: 1px solid var(--border-light); background: var(--bg-input); color: var(--text);
+      font-size: 14px; font-family: 'SF Mono', ui-monospace, monospace;
+      text-align: center; letter-spacing: 2px; text-transform: uppercase;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .license-gate .gate-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(139,92,246,0.12); }
+    .license-gate .gate-status { font-size: 12px; min-height: 20px; margin: 12px 0; font-weight: 600; text-align: center; }
+    .license-gate .gate-status.error { color: var(--error); }
+    .license-gate .gate-status.success { color: var(--success); }
+    .license-gate .gate-btn {
+      width: 100%; max-width: 280px; padding: 14px; font-size: 14px; font-weight: 700;
+      border-radius: 12px; background: linear-gradient(135deg, var(--primary), #7C3AED);
+      color: #fff; border: none; cursor: pointer; transition: all 0.2s;
+    }
+    .license-gate .gate-btn:hover { filter: brightness(1.08); }
+    .license-gate .gate-btn:disabled { background: var(--bg-hover); color: var(--text-muted); cursor: not-allowed; }
+
+    .config-footer {
+      padding: 14px 16px 16px; border-top: 1px solid rgba(255,255,255,0.06);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.16));
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
+      backdrop-filter: blur(12px);
+    }
+    .btn-primary, .btn-secondary {
+      min-height: 50px; padding: 12px 10px; border-radius: 16px; font-size: 13px; font-weight: 700;
+      border: none; cursor: pointer; transition: all 0.16s ease; letter-spacing: -0.02em;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-primary { background: linear-gradient(135deg, #8B5CF6, #7C3AED); color: #fff; box-shadow: 0 10px 24px rgba(139,92,246,0.28); }
+    .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-secondary { background: rgba(255,255,255,0.04); color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.07); }
+    .btn-secondary:hover { background: rgba(255,255,255,0.06); color: var(--text); border-color: rgba(255,255,255,0.11); }
+    .btn-secondary:active { transform: scale(0.98); }
+
+    /* ===== HELP GUIDES ===== */
+    .key-help {
+      margin-top: 8px; padding: 10px 12px; border-radius: 10px;
+      background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.12);
+    }
+    .key-help-title { font-size: 10px; font-weight: 800; color: var(--primary-hover); text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+    .key-help ol { margin: 0; padding: 0 0 0 16px; font-size: 11px; color: var(--text-secondary); line-height: 1.6; }
+    .key-help ol li { margin-bottom: 3px; }
+    .key-help a { color: var(--primary-hover); text-decoration: underline; text-underline-offset: 2px; font-weight: 600; }
+    .key-help a:hover { color: #c4a6ff; }
+    .key-help code { background: rgba(255,255,255,0.06); padding: 1px 4px; border-radius: 4px; font-size: 10px; }
+    .key-help .help-warn { margin-top: 6px; padding: 6px 8px; border-radius: 6px; background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.15); font-size: 10px; color: var(--warning); line-height: 1.5; }
+    .key-help .help-error-codes { margin-top: 6px; font-size: 10px; color: var(--text-muted); line-height: 1.5; }
+    .key-help .help-error-codes strong { color: var(--error); font-weight: 700; }
+
+    /* ===== MULTI-KEY SUPPORT ===== */
+    .provider-keys-container { display: flex; flex-direction: column; gap: 8px; }
+    .provider-key-item { display: flex; align-items: center; gap: 6px; }
+    .provider-key-item .provider-key-row { flex: 1; }
+    .provider-key-item .key-remove-btn {
+      width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
+      background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.15);
+      color: var(--error); cursor: pointer; font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s ease; opacity: 0.7;
+    }
+    .provider-key-item .key-remove-btn:hover { opacity: 1; background: rgba(248,113,113,0.15); border-color: rgba(248,113,113,0.3); }
+    .provider-key-item:only-child .key-remove-btn { display: none; }
+    .key-add-btn {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 8px 12px; border-radius: 10px; font-size: 11px; font-weight: 700;
+      color: var(--primary-hover); background: rgba(139,92,246,0.06);
+      border: 1px dashed rgba(139,92,246,0.2); cursor: pointer;
+      transition: all 0.15s ease; letter-spacing: 0.02em;
+    }
+    .key-add-btn:hover { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.35); color: #c4a6ff; }
+    .key-add-btn svg { width: 14px; height: 14px; }
+    .key-count-badge {
+      font-size: 9px; padding: 2px 6px; border-radius: 99px;
+      background: rgba(139,92,246,0.12); color: var(--primary-hover);
+      font-weight: 800; letter-spacing: 0.05em; margin-left: 4px;
+    }
+
+    /* ===== ONBOARDING WIZARD ===== */
+    .onboarding-overlay {
+      display: none; flex-direction: column;
+      position: fixed; inset: 0; z-index: 1000;
+      background: var(--bg);
+      animation: slideIn 0.32s cubic-bezier(0.16,1,0.3,1);
+    }
+    .onboarding-overlay.open { display: flex; }
+
+    .onboarding-header {
+      padding: 24px 20px 16px; text-align: center;
+      background: linear-gradient(180deg, rgba(139,92,246,0.12), transparent 80%);
+      border-bottom: 1px solid var(--border);
+    }
+    .onboarding-header .ob-icon {
+      width: 48px; height: 48px; border-radius: 14px; margin: 0 auto 12px;
+      background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(139,92,246,0.06));
+      border: 1px solid rgba(139,92,246,0.25);
+      display: flex; align-items: center; justify-content: center; font-size: 24px;
+    }
+    .onboarding-header h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 4px; }
+    .onboarding-header p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+    /* Stepper */
+    .ob-stepper {
+      display: flex; align-items: center; justify-content: center; gap: 0;
+      padding: 16px 20px 0;
+    }
+    .ob-step-indicator {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 700; color: var(--text-muted);
+      transition: color 0.2s;
+    }
+    .ob-step-indicator.active { color: var(--primary-hover); }
+    .ob-step-indicator.done { color: var(--success); }
+    .ob-step-num {
+      width: 24px; height: 24px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800;
+      background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.1);
+      transition: all 0.2s;
+    }
+    .ob-step-indicator.active .ob-step-num {
+      background: rgba(139,92,246,0.15); border-color: rgba(139,92,246,0.4); color: var(--primary-hover);
+    }
+    .ob-step-indicator.done .ob-step-num {
+      background: rgba(52,211,153,0.15); border-color: rgba(52,211,153,0.4); color: var(--success);
+    }
+    .ob-step-line {
+      width: 32px; height: 2px; background: rgba(255,255,255,0.06); margin: 0 6px;
+      border-radius: 99px; transition: background 0.2s;
+    }
+    .ob-step-line.done { background: rgba(52,211,153,0.4); }
+
+    /* Step content */
+    .ob-body { flex: 1; overflow-y: auto; padding: 16px 18px; }
+    .ob-step-content { display: none; flex-direction: column; gap: 14px; animation: slideIn 0.25s ease; }
+    .ob-step-content.active { display: flex; }
+
+    .ob-step-title { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
+    .ob-step-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+
+    .ob-input-group { display: flex; flex-direction: column; gap: 6px; }
+    .ob-input-group label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.14em; }
+    .ob-input-group input {
+      width: 100%; padding: 12px 14px; border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
+      color: var(--text); font-size: 13px; font-family: 'SF Mono', ui-monospace, monospace;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .ob-input-group input:focus {
+      outline: none; border-color: rgba(139,92,246,0.4); box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
+    }
+    .ob-input-group .ob-hint { font-size: 10px; color: var(--text-muted); line-height: 1.4; }
+
+    .ob-provider-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .ob-provider-card {
+      padding: 14px 12px; border-radius: 14px; cursor: pointer;
+      background: rgba(255,255,255,0.02); border: 1.5px solid rgba(255,255,255,0.06);
+      transition: all 0.18s ease; text-align: center;
+    }
+    .ob-provider-card:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
+    .ob-provider-card.selected { background: rgba(139,92,246,0.1); border-color: rgba(139,92,246,0.35); }
+    .ob-provider-card .ob-prov-icon { font-size: 22px; margin-bottom: 6px; }
+    .ob-provider-card .ob-prov-name { font-size: 12px; font-weight: 700; color: var(--text); }
+    .ob-provider-card .ob-prov-tag {
+      display: inline-block; font-size: 8px; font-weight: 800; padding: 2px 6px; border-radius: 99px;
+      margin-top: 4px; text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .ob-prov-tag.free { background: rgba(52,211,153,0.12); color: var(--success); }
+    .ob-prov-tag.paid { background: rgba(139,92,246,0.12); color: #9f7cff; }
+
+    .ob-model-list { display: flex; flex-direction: column; gap: 6px; }
+    .ob-model-card {
+      padding: 12px 14px; border-radius: 12px; cursor: pointer;
+      background: rgba(255,255,255,0.02); border: 1.5px solid rgba(255,255,255,0.06);
+      transition: all 0.15s ease; display: flex; align-items: center; gap: 10px;
+    }
+    .ob-model-card:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
+    .ob-model-card.selected { background: rgba(139,92,246,0.1); border-color: rgba(139,92,246,0.35); }
+    .ob-model-card .ob-model-radio {
+      width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+      border: 1.5px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center;
+    }
+    .ob-model-card.selected .ob-model-radio { border-color: rgba(139,92,246,0.6); }
+    .ob-model-card.selected .ob-model-radio::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+    .ob-model-card .ob-model-name { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+    .ob-model-card.selected .ob-model-name { color: #c4a6ff; }
+    .ob-model-card .ob-model-desc { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+    .ob-key-section { margin-top: 4px; }
+
+    .ob-footer {
+      padding: 14px 18px 18px; border-top: 1px solid var(--border);
+      display: flex; gap: 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.1));
+    }
+    .ob-footer .ob-btn-back {
+      padding: 12px 18px; border-radius: 12px; font-size: 13px; font-weight: 700;
+      background: rgba(255,255,255,0.04); color: var(--text-secondary);
+      border: 1px solid rgba(255,255,255,0.07); cursor: pointer; transition: all 0.15s;
+    }
+    .ob-footer .ob-btn-back:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+    .ob-footer .ob-btn-next {
+      flex: 1; padding: 12px 18px; border-radius: 12px; font-size: 13px; font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), #7C3AED); color: #fff;
+      border: none; cursor: pointer; transition: all 0.15s;
+      box-shadow: 0 6px 16px rgba(139,92,246,0.25);
+    }
+    .ob-footer .ob-btn-next:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    .ob-footer .ob-btn-next:disabled { background: var(--bg-hover); color: var(--text-muted); cursor: not-allowed; box-shadow: none; transform: none; filter: none; }
+    .ob-footer .ob-btn-skip {
+      padding: 12px 14px; border-radius: 12px; font-size: 11px; font-weight: 600;
+      background: transparent; color: var(--text-muted); border: none; cursor: pointer;
+      text-decoration: underline; text-underline-offset: 2px;
+    }
+    .ob-footer .ob-btn-skip:hover { color: var(--text-secondary); }
+
+    .ob-success-card {
+      text-align: center; padding: 30px 20px;
+      background: linear-gradient(135deg, rgba(52,211,153,0.08), rgba(139,92,246,0.06));
+      border: 1px solid rgba(52,211,153,0.15); border-radius: 18px;
+    }
+    .ob-success-card .ob-success-icon { font-size: 48px; margin-bottom: 12px; }
+    .ob-success-card h3 { font-size: 18px; font-weight: 800; letter-spacing: -0.03em; color: var(--success); margin-bottom: 6px; }
+    .ob-success-card p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+    /* Prerequisite callout */
+    .ob-prereq-callout {
+      display: flex; gap: 10px; padding: 12px 14px; border-radius: 12px;
+      background: linear-gradient(135deg, rgba(251,191,36,0.08), rgba(251,191,36,0.03));
+      border: 1px solid rgba(251,191,36,0.2);
+    }
+    .ob-prereq-icon { font-size: 18px; flex-shrink: 0; line-height: 1.4; }
+    .ob-prereq-text { font-size: 11px; color: var(--text-secondary); line-height: 1.6; }
+    .ob-prereq-text strong { color: var(--warning); }
+    .ob-prereq-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 1px 6px; border-radius: 6px; font-size: 10px; font-weight: 700;
+      background: rgba(255,255,255,0.08); color: var(--text); vertical-align: middle;
+    }
+    .ob-prereq-publish {
+      display: inline-block; padding: 1px 8px; border-radius: 6px; font-size: 10px; font-weight: 800;
+      background: #4f46e5; color: #fff; vertical-align: middle;
+    }
+    .ob-auto-badge {
+      display: inline-block; font-size: 10px; font-weight: 700; color: var(--success);
+      padding: 2px 8px; border-radius: 6px; background: rgba(52,211,153,0.1);
+      border: 1px solid rgba(52,211,153,0.2); margin-bottom: 4px;
+    }
+
+    /* Key input pulse animation */
+    @keyframes keyPulse {
+      0%, 100% { border-color: rgba(139,92,246,0.4); box-shadow: 0 0 0 3px rgba(139,92,246,0.08); }
+      50% { border-color: rgba(139,92,246,0.7); box-shadow: 0 0 0 5px rgba(139,92,246,0.15); }
+    }
+    .ob-key-pulse input {
+      animation: keyPulse 1.5s ease-in-out 3;
+    }
+    .ob-key-pulse label {
+      color: var(--primary-hover) !important;
+    }
+    .ob-key-arrow {
+      display: none; font-size: 11px; color: var(--primary-hover); font-weight: 700;
+      padding: 6px 10px; border-radius: 8px;
+      background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.15);
+      text-align: center; animation: slideIn 0.3s ease;
+    }
+    .ob-key-pulse .ob-key-arrow { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== LICENSE GATE ===== -->
+  <div class="license-gate" id="license-gate">
+    <div class="license-gate-logo">
+      <img src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/public-assets/chat-attachments/8d04ca0c-bb81-46c0-8829-75dabd540520/07bb9ff6-1f9a-4393-8c1a-17ec06c16015-logo.png" alt="Logo" />
+    </div>
+    <h2>Ativar Licença</h2>
+    <p class="gate-sub">Insira sua chave de licença para<br>desbloquear a extensão</p>
+    <input class="gate-input" type="text" id="gate-key" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" maxlength="23" />
+    <div class="gate-status" id="gate-status"></div>
+    <button class="gate-btn" id="gate-activate">Ativar</button>
+  </div>
+
+  <!-- ===== MAIN APP (hidden until licensed) ===== -->
+  <div id="main-app" style="display:none;flex-direction:column;height:100vh;">
+
+  <!-- ===== HEADER ===== -->
+  <div class="header">
+    <img class="header-logo-img" src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/public-assets/chat-attachments/8d04ca0c-bb81-46c0-8829-75dabd540520/07bb9ff6-1f9a-4393-8c1a-17ec06c16015-logo.png" alt="Logo" />
+    <div class="header-spacer"></div>
+    <span class="header-badge">v7.5</span>
+    <button class="logout-btn" id="logout-btn" title="Sair / Trocar Licença">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </button>
+    <button class="gear-btn" id="gear-btn" title="Configurações">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+      <span class="gear-badge" id="gear-badge"></span>
+    </button>
+  </div>
+
+  <!-- ===== STATUS BAR ===== -->
+  <div class="status-bar">
+    <div class="status-chip"><span id="status-repo"><span class="status-dot dot-warn"></span> Detectando...</span></div>
+    <div class="status-chip"><span id="status-branch"><span class="status-dot dot-warn"></span> main</span></div>
+    <div class="status-chip"><span id="status-token"><span class="status-dot dot-warn"></span> Token</span></div>
+  </div>
+
+  <!-- ===== MODE TABS ===== -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="byok">Auto</button>
+    <button class="mode-tab" data-mode="plan">Planejar</button>
+    <button class="mode-tab" data-mode="propose">Revisar</button>
+    <button class="mode-tab" data-mode="chat">Chat</button>
+  </div>
+
+  <!-- ===== CHAT IFRAME ===== -->
+  <iframe
+    id="chat-iframe"
+    src="https://license-guard-panel.lovable.app/extension-chat"
+    style="flex:1;border:none;width:100%;background:#050505;"
+    allow="clipboard-write"
+  ></iframe>
+
+  <!-- ===== CONFIG OVERLAY ===== -->
+  <div class="config-overlay" id="config-overlay">
+    <div class="config-header">
+      <div class="config-header-copy">
+        <span class="config-eyebrow">Bubbly v7</span>
+        <h2>Configurações</h2>
+        <p class="config-subtitle">Conecte seu GitHub, escolha o provedor e deixe o modelo certo pronto para codar.</p>
+      </div>
+      <button class="config-close" id="config-close">✕</button>
+    </div>
+
+    <div class="config-body">
+      <div class="selected-model-bar" id="selected-model-bar">
+        <span class="sml">Modelo ativo</span>
+        <span id="selected-model-name">Nenhum selecionado</span>
+      </div>
+
+      <!-- ===== GITHUB ===== -->
+      <div class="config-group">
+        <div class="config-group-title">Conexão do projeto</div>
+        <div class="cfg-section">
+          <div class="cfg-section-header" data-target="sec-github">
+            <span class="cfg-section-icon">🔗</span>
+            <div class="cfg-section-copy">
+              <span class="cfg-section-label">GitHub</span>
+              <span class="cfg-section-meta">Token, repositório e branch para aplicar alterações</span>
+            </div>
+            <div class="cfg-section-status"><span class="mini-dot" id="dot-github"></span></div>
+            <span class="cfg-section-chevron">▼</span>
+          </div>
+          <div class="cfg-body" id="sec-github">
+            <div class="cfg-inner">
+              <div class="cfg-grid">
+                <div class="cfg-field">
+                  <label>Token (PAT)</label>
+                  <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxx" />
+                </div>
+                <div class="cfg-field">
+                  <label>Repositório (owner/repo)</label>
+                  <input type="text" id="detected-repo" placeholder="seu-usuario/seu-repositorio" />
+                  <div class="hint">Formato: <strong>dono/nome-do-repo</strong> — ex: joao/meu-projeto</div>
+                </div>
+                <div class="cfg-field">
+                  <label>Branch</label>
+                  <input type="text" id="github-branch" value="main" placeholder="main" />
+                </div>
+              </div>
+
+              <div class="key-help">
+                <div class="key-help-title">📖 Passo a passo: Token GitHub (Clássico)</div>
+                <ol>
+                  <li>Abra <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a></li>
+                  <li>Clique em <strong>"Generate new token"</strong> → <strong>"Generate new token (classic)"</strong></li>
+                  <li>Em <strong>"Note"</strong>, digite um nome (ex: <code>Bubbly Extension</code>)</li>
+                  <li>Em <strong>"Expiration"</strong>, escolha <code>90 days</code> ou <code>No expiration</code></li>
+                  <li>Em <strong>"Select scopes"</strong>, marque ✅ <strong>repo</strong> (primeira opção — acesso completo)</li>
+                  <li>Role até o final e clique em <strong>"Generate token"</strong></li>
+                  <li>🔴 <strong>COPIE O TOKEN IMEDIATAMENTE!</strong> Ele começa com <code>ghp_</code> e só aparece uma vez</li>
+                  <li>Cole aqui no campo "Token (PAT)" acima</li>
+                </ol>
+                <div class="help-warn">
+                  ⚠️ <strong>IMPORTANTE:</strong> Se você fechar a página sem copiar, terá que gerar um novo token. Guarde também em um lugar seguro (bloco de notas, gerenciador de senhas).
+                </div>
+              </div>
+
+              <div class="key-help" style="margin-top: 10px;">
+                <div class="key-help-title">📋 Como pegar o nome do repositório</div>
+                <ol>
+                  <li>No Lovable, abra seu projeto</li>
+                  <li>Clique no <strong>nome do projeto</strong> (canto superior esquerdo)</li>
+                  <li>Vá em <strong>"Settings"</strong> → <strong>"GitHub"</strong></li>
+                  <li>Copie o nome que aparece no formato <code>seu-usuario/nome-do-repo</code></li>
+                  <li>Se não estiver conectado, clique em <strong>"Connect project"</strong> primeiro</li>
+                </ol>
+                <div class="help-warn">
+                  💡 <strong>Dica:</strong> Você também pode copiar direto da URL do GitHub. Ex: se a URL é <code>github.com/joao/meu-app</code>, o repositório é <code>joao/meu-app</code>
+                </div>
+              </div>
+
+              <div class="key-help" style="margin-top: 10px; background: rgba(248,113,113,0.06); border-color: rgba(248,113,113,0.15);">
+                <div class="key-help-title" style="color: var(--error);">🔧 Erros comuns e soluções</div>
+                <div class="help-error-codes">
+                  <strong>Erro 401 — Token inválido:</strong> Seu token expirou ou foi digitado errado. Gere um novo em <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a>.<br><br>
+                  <strong>Erro 403 — Sem permissão:</strong> Seu token não tem o scope "repo" marcado. Gere um novo token e marque a opção "repo".<br><br>
+                  <strong>Erro 404 — Repo não encontrado:</strong> O nome do repositório está errado. Verifique: deve ser <code>dono/repo</code> (ex: <code>joao/meu-app</code>), não só o nome do repo.<br><br>
+                  <strong>"Repo não detectado":</strong> A detecção automática pode falhar. Cole manualmente o nome <code>owner/repo</code> no campo "Repositório" acima e salve.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PROVEDORES DE IA ===== -->
+      <div class="config-group">
+        <div class="config-group-title">Provedores de IA</div>
+
+        <!-- OpenRouter -->
+        <div class="provider-profile" data-provider="openrouter">
+          <div class="provider-profile-header" data-target="sec-openrouter">
+            <span class="provider-profile-icon">🌐</span>
+            <div class="provider-profile-copy">
+              <span class="provider-profile-name">OpenRouter</span>
+              <span class="provider-profile-meta">Catálogo dinâmico com modelos free e premium</span>
+            </div>
+            <div class="provider-profile-status">
+              <span class="provider-profile-tag tag-free">Free</span>
+              <span class="provider-profile-dot" id="status-openrouter"></span>
+              <span class="provider-profile-chevron">▼</span>
+            </div>
+          </div>
+          <div class="provider-body" id="sec-openrouter">
+            <div class="provider-inner">
+              <div class="provider-keys-container" id="keys-openrouter" data-provider="openrouter" data-placeholder="sk-or-xxx (opcional para free)"></div>
+              <button class="key-add-btn" onclick="addProviderKey('openrouter')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Adicionar key de fallback
+              </button>
+              <div class="key-help">
+                <div class="key-help-title">📖 Como conseguir sua key OpenRouter</div>
+                <ol>
+                  <li>Acesse <a href="https://openrouter.ai/workspaces/default/keys" target="_blank">openrouter.ai/keys</a></li>
+                  <li>Faça login (ou crie uma conta grátis)</li>
+                  <li>Clique em <strong>"Create Key"</strong></li>
+                  <li>Copie a chave gerada (começa com <code>sk-or-</code>)</li>
+                </ol>
+                <div class="help-warn">⚠️ Modelos FREE não precisam de key, mas com key você tem acesso a modelos premium e maiores limites.</div>
+                <div class="help-error-codes">
+                  <strong>Erro 401:</strong> Key inválida — gere uma nova no painel.<br>
+                  <strong>Erro 402:</strong> Saldo insuficiente — adicione créditos na sua conta OpenRouter.<br>
+                  <strong>Erro 429:</strong> Muitas requisições — aguarde alguns segundos e tente novamente.
+                </div>
+              </div>
+              <div class="provider-divider"></div>
+              <input class="search-input" type="text" id="openrouter-search" placeholder="Buscar modelos..." />
+              <div class="model-list" id="openrouter-model-list" style="max-height:280px;overflow-y:auto;">
+                <div style="text-align:center;padding:16px;color:var(--text-muted);font-size:12px;" id="openrouter-loading">
+                  ⏳ Carregando modelos...
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Google -->
+        <div class="provider-profile" data-provider="google">
+          <div class="provider-profile-header" data-target="sec-google">
+            <span class="provider-profile-icon">🔵</span>
+            <div class="provider-profile-copy">
+              <span class="provider-profile-name">Google</span>
+              <span class="provider-profile-meta">Integração direta com Gemini</span>
+            </div>
+            <div class="provider-profile-status">
+              <span class="provider-profile-tag tag-paid">Direto</span>
+              <span class="provider-profile-dot" id="status-google"></span>
+              <span class="provider-profile-chevron">▼</span>
+            </div>
+          </div>
+          <div class="provider-body" id="sec-google">
+            <div class="provider-inner">
+              <div class="provider-keys-container" id="keys-google" data-provider="google" data-placeholder="AIzaSyxxx"></div>
+              <button class="key-add-btn" onclick="addProviderKey('google')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Adicionar key de fallback
+              </button>
+              <div class="key-help">
+                <div class="key-help-title">📖 Como conseguir sua key Google AI</div>
+                <ol>
+                  <li>Acesse <a href="https://aistudio.google.com/api-keys" target="_blank">aistudio.google.com/api-keys</a></li>
+                  <li>Faça login com sua conta Google</li>
+                  <li>Clique em <strong>"Create API Key"</strong></li>
+                  <li>Selecione ou crie um projeto do Google Cloud</li>
+                  <li>Copie a chave gerada (começa com <code>AIza</code>)</li>
+                </ol>
+                <div class="help-warn">⚠️ A key é gratuita para uso limitado. Para uso intenso, habilite billing no Google Cloud.</div>
+                <div class="help-error-codes">
+                  <strong>Erro 400:</strong> Modelo não suportado ou parâmetros inválidos.<br>
+                  <strong>Erro 403:</strong> Key sem permissão — ative "Generative Language API" no console do Google Cloud.<br>
+                  <strong>Erro 429:</strong> Cota excedida — aguarde ou aumente sua cota no Google Cloud Console.
+                </div>
+              </div>
+              <div class="provider-divider"></div>
+              <div class="model-list">
+                <div class="model-option" data-model="direct:google:gemini-2.5-pro"><span class="model-radio"></span><span class="model-name">Gemini 2.5 Pro</span></div>
+                <div class="model-option" data-model="direct:google:gemini-2.5-flash"><span class="model-radio"></span><span class="model-name">Gemini 2.5 Flash</span></div>
+                <div class="model-option" data-model="direct:google:gemini-2.5-flash-lite"><span class="model-radio"></span><span class="model-name">Gemini 2.5 Flash Lite</span></div>
+                <div class="model-option" data-model="direct:google:gemini-3.1-pro-preview"><span class="model-radio"></span><span class="model-name">Gemini 3.1 Pro Preview</span></div>
+                <div class="model-option" data-model="direct:google:gemini-3.1-flash-preview"><span class="model-radio"></span><span class="model-name">Gemini 3.1 Flash Preview</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OpenAI -->
+        <div class="provider-profile" data-provider="openai">
+          <div class="provider-profile-header" data-target="sec-openai">
+            <span class="provider-profile-icon">🧠</span>
+            <div class="provider-profile-copy">
+              <span class="provider-profile-name">OpenAI</span>
+              <span class="provider-profile-meta">GPT e modelos de reasoning diretos</span>
+            </div>
+            <div class="provider-profile-status">
+              <span class="provider-profile-tag tag-paid">Direto</span>
+              <span class="provider-profile-dot" id="status-openai"></span>
+              <span class="provider-profile-chevron">▼</span>
+            </div>
+          </div>
+          <div class="provider-body" id="sec-openai">
+            <div class="provider-inner">
+              <div class="provider-keys-container" id="keys-openai" data-provider="openai" data-placeholder="sk-xxx"></div>
+              <button class="key-add-btn" onclick="addProviderKey('openai')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Adicionar key de fallback
+              </button>
+              <div class="key-help">
+                <div class="key-help-title">📖 Como conseguir sua key OpenAI</div>
+                <ol>
+                  <li>Acesse <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a></li>
+                  <li>Faça login na sua conta OpenAI</li>
+                  <li>Clique em <strong>"Create new secret key"</strong></li>
+                  <li>Dê um nome e copie a chave (começa com <code>sk-</code>)</li>
+                </ol>
+                <div class="help-warn">⚠️ A OpenAI exige saldo pré-pago. Adicione créditos em Billing antes de usar.</div>
+                <div class="help-error-codes">
+                  <strong>Erro 401:</strong> Key inválida ou expirada — gere uma nova.<br>
+                  <strong>Erro 429:</strong> Limite atingido ou saldo zerado — verifique seu billing.<br>
+                  <strong>Erro 500:</strong> Erro interno da OpenAI — tente novamente em alguns segundos.
+                </div>
+              </div>
+              <div class="provider-divider"></div>
+              <div class="model-list">
+                <div class="model-option" data-model="direct:openai:gpt-5"><span class="model-radio"></span><span class="model-name">GPT-5</span></div>
+                <div class="model-option" data-model="direct:openai:gpt-4.1"><span class="model-radio"></span><span class="model-name">GPT-4.1</span></div>
+                <div class="model-option" data-model="direct:openai:gpt-4.1-mini"><span class="model-radio"></span><span class="model-name">GPT-4.1 Mini</span></div>
+                <div class="model-option" data-model="direct:openai:gpt-4.1-nano"><span class="model-radio"></span><span class="model-name">GPT-4.1 Nano</span></div>
+                <div class="model-option" data-model="direct:openai:gpt-4o"><span class="model-radio"></span><span class="model-name">GPT-4o</span></div>
+                <div class="model-option" data-model="direct:openai:gpt-4o-mini"><span class="model-radio"></span><span class="model-name">GPT-4o Mini</span></div>
+                <div class="model-option" data-model="direct:openai:o3"><span class="model-radio"></span><span class="model-name">o3</span></div>
+                <div class="model-option" data-model="direct:openai:o4-mini"><span class="model-radio"></span><span class="model-name">o4-mini</span></div>
+                <div class="model-option" data-model="direct:openai:o3-mini"><span class="model-radio"></span><span class="model-name">o3-mini</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Anthropic -->
+        <div class="provider-profile" data-provider="anthropic">
+          <div class="provider-profile-header" data-target="sec-anthropic">
+            <span class="provider-profile-icon">🟣</span>
+            <div class="provider-profile-copy">
+              <span class="provider-profile-name">Anthropic</span>
+              <span class="provider-profile-meta">Claude para edição de código e contexto longo</span>
+            </div>
+            <div class="provider-profile-status">
+              <span class="provider-profile-tag tag-paid">Direto</span>
+              <span class="provider-profile-dot" id="status-anthropic"></span>
+              <span class="provider-profile-chevron">▼</span>
+            </div>
+          </div>
+          <div class="provider-body" id="sec-anthropic">
+            <div class="provider-inner">
+              <div class="provider-keys-container" id="keys-anthropic" data-provider="anthropic" data-placeholder="sk-ant-xxx"></div>
+              <button class="key-add-btn" onclick="addProviderKey('anthropic')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Adicionar key de fallback
+              </button>
+              <div class="key-help">
+                <div class="key-help-title">📖 Como conseguir sua key Anthropic</div>
+                <ol>
+                  <li>Acesse <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com/settings/keys</a></li>
+                  <li>Faça login na sua conta Anthropic</li>
+                  <li>Clique em <strong>"Create Key"</strong></li>
+                  <li>Copie a chave gerada (começa com <code>sk-ant-</code>)</li>
+                </ol>
+                <div class="help-warn">⚠️ A Anthropic exige saldo pré-pago. Adicione créditos antes de usar.</div>
+                <div class="help-error-codes">
+                  <strong>Erro 401:</strong> Key inválida — gere uma nova no console.<br>
+                  <strong>Erro 403:</strong> Conta sem permissão ou sem billing ativo.<br>
+                  <strong>Erro 429:</strong> Rate limit — espere e tente novamente.<br>
+                  <strong>Erro 529:</strong> Servidores sobrecarregados — tente mais tarde.
+                </div>
+              </div>
+              <div class="provider-divider"></div>
+              <div class="model-list">
+                <div class="model-option" data-model="direct:anthropic:claude-opus-4-1-20250805"><span class="model-radio"></span><span class="model-name">Claude Opus 4.1</span></div>
+                <div class="model-option" data-model="direct:anthropic:claude-opus-4-20250514"><span class="model-radio"></span><span class="model-name">Claude Opus 4</span></div>
+                <div class="model-option" data-model="direct:anthropic:claude-sonnet-4-20250514"><span class="model-radio"></span><span class="model-name">Claude Sonnet 4</span></div>
+                <div class="model-option" data-model="direct:anthropic:claude-3-7-sonnet-20250219"><span class="model-radio"></span><span class="model-name">Claude 3.7 Sonnet</span></div>
+                <div class="model-option" data-model="direct:anthropic:claude-3-5-haiku-20241022"><span class="model-radio"></span><span class="model-name">Claude 3.5 Haiku</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- xAI / Grok -->
+        <div class="provider-profile" data-provider="xai">
+          <div class="provider-profile-header" data-target="sec-xai">
+            <span class="provider-profile-icon">⚡</span>
+            <div class="provider-profile-copy">
+              <span class="provider-profile-name">xAI / Grok</span>
+              <span class="provider-profile-meta">Modelos rápidos para chat e código</span>
+            </div>
+            <div class="provider-profile-status">
+              <span class="provider-profile-tag tag-paid">Direto</span>
+              <span class="provider-profile-dot" id="status-xai"></span>
+              <span class="provider-profile-chevron">▼</span>
+            </div>
+          </div>
+          <div class="provider-body" id="sec-xai">
+            <div class="provider-inner">
+              <div class="provider-keys-container" id="keys-xai" data-provider="xai" data-placeholder="xai-xxx"></div>
+              <button class="key-add-btn" onclick="addProviderKey('xai')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Adicionar key de fallback
+              </button>
+              <div class="key-help">
+                <div class="key-help-title">📖 Como conseguir sua key xAI</div>
+                <ol>
+                  <li>Acesse <a href="https://console.x.ai/" target="_blank">console.x.ai</a></li>
+                  <li>Faça login com sua conta</li>
+                  <li>Vá em <strong>"API Keys"</strong> no menu lateral</li>
+                  <li>Clique em <strong>"Create API Key"</strong></li>
+                  <li>Copie a chave gerada (começa com <code>xai-</code>)</li>
+                </ol>
+                <div class="help-warn">⚠️ A xAI oferece créditos gratuitos para novos usuários. Após isso, é necessário billing.</div>
+                <div class="help-error-codes">
+                  <strong>Erro 401:</strong> Key inválida — verifique no painel da xAI.<br>
+                  <strong>Erro 403:</strong> Sem permissão ou billing não configurado.<br>
+                  <strong>Erro 429:</strong> Rate limit — aguarde um momento.
+                </div>
+              </div>
+              <div class="provider-divider"></div>
+              <div class="model-list">
+                <div class="model-option" data-model="direct:xai:grok-4-0709"><span class="model-radio"></span><span class="model-name">Grok 4</span></div>
+                <div class="model-option" data-model="direct:xai:grok-4-1-fast"><span class="model-radio"></span><span class="model-name">Grok 4.1 Fast</span></div>
+                <div class="model-option" data-model="direct:xai:grok-3"><span class="model-radio"></span><span class="model-name">Grok 3</span></div>
+                <div class="model-option" data-model="direct:xai:grok-3-fast"><span class="model-radio"></span><span class="model-name">Grok 3 Fast</span></div>
+                <div class="model-option" data-model="direct:xai:grok-3-mini"><span class="model-radio"></span><span class="model-name">Grok 3 Mini</span></div>
+                <div class="model-option" data-model="direct:xai:grok-3-mini-fast"><span class="model-radio"></span><span class="model-name">Grok 3 Mini Fast</span></div>
+                <div class="model-option" data-model="direct:xai:grok-code-fast-1"><span class="model-radio"></span><span class="model-name">Grok Code Fast</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Groq -->
+        <div class="provider-profile" data-provider="groq">
+          <div class="provider-profile-header" data-target="sec-groq">
+            <span class="provider-profile-icon">🟢</span>
+            <div class="provider-profile-copy">
+              <span class="provider-profile-name">Groq</span>
+              <span class="provider-profile-meta">Inferência ultrarrápida com LPU — tier gratuito generoso</span>
+            </div>
+            <div class="provider-profile-status">
+              <span class="provider-profile-tag tag-free">Free</span>
+              <span class="provider-profile-dot" id="status-groq"></span>
+              <span class="provider-profile-chevron">▼</span>
+            </div>
+          </div>
+          <div class="provider-body" id="sec-groq">
+            <div class="provider-inner">
+              <div class="provider-keys-container" id="keys-groq" data-provider="groq" data-placeholder="gsk_xxx"></div>
+              <button class="key-add-btn" onclick="addProviderKey('groq')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Adicionar key de fallback
+              </button>
+              <div class="key-help">
+                <div class="key-help-title">📖 Como conseguir sua key Groq</div>
+                <ol>
+                  <li>Acesse <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a></li>
+                  <li>Faça login ou crie uma conta gratuita</li>
+                  <li>Clique em <strong>"Create API Key"</strong></li>
+                  <li>Dê um nome e copie a chave gerada (começa com <code>gsk_</code>)</li>
+                </ol>
+                <div class="help-warn">⚠️ A Groq oferece tier gratuito com limites generosos. Perfeita para testes rápidos e uso diário!</div>
+                <div class="help-error-codes">
+                  <strong>Erro 401:</strong> Key inválida — gere uma nova no console da Groq.<br>
+                  <strong>Erro 429:</strong> Rate limit atingido — a Groq tem limites por minuto, aguarde e tente novamente.<br>
+                  <strong>Erro 503:</strong> Serviço temporariamente indisponível — tente novamente em instantes.
+                </div>
+              </div>
+              <div class="provider-divider"></div>
+              <div class="model-list">
+                <div class="model-option" data-model="direct:groq:llama-3.3-70b-versatile"><span class="model-radio"></span><span class="model-name">Llama 3.3 70B</span></div>
+                <div class="model-option" data-model="direct:groq:llama-3.1-8b-instant"><span class="model-radio"></span><span class="model-name">Llama 3.1 8B Instant</span></div>
+                <div class="model-option" data-model="direct:groq:llama3-70b-8192"><span class="model-radio"></span><span class="model-name">Llama 3 70B</span></div>
+                <div class="model-option" data-model="direct:groq:llama3-8b-8192"><span class="model-radio"></span><span class="model-name">Llama 3 8B</span></div>
+                <div class="model-option" data-model="direct:groq:mixtral-8x7b-32768"><span class="model-radio"></span><span class="model-name">Mixtral 8x7B</span></div>
+                <div class="model-option" data-model="direct:groq:gemma2-9b-it"><span class="model-radio"></span><span class="model-name">Gemma 2 9B</span></div>
+                <div class="model-option" data-model="direct:groq:meta-llama/llama-4-scout-17b-16e-instruct"><span class="model-radio"></span><span class="model-name">Llama 4 Scout 17B</span></div>
+                <div class="model-option" data-model="direct:groq:meta-llama/llama-4-maverick-17b-128e-instruct"><span class="model-radio"></span><span class="model-name">Llama 4 Maverick 17B</span></div>
+                <div class="model-option" data-model="direct:groq:openai/gpt-oss-120b"><span class="model-radio"></span><span class="model-name">GPT-OSS 120B</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DeepSeek -->
+        <div class="provider-profile" data-provider="deepseek">
+          <div class="provider-profile-header" data-target="sec-deepseek">
+            <span class="provider-profile-icon">🔷</span>
+            <div class="provider-profile-copy">
+              <span class="provider-profile-name">DeepSeek</span>
+              <span class="provider-profile-meta">V3 e R1 para custo-benefício</span>
+            </div>
+            <div class="provider-profile-status">
+              <span class="provider-profile-tag tag-paid">Direto</span>
+              <span class="provider-profile-dot" id="status-deepseek"></span>
+              <span class="provider-profile-chevron">▼</span>
+            </div>
+          </div>
+          <div class="provider-body" id="sec-deepseek">
+            <div class="provider-inner">
+              <div class="provider-keys-container" id="keys-deepseek" data-provider="deepseek" data-placeholder="sk-xxx"></div>
+              <button class="key-add-btn" onclick="addProviderKey('deepseek')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Adicionar key de fallback
+              </button>
+              <div class="key-help">
+                <div class="key-help-title">📖 Como conseguir sua key DeepSeek</div>
+                <ol>
+                  <li>Acesse <a href="https://platform.deepseek.com/api_keys" target="_blank">platform.deepseek.com/api_keys</a></li>
+                  <li>Faça login ou crie uma conta</li>
+                  <li>Clique em <strong>"Create API Key"</strong></li>
+                  <li>Copie a chave gerada</li>
+                </ol>
+                <div class="help-warn">⚠️ A DeepSeek oferece créditos gratuitos para novos usuários. Preços muito acessíveis.</div>
+                <div class="help-error-codes">
+                  <strong>Erro 401:</strong> Key inválida — gere uma nova.<br>
+                  <strong>Erro 429:</strong> Rate limit — aguarde e tente novamente.
+                </div>
+              </div>
+              <div class="provider-divider"></div>
+              <div class="model-list">
+                <div class="model-option" data-model="direct:deepseek:deepseek-chat"><span class="model-radio"></span><span class="model-name">DeepSeek V3 (chat)</span></div>
+                <div class="model-option" data-model="direct:deepseek:deepseek-reasoner"><span class="model-radio"></span><span class="model-name">DeepSeek R1 (reasoner)</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- z.ai -->
+        <div class="provider-profile" data-provider="zai">
+          <div class="provider-profile-header" data-target="sec-zai">
+            <span class="provider-profile-icon">🌐</span>
+            <div class="provider-profile-copy">
+              <span class="provider-profile-name">z.ai (Zhipu)</span>
+              <span class="provider-profile-meta">Integração direta com modelos GLM</span>
+            </div>
+            <div class="provider-profile-status">
+              <span class="provider-profile-tag tag-paid">Direto</span>
+              <span class="provider-profile-dot" id="status-zai"></span>
+              <span class="provider-profile-chevron">▼</span>
+            </div>
+          </div>
+          <div class="provider-body" id="sec-zai">
+            <div class="provider-inner">
+              <div class="provider-keys-container" id="keys-zai" data-provider="zai" data-placeholder="z-xxx"></div>
+              <button class="key-add-btn" onclick="addProviderKey('zai')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Adicionar key de fallback
+              </button>
+              <div class="key-help">
+                <div class="key-help-title">📖 Como conseguir sua key z.ai</div>
+                <ol>
+                  <li>Acesse <a href="https://open.bigmodel.cn/" target="_blank">open.bigmodel.cn</a></li>
+                  <li>Crie uma conta e vá em API Keys</li>
+                  <li>Gere uma nova chave e copie</li>
+                </ol>
+                <div class="help-error-codes">
+                  <strong>Erro 401:</strong> Key inválida — gere uma nova.<br>
+                  <strong>Erro 429:</strong> Rate limit — aguarde.
+                </div>
+              </div>
+              <div class="provider-divider"></div>
+              <div class="model-list">
+                <div class="model-option" data-model="direct:zai:glm-4.5"><span class="model-radio"></span><span class="model-name">GLM-4.5</span></div>
+                <div class="model-option" data-model="direct:zai:glm-5"><span class="model-radio"></span><span class="model-name">GLM-5</span></div>
+                <div class="model-option" data-model="direct:zai:glm-4-plus"><span class="model-radio"></span><span class="model-name">GLM-4 Plus</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agent Router -->
+        <div class="provider-profile" data-provider="agentrouter">
+          <div class="provider-profile-header" data-target="sec-agentrouter">
+            <span class="provider-profile-icon">🔀</span>
+            <div class="provider-profile-copy">
+              <span class="provider-profile-name">Agent Router</span>
+              <span class="provider-profile-meta">Roteamento inteligente entre múltiplos modelos de IA</span>
+            </div>
+            <div class="provider-profile-status">
+              <span class="provider-profile-tag tag-paid">Multi-IA</span>
+              <span class="provider-profile-dot" id="status-agentrouter"></span>
+              <span class="provider-profile-chevron">▼</span>
+            </div>
+          </div>
+          <div class="provider-body" id="sec-agentrouter">
+            <div class="provider-inner">
+              <div class="provider-key-row">
+                <span class="key-label">Key</span>
+                <input type="password" id="key-agentrouter" placeholder="sk-xxx" />
+              </div>
+              <div class="key-help">
+                <div class="key-help-title">📖 Como conseguir sua key Agent Router</div>
+                <ol>
+                  <li>Acesse <a href="https://agentrouter.org/console/token" target="_blank">agentrouter.org/console/token</a></li>
+                  <li>Faça login ou crie uma conta</li>
+                  <li>Clique em <strong>"Generate New API Key"</strong></li>
+                  <li>Copie a chave gerada (começa com <code>sk-</code>)</li>
+                  <li>Guarde em local seguro — ela só aparece uma vez!</li>
+                </ol>
+                <div class="help-warn">
+                  💡 <strong>O que é o Agent Router?</strong> Ele funciona como uma camada intermediária entre seu app e vários modelos de IA (Claude, GPT, Gemini, etc). Ele pode:<br>
+                  • Escolher automaticamente o melhor modelo para cada tarefa<br>
+                  • Reduzir custo balanceando entre modelos<br>
+                  • Trocar de modelo automaticamente se um falhar<br>
+                  • Balancear velocidade vs qualidade
+                </div>
+                <div class="help-error-codes">
+                  <strong>Erro 401:</strong> Key inválida — gere uma nova em <a href="https://agentrouter.org/console/token" target="_blank">agentrouter.org/console/token</a>.<br>
+                  <strong>Erro 403:</strong> Sem permissão — verifique se sua conta está ativa e com billing configurado.<br>
+                  <strong>Erro 429:</strong> Rate limit — aguarde alguns segundos e tente novamente.<br>
+                  <strong>Erro 500/502:</strong> Erro no servidor ou no modelo subjacente — tente outro modelo ou aguarde.
+                </div>
+              </div>
+              <div class="provider-divider"></div>
+              <div class="model-list">
+                <div class="model-option" data-model="direct:agentrouter:deepseek-r1-0528"><span class="model-radio"></span><span class="model-name">DeepSeek R1 0528</span></div>
+                <div class="model-option" data-model="direct:agentrouter:deepseek-v3.1"><span class="model-radio"></span><span class="model-name">DeepSeek V3.1</span></div>
+                <div class="model-option" data-model="direct:agentrouter:deepseek-v3.2"><span class="model-radio"></span><span class="model-name">DeepSeek V3.2</span></div>
+                <div class="model-option" data-model="direct:agentrouter:glm-4.5"><span class="model-radio"></span><span class="model-name">GLM-4.5</span></div>
+                <div class="model-option" data-model="direct:agentrouter:glm-4.6"><span class="model-radio"></span><span class="model-name">GLM-4.6</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Moonshot (Kimi) -->
+        <div class="provider-profile" data-provider="moonshot">
+          <div class="provider-profile-header" data-target="sec-moonshot">
+            <span class="provider-profile-icon">🌙</span>
+            <div class="provider-profile-copy">
+              <span class="provider-profile-name">Moonshot (Kimi)</span>
+              <span class="provider-profile-meta">IA chinesa de alta performance — modelos Kimi K2.5</span>
+            </div>
+            <div class="provider-profile-status">
+              <span class="provider-profile-tag tag-paid">Pago</span>
+              <span class="provider-profile-dot" id="status-moonshot"></span>
+              <span class="provider-profile-chevron">▼</span>
+            </div>
+          </div>
+          <div class="provider-body" id="sec-moonshot">
+            <div class="provider-inner">
+              <div class="provider-keys-container" id="keys-moonshot" data-provider="moonshot" data-placeholder="sk-xxx"></div>
+              <button class="key-add-btn" onclick="addProviderKey('moonshot')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Adicionar key de fallback
+              </button>
+              <div class="key-help">
+                <div class="key-help-title">📖 Como conseguir sua key Moonshot</div>
+                <ol>
+                  <li>Acesse <a href="https://platform.moonshot.cn/console/api-keys" target="_blank">platform.moonshot.cn</a></li>
+                  <li>Faça login ou crie uma conta</li>
+                  <li>Vá em <strong>"API Keys"</strong> e crie uma nova chave</li>
+                  <li>Copie a chave gerada (começa com <code>sk-</code>)</li>
+                  <li>Guarde em local seguro — ela só aparece uma vez!</li>
+                </ol>
+                <div class="help-warn">
+                  💡 <strong>Modelos disponíveis:</strong> Kimi K2.5 (mais avançado), Kimi K2 Turbo, Moonshot v1 (8k/32k/128k). API compatível com OpenAI SDK.
+                </div>
+                <div class="help-error-codes">
+                  <strong>Erro 401:</strong> Key inválida — gere uma nova no console Moonshot.<br>
+                  <strong>Erro 429:</strong> Rate limit ou saldo insuficiente — verifique seu billing.<br>
+                  <strong>Erro 400:</strong> Parâmetros inválidos — verifique o modelo selecionado.
+                </div>
+              </div>
+              <div class="provider-divider"></div>
+              <div class="model-list">
+                <div class="model-option" data-model="direct:moonshot:kimi-k2.5"><span class="model-radio"></span><span class="model-name">Kimi K2.5</span></div>
+                <div class="model-option" data-model="direct:moonshot:kimi-k2-turbo-preview"><span class="model-radio"></span><span class="model-name">Kimi K2 Turbo</span></div>
+                <div class="model-option" data-model="direct:moonshot:kimi-k2-thinking-turbo"><span class="model-radio"></span><span class="model-name">Kimi K2 Thinking Turbo</span></div>
+                <div class="model-option" data-model="direct:moonshot:moonshot-v1-128k"><span class="model-radio"></span><span class="model-name">Moonshot v1 128K</span></div>
+                <div class="model-option" data-model="direct:moonshot:moonshot-v1-32k"><span class="model-radio"></span><span class="model-name">Moonshot v1 32K</span></div>
+                <div class="model-option" data-model="direct:moonshot:moonshot-v1-8k"><span class="model-radio"></span><span class="model-name">Moonshot v1 8K</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== AVANÇADO ===== -->
+      <div class="config-group">
+        <div class="config-group-title">Avançado</div>
+        <div class="cfg-section">
+          <div class="cfg-section-header" data-target="sec-custom">
+            <span class="cfg-section-icon">✏️</span>
+            <div class="cfg-section-copy">
+              <span class="cfg-section-label">Modelo personalizado</span>
+              <span class="cfg-section-meta">Defina manualmente um provider/model ou direct:provider:model</span>
+            </div>
+            <span class="cfg-section-chevron">▼</span>
+          </div>
+          <div class="cfg-body" id="sec-custom">
+            <div class="cfg-inner">
+              <div class="cfg-field custom-model-input">
+                <label>Modelo</label>
+                <input type="text" id="openai-model" placeholder="provider/model-name ou direct:provider:model" />
+                <div class="hint">Use prefixo direct: para APIs diretas</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="config-footer">
+      <button class="btn-secondary" id="btn-detect">Detectar</button>
+      <button class="btn-secondary" id="btn-clear-cache">Cache</button>
+      <button class="btn-secondary" id="btn-redo-tutorial" title="Reabre o assistente de 3 passos (GitHub → Provedor → Modelo) para reconfigurar do zero">Tutorial</button>
+      <button class="btn-primary" id="btn-save-config">Salvar</button>
+    </div>
+  </div>
+
+  </div> <!-- /main-app -->
+
+  <!-- ===== ONBOARDING WIZARD ===== -->
+  <div class="onboarding-overlay" id="onboarding-overlay">
+    <div class="onboarding-header">
+      <div class="ob-icon">🚀</div>
+      <h2>Primeira Configuração</h2>
+      <p>Configure em 3 passos simples para começar a usar o Bubbly</p>
+    </div>
+
+    <!-- Stepper -->
+    <div class="ob-stepper">
+      <div class="ob-step-indicator active" id="ob-ind-1">
+        <span class="ob-step-num">1</span>
+        <span>GitHub</span>
+      </div>
+      <div class="ob-step-line" id="ob-line-1"></div>
+      <div class="ob-step-indicator" id="ob-ind-2">
+        <span class="ob-step-num">2</span>
+        <span>Provedor</span>
+      </div>
+      <div class="ob-step-line" id="ob-line-2"></div>
+      <div class="ob-step-indicator" id="ob-ind-3">
+        <span class="ob-step-num">3</span>
+        <span>Modelo</span>
+      </div>
+    </div>
+
+    <div class="ob-body">
+      <!-- STEP 1: GitHub -->
+      <div class="ob-step-content active" id="ob-step-1">
+        <div class="ob-step-title">🔗 Conecte seu GitHub</div>
+
+        <!-- PREREQUISITE CALLOUT -->
+        <div class="ob-prereq-callout">
+          <div class="ob-prereq-icon">⚠️</div>
+          <div class="ob-prereq-text">
+            <strong>Pré-requisito:</strong> Antes de continuar, conecte o GitHub no seu projeto Lovable.<br>
+            Clique no botão <span class="ob-prereq-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></span> ao lado de <span class="ob-prereq-publish">Publish</span> no canto superior do Lovable.
+          </div>
+        </div>
+
+        <div class="ob-step-desc">
+          O Bubbly precisa de um <strong>Token de Acesso Pessoal (PAT)</strong> do GitHub para ler e modificar o código do seu projeto.
+        </div>
+
+        <div class="ob-input-group">
+          <label>Token GitHub (PAT Clássico)</label>
+          <input type="password" id="ob-github-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+          <div class="ob-hint">Começa com <strong>ghp_</strong> ou <strong>github_pat_</strong> — gerado no GitHub Settings</div>
+          <div id="ob-github-validation" style="display:none; margin-top:8px; padding:10px 12px; border-radius:10px; font-size:12px; font-weight:600; line-height:1.4;"></div>
+        </div>
+
+        <div class="key-help">
+          <div class="key-help-title">📖 Como criar seu Token em 7 passos</div>
+          <ol>
+            <li>Abra <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a></li>
+            <li>Clique em <strong>"Generate new token"</strong> → <strong>"Generate new token (classic)"</strong></li>
+            <li>Em <strong>"Note"</strong>, digite: <code>Bubbly Extension</code></li>
+            <li>Em <strong>"Expiration"</strong>, escolha <code>90 days</code> ou <code>No expiration</code></li>
+            <li>Em <strong>"Select scopes"</strong>, marque ✅ <strong>TODAS as opções disponíveis</strong> (repo, workflow, write:packages, etc.) conforme a imagem abaixo</li>
+            <li>Clique em <strong>"Generate token"</strong></li>
+            <li>🔴 <strong>COPIE O TOKEN IMEDIATAMENTE!</strong> Ele só aparece uma vez</li>
+          </ol>
+          <div style="margin-top:10px; border-radius:10px; overflow:hidden; border:1px solid rgba(139,92,246,0.2);">
+            <img src="/extension-v7/github-scopes-guide.png" alt="Selecione todos os escopos no modo Classic" style="width:100%; display:block; border-radius:10px;" />
+          </div>
+          <div class="help-warn">⚠️ Selecione <strong>TODAS</strong> as permissões no modo <strong>Classic</strong> para garantir que o Bubbly funcione corretamente.</div>
+        </div>
+
+        <div class="ob-input-group" style="margin-top:4px;">
+          <label>Repositório (owner/repo)</label>
+          <input type="text" id="ob-github-repo" placeholder="seu-usuario/seu-repositorio" />
+          <div class="ob-hint" id="ob-repo-hint">
+            <span class="ob-auto-badge" id="ob-auto-badge" style="display:none;">✅ Detectado automaticamente</span>
+            <span id="ob-repo-manual-hint"><strong>Onde encontrar:</strong> O repositório será detectado automaticamente quando você abrir um projeto no Lovable. Ou copie da URL: <code>github.com/joao/app</code> → <code>joao/app</code></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Provider -->
+      <div class="ob-step-content" id="ob-step-2">
+        <div class="ob-step-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:6px;opacity:0.8;"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>Escolha um Provedor de IA</div>
+        <div class="ob-step-desc">
+          Escolha de onde vem a inteligência. O Bubbly conecta com vários provedores — escolha o que prefere e cole sua chave API.
+        </div>
+
+        <div class="ob-provider-grid">
+          <div class="ob-provider-card" data-ob-provider="openrouter">
+            <div class="ob-prov-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+            <div class="ob-prov-name">OpenRouter</div>
+            <span class="ob-prov-tag free">Free</span>
+          </div>
+          <div class="ob-provider-card" data-ob-provider="groq">
+            <div class="ob-prov-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+            <div class="ob-prov-name">Groq</div>
+            <span class="ob-prov-tag free">Free</span>
+          </div>
+          <div class="ob-provider-card" data-ob-provider="google">
+            <div class="ob-prov-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4285f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg></div>
+            <div class="ob-prov-name">Google</div>
+            <span class="ob-prov-tag free">Free</span>
+          </div>
+          <div class="ob-provider-card" data-ob-provider="anthropic">
+            <div class="ob-prov-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
+            <div class="ob-prov-name">Anthropic</div>
+            <span class="ob-prov-tag paid">Pago</span>
+          </div>
+          <div class="ob-provider-card" data-ob-provider="openai">
+            <div class="ob-prov-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10"/></svg></div>
+            <div class="ob-prov-name">OpenAI</div>
+            <span class="ob-prov-tag paid">Pago</span>
+          </div>
+          <div class="ob-provider-card" data-ob-provider="xai">
+            <div class="ob-prov-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+            <div class="ob-prov-name">xAI / Grok</div>
+            <span class="ob-prov-tag paid">Pago</span>
+          </div>
+          <div class="ob-provider-card" data-ob-provider="deepseek">
+            <div class="ob-prov-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></div>
+            <div class="ob-prov-name">DeepSeek</div>
+            <span class="ob-prov-tag paid">Pago</span>
+          </div>
+          <div class="ob-provider-card" data-ob-provider="agentrouter">
+            <div class="ob-prov-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="m21 3-8.5 8.5"/><path d="M3 3l8.5 8.5"/><path d="M3 21l8.5-8.5"/><path d="m21 21-8.5-8.5"/><path d="M16 21h5v-5"/><path d="M8 21H3v-5"/></svg></div>
+            <div class="ob-prov-name">Agent Router</div>
+            <span class="ob-prov-tag paid">Multi-IA</span>
+          </div>
+          <div class="ob-provider-card" data-ob-provider="moonshot">
+            <div class="ob-prov-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></div>
+            <div class="ob-prov-name">Moonshot</div>
+            <span class="ob-prov-tag paid">Pago</span>
+          </div>
+        </div>
+
+        <!-- Dynamic key input area -->
+        <div class="ob-key-section" id="ob-key-section" style="display:none;">
+          <div class="ob-key-arrow" id="ob-key-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px;"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>Agora cole sua chave API abaixo</div>
+          <div class="ob-input-group">
+            <label id="ob-key-label">Chave API</label>
+            <input type="password" id="ob-provider-key" placeholder="" />
+            <div class="ob-hint" id="ob-key-hint"></div>
+            <div id="ob-provider-validation" style="display:none; margin-top:8px; padding:10px 12px; border-radius:10px; font-size:12px; font-weight:600; line-height:1.4;"></div>
+          </div>
+          <div class="key-help" id="ob-key-help" style="margin-top:8px;"></div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Model -->
+      <div class="ob-step-content" id="ob-step-3">
+        <div class="ob-step-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-3px;margin-right:6px;opacity:0.8;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Selecione um Modelo</div>
+        <div class="ob-step-desc" id="ob-model-desc">
+          Escolha o modelo de IA que será usado para gerar e modificar código.
+        </div>
+        <input type="text" id="ob-model-search" placeholder="Buscar modelo..." style="display:none;width:100%;padding:10px 14px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border);color:var(--text);font-size:13px;margin-bottom:8px;outline:none;" />
+        <div class="ob-model-list" id="ob-model-list" style="max-height:280px;overflow-y:auto;">
+          <!-- Filled dynamically -->
+        </div>
+      </div>
+
+      <!-- SUCCESS -->
+      <div class="ob-step-content" id="ob-step-done">
+        <div class="ob-success-card">
+          <div class="ob-success-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <h3>Tudo configurado!</h3>
+          <p>Seu Bubbly está pronto para usar. Envie uma mensagem no chat para começar a modificar código via IA.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="ob-footer">
+      <button class="ob-btn-back" id="ob-btn-back" style="display:none;">← Voltar</button>
+      <button class="ob-btn-next" id="ob-btn-next">Próximo →</button>
+      <button class="ob-btn-skip" id="ob-btn-skip">Pular setup</button>
+    </div>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>

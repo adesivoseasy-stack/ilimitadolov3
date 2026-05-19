@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS public._tmp_diag_user;

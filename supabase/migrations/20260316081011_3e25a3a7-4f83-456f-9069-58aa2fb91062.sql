@@ -1,0 +1,1 @@
+UPDATE system_config SET value = '39.90', updated_at = now() WHERE key = 'reseller_key_tier_197_1_price';

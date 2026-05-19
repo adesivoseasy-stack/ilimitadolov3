@@ -1,0 +1,1 @@
+DELETE FROM public.system_config WHERE key IN ('lvb_package_10', 'lvb_package_50');

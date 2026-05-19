@@ -1,0 +1,1 @@
+UPDATE reseller_profiles SET custom_key_price = NULL WHERE user_id = '986a3dfb-c747-490e-b194-f18eb38da7b3' AND plan_type = '197';

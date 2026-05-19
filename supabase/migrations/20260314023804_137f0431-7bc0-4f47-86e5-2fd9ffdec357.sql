@@ -1,0 +1,1 @@
+ALTER TABLE public.reseller_profiles ADD COLUMN IF NOT EXISTS document text;

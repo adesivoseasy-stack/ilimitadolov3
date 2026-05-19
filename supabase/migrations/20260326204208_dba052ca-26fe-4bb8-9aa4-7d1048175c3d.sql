@@ -1,0 +1,1 @@
+UPDATE system_config SET value = '49.90', updated_at = now() WHERE key IN ('reseller_key_tier_197_1_price', 'reseller_key_tier_197_2_price', 'reseller_key_tier_197_3_price');

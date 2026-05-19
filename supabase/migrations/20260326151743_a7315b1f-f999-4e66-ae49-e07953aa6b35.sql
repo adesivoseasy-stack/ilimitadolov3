@@ -1,0 +1,1 @@
+UPDATE public.system_config SET value = 'https://n8n.projetocode.com.br/webhook/mateus-lovable', updated_at = now() WHERE key = 'n8n_webhook_url';

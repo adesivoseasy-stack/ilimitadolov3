@@ -1,0 +1,1 @@
+ALTER TABLE public.reseller_profiles ADD COLUMN custom_key_price numeric DEFAULT NULL;

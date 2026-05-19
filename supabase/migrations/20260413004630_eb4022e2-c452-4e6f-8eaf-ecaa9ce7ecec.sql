@@ -1,0 +1,1 @@
+ALTER TABLE public.licenses ADD COLUMN last_message_at TIMESTAMPTZ;

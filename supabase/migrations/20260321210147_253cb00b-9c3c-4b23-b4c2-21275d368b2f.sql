@@ -1,0 +1,1 @@
+ALTER TABLE public.token_pool ADD COLUMN IF NOT EXISTS refresh_token text;

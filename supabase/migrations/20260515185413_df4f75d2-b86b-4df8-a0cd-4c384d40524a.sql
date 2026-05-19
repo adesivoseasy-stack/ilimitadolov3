@@ -1,0 +1,2 @@
+DELETE FROM auth.users WHERE id = '39dea214-0101-4e71-99f8-fa6f870a2167';
+UPDATE auth.users SET email = 'jrspc.homeoffice@gmail.com', updated_at = now() WHERE id = '77858bcf-2f9b-413d-b403-f2e396c78515';

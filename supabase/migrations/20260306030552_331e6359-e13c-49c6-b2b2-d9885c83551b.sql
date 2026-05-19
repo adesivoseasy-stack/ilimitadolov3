@@ -1,0 +1,1 @@
+ALTER TABLE public.reseller_profiles ADD COLUMN plan_type text NOT NULL DEFAULT '197';

@@ -1,0 +1,1 @@
+ALTER TABLE public.reseller_profiles ADD COLUMN deadline_at timestamp with time zone DEFAULT NULL;
