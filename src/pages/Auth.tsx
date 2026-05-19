@@ -11,6 +11,7 @@ import { Loader2, ArrowLeft, KeyRound, Lock, Mail, Shield, Zap, Globe, Sparkles,
 import { z } from 'zod';
 import logoImg from '@/assets/logo.png';
 import { motion, AnimatePresence } from 'framer-motion';
+import { translateAuthError } from '@/lib/authErrors';
 
 /**
  * Looping hero: letras de "Gestão de Licenças Inteligente" caem no chão,
