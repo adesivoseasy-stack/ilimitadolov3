@@ -210,19 +210,18 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Check if this is a test license that needs activation
-    const isTestLicense = license.duration_hours && !license.first_activated_at;
+    // 1ª ativação: define expires_at = now + duration_hours (test ou pagas mensais)
+    const needsActivation = license.duration_hours && !license.first_activated_at;
+    const isTestLike = !!license.duration_hours && license.duration_hours <= 0.5;
     let expiresAt = new Date(license.expires_at);
     let daysRemaining: number;
     const now = new Date();
 
-    if (isTestLicense) {
-      // First activation of a test license - set the real expiration
-      console.log(`First activation of test license, duration: ${license.duration_hours} hours`);
+    if (needsActivation) {
+      console.log(`Primeira ativação, duration: ${license.duration_hours} hours (test=${isTestLike})`);
       const durationMs = license.duration_hours * 60 * 60 * 1000;
       expiresAt = new Date(now.getTime() + durationMs);
-      
-      // Update the license with real expiration
+
       const { error: updateError } = await supabase
         .from('licenses')
         .update({
@@ -235,10 +234,9 @@ Deno.serve(async (req) => {
         console.error('Failed to update license activation:', updateError);
       }
 
-      // Log the activation
       await supabase.from('license_logs').insert({
         license_id: license.id,
-        action: 'test_license_activated',
+        action: isTestLike ? 'test_license_activated' : 'license_activated',
         details: { duration_hours: license.duration_hours, expires_at: expiresAt.toISOString() },
       });
 

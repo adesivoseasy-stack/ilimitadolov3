@@ -100,14 +100,15 @@ export function useResellerCreateLicense() {
         ? durationDays
         : (isWildcard ? Math.max(durationDays, 36500) : 30);
       const expiresAt = new Date();
-      if (isTestLicense) {
-        // Test licenses: 10 minutes duration, fallback expiry 1 hour
-        expiresAt.setTime(expiresAt.getTime() + 60 * 60 * 1000);
+      if (isTestLicense || !isWildcard) {
+        // Test e pagas: placeholder de 100 anos. Expiração real é setada na 1ª ativação.
+        expiresAt.setFullYear(expiresAt.getFullYear() + 100);
       } else {
         expiresAt.setTime(expiresAt.getTime() + effectiveDurationDays * 24 * 60 * 60 * 1000);
       }
 
       const testDurationHours = 10 / 60; // ~0.1667 (10 minutes)
+      const paidDurationHours = 30 * 24; // 720h (30 dias)
 
       const { data, error } = await supabase
         .from('licenses')
@@ -117,8 +118,8 @@ export function useResellerCreateLicense() {
           expires_at: expiresAt.toISOString(),
           price: price || 0,
           notes,
-          duration_hours: isTestLicense ? testDurationHours : null,
-          first_activated_at: null,
+          duration_hours: isWildcard ? null : (isTestLicense ? testDurationHours : paidDurationHours),
+          first_activated_at: isWildcard ? new Date().toISOString() : null,
           is_wildcard: isWildcard || false,
           created_by: user?.id,
           max_messages: null,

@@ -169,7 +169,11 @@ export default function Licenses() {
                       <TableCell className="text-center text-sm font-bold font-display text-foreground/80">{license.devices.length}</TableCell>
                       <TableCell className="text-center text-sm font-display text-foreground/80">{license.messages_used}/{license.max_messages ?? '∞'}</TableCell>
                       <TableCell className="text-sm font-display text-foreground/70">
-                        {format(parseISO(license.expires_at), 'dd/MM/yyyy', { locale: ptBR })}
+                        {license.duration_hours && !license.first_activated_at && !license.is_wildcard ? (
+                          <span className="text-xs text-muted-foreground">⏳ {Math.round(license.duration_hours / 24)}d (aguardando)</span>
+                        ) : (
+                          format(parseISO(license.expires_at), 'dd/MM/yyyy', { locale: ptBR })
+                        )}
                       </TableCell>
                       <TableCell className="text-xs font-display text-foreground/70 whitespace-nowrap">
                         {license.creator_name || 'Admin'}
