@@ -2,11 +2,76 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-token',
   'Content-Type': 'application/json; charset=utf-8',
 }
 
-const COMPLETED_STATUSES = new Set(['completed', 'completo', 'paid', 'paid_out', 'approved', 'success', 'succeeded'])
+// SyncPay v1 cash-in: only these statuses indicate a real settled payment
+const COMPLETED_STATUSES = new Set(['completed', 'paid', 'approved'])
+const SYNCPAY_API = 'https://api.syncpayments.com.br'
+
+async function readJson(res: Response): Promise<any> {
+  const text = await res.text()
+  if (!text) return {}
+  try { return JSON.parse(text) } catch { return { raw: text } }
+}
+
+async function getSyncPayToken(): Promise<string | null> {
+  const clientId = Deno.env.get('SYNCPAY_CLIENT_ID') || ''
+  const clientSecret = Deno.env.get('SYNCPAY_CLIENT_SECRET') || ''
+  if (!clientId || !clientSecret) return null
+  try {
+    const res = await fetch(`${SYNCPAY_API}/api/partner/v1/auth-token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_id: clientId, client_secret: clientSecret }),
+    })
+    const data = await readJson(res)
+    if (!res.ok || !data?.access_token) {
+      console.error('[syncpay-webhook] auth failed status=', res.status)
+      return null
+    }
+    return data.access_token as string
+  } catch (e) {
+    console.error('[syncpay-webhook] auth error:', (e as Error).message)
+    return null
+  }
+}
+
+/**
+ * Re-fetches the transaction from SyncPay directly and returns the verified
+ * { status, amountCents } as reported by the gateway. Returning null means we
+ * could not confirm the payment — caller must reject.
+ */
+async function verifyTransactionWithSyncPay(identifier: string): Promise<{ status: string; amountCents: number | null } | null> {
+  const token = await getSyncPayToken()
+  if (!token) return null
+
+  // Try the most likely lookup endpoints (SyncPay v1 cash-in)
+  const candidates = [
+    `${SYNCPAY_API}/api/partner/v1/cash-in/${encodeURIComponent(identifier)}`,
+    `${SYNCPAY_API}/api/partner/v1/transactions/${encodeURIComponent(identifier)}`,
+  ]
+
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
+      })
+      if (res.status === 404) continue
+      const data = await readJson(res)
+      if (!res.ok) continue
+      const tx = data?.data || data
+      const status = String(tx?.status || '').toLowerCase()
+      const amountRaw = tx?.amount ?? tx?.value ?? null
+      const amountCents = amountRaw != null ? Math.round(parseFloat(amountRaw) * 100) : null
+      if (status) return { status, amountCents }
+    } catch (e) {
+      console.error('[syncpay-webhook] verify error:', (e as Error).message)
+    }
+  }
+  return null
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -14,23 +79,45 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const body = await req.json()
-    console.log('[syncpay-webhook] Received webhook payload:', JSON.stringify(body))
+    // Optional shared-secret gate — if SYNCPAY_WEBHOOK_TOKEN is configured,
+    // requests without the matching header are dropped early.
+    const expectedToken = Deno.env.get('SYNCPAY_WEBHOOK_TOKEN')
+    if (expectedToken) {
+      const got = req.headers.get('x-webhook-token') || req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || ''
+      if (got !== expectedToken) {
+        console.warn('[syncpay-webhook] rejected: bad webhook token')
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders })
+      }
+    }
+
+    const body = await req.json().catch(() => ({}))
 
     // SyncPay sends { data: { id, amount, status, ... } }
-    const webhookData = body.data || body
+    const webhookData = (body && typeof body === 'object' && body.data) ? body.data : body
     const identifier = webhookData.id || webhookData.idtransaction || ''
-    const status = (webhookData.status || '').toLowerCase()
+    const claimedStatus = String(webhookData.status || '').toLowerCase()
+    console.log('[syncpay-webhook] received id=', identifier, 'claimedStatus=', claimedStatus)
 
     if (!identifier) {
       return new Response(JSON.stringify({ error: 'Missing identifier' }), { status: 400, headers: corsHeaders })
     }
 
-    // SyncPay may send several successful statuses depending on the flow
-    if (!COMPLETED_STATUSES.has(status)) {
-      console.log('[syncpay-webhook] Not completed yet, status:', status)
+    if (!COMPLETED_STATUSES.has(claimedStatus)) {
       return new Response(JSON.stringify({ ok: true, message: 'Not completed yet' }), { headers: corsHeaders })
     }
+
+    // CRITICAL: re-verify directly with SyncPay before crediting anything.
+    // We never trust the webhook payload's status/amount on its own.
+    const verified = await verifyTransactionWithSyncPay(identifier)
+    if (!verified) {
+      console.error('[syncpay-webhook] could not verify transaction with SyncPay:', identifier)
+      return new Response(JSON.stringify({ error: 'Verification failed' }), { status: 502, headers: corsHeaders })
+    }
+    if (!COMPLETED_STATUSES.has(verified.status)) {
+      console.warn('[syncpay-webhook] gateway reports non-completed status:', verified.status)
+      return new Response(JSON.stringify({ error: 'Transaction not approved' }), { status: 403, headers: corsHeaders })
+    }
+    const verifiedAmountCents = verified.amountCents
 
     const adminClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -45,7 +132,7 @@ Deno.serve(async (req) => {
       .single()
 
     if (lvbOrder && !lvbError) {
-      return await handleLvbOrder(adminClient, lvbOrder, webhookData)
+      return await handleLvbOrder(adminClient, lvbOrder, verifiedAmountCents)
     }
 
     // Otherwise, handle as regular credit order
@@ -56,12 +143,17 @@ Deno.serve(async (req) => {
       .single()
 
     if (orderError || !order) {
-      console.error('[syncpay-webhook] Order not found:', identifier, orderError)
+      console.error('[syncpay-webhook] Order not found:', identifier)
       return new Response(JSON.stringify({ error: 'Order not found' }), { status: 404, headers: corsHeaders })
     }
 
+    // STRICT amount validation against the verified amount from SyncPay
+    if (verifiedAmountCents == null || verifiedAmountCents !== order.amount_cents) {
+      console.error('[syncpay-webhook] amount mismatch verified=', verifiedAmountCents, 'expected=', order.amount_cents)
+      return new Response(JSON.stringify({ error: 'Amount mismatch' }), { status: 403, headers: corsHeaders })
+    }
+
     // ATOMIC: Only update if status is NOT already 'paid' — prevents race condition
-    // If multiple webhooks arrive simultaneously, only one will succeed here
     const { data: claimedOrder, error: claimError } = await adminClient
       .from('credit_orders')
       .update({ status: 'paid', paid_at: new Date().toISOString() })
@@ -71,24 +163,7 @@ Deno.serve(async (req) => {
       .single()
 
     if (claimError || !claimedOrder) {
-      console.log('[syncpay-webhook] Order already paid (race avoided):', order.id)
       return new Response(JSON.stringify({ ok: true, message: 'Already processed' }), { headers: corsHeaders })
-    }
-
-    // Validate amount matches (SyncPay sends amount in reais as integer or float)
-    const webhookAmount = webhookData.amount
-    if (webhookAmount != null) {
-      const webhookCents = Math.round(parseFloat(webhookAmount) * 100)
-      if (webhookCents !== order.amount_cents) {
-        console.error('[syncpay-webhook] Amount mismatch! Webhook:', webhookCents, 'DB:', order.amount_cents)
-        // Revert status since amount doesn't match
-        await adminClient
-          .from('credit_orders')
-          .update({ status: 'pending', paid_at: null })
-          .eq('id', order.id)
-        return new Response(JSON.stringify({ error: 'Amount mismatch' }), { status: 403, headers: corsHeaders })
-      }
-      console.log('[syncpay-webhook] Amount validated:', webhookCents, '===', order.amount_cents)
     }
 
     // Generate license keys and add to reseller's stock
@@ -144,13 +219,19 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ ok: true, keys_generated: generatedKeys.length }), { headers: corsHeaders })
   } catch (err) {
-    console.error('[syncpay-webhook] Error:', err)
+    console.error('[syncpay-webhook] Error:', (err as Error).message)
     return new Response(JSON.stringify({ error: 'Internal error' }), { status: 500, headers: corsHeaders })
   }
 })
 
-async function handleLvbOrder(adminClient: any, lvbOrder: any, webhookData: any) {
+async function handleLvbOrder(adminClient: any, lvbOrder: any, verifiedAmountCents: number | null) {
   console.log('[syncpay-webhook] Processing LVB order:', lvbOrder.id)
+
+  // STRICT amount validation against the verified amount from SyncPay
+  if (verifiedAmountCents == null || verifiedAmountCents !== lvbOrder.amount_cents) {
+    console.error('[syncpay-webhook] LVB amount mismatch verified=', verifiedAmountCents, 'expected=', lvbOrder.amount_cents)
+    return new Response(JSON.stringify({ error: 'Amount mismatch' }), { status: 403, headers: { 'Content-Type': 'application/json' } })
+  }
 
   // ATOMIC: Only claim if not already processed — prevents race condition
   const { data: claimedLvb, error: claimLvbError } = await adminClient
@@ -162,19 +243,7 @@ async function handleLvbOrder(adminClient: any, lvbOrder: any, webhookData: any)
     .single()
 
   if (claimLvbError || !claimedLvb) {
-    console.log('[syncpay-webhook] LVB order already processed (race avoided):', lvbOrder.id)
     return new Response(JSON.stringify({ ok: true, message: 'Already processed' }), { headers: { 'Content-Type': 'application/json' } })
-  }
-
-  // Validate amount
-  const webhookAmount = webhookData.amount
-  if (webhookAmount != null) {
-    const webhookCents = Math.round(parseFloat(webhookAmount) * 100)
-    if (webhookCents !== lvbOrder.amount_cents) {
-      console.error('[syncpay-webhook] LVB amount mismatch! Webhook:', webhookCents, 'DB:', lvbOrder.amount_cents)
-      await adminClient.from('lvb_credit_orders').update({ status: 'aguardando' }).eq('id', lvbOrder.id)
-      return new Response(JSON.stringify({ error: 'Amount mismatch' }), { status: 403, headers: { 'Content-Type': 'application/json' } })
-    }
   }
 
   // Call LVB Credits API to create order + set delivery
