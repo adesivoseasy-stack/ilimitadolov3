@@ -292,8 +292,8 @@ async function calculateTotal(adminClient: any, planType: string, quantity: numb
   }
 
   const DEFAULT_TIERS: Record<string, { quantity: number; pricePerKey: number }[]> = {
-    '197': [{ quantity: 1, pricePerKey: 49.90 }],
-    '297': [{ quantity: 1, pricePerKey: 29.90 }],
+    '197': [{ quantity: 1, pricePerKey: 34.90 }],
+    '297': [{ quantity: 1, pricePerKey: 34.90 }],
   }
 
   const activeTiers = tiers.length > 0 ? tiers.sort((a, b) => a.quantity - b.quantity) : (DEFAULT_TIERS[planType] || DEFAULT_TIERS['197'])
