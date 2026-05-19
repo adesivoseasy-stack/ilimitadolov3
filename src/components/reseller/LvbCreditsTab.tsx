@@ -1144,16 +1144,14 @@ export function LvbCreditsTab() {
             <span className="text-lg">🎬</span>
             <span className="text-sm font-semibold">Vídeo Tutorial: Como comprar créditos</span>
           </div>
-          <div className="rounded-xl overflow-hidden border border-border/50 bg-black">
-            <video
-              controls
-              className="w-full max-h-[400px]"
-              poster=""
-              preload="metadata"
-            >
-              <source src="https://res.cloudinary.com/diolkpui9/video/upload/v1775259083/TUTORIAL_CREDITOS_yymjdu.mp4" type="video/mp4" />
-              Seu navegador não suporta vídeos.
-            </video>
+          <div className="rounded-xl overflow-hidden border border-border/50 bg-black aspect-video">
+            <iframe
+              src="https://player.cloudinary.com/embed/?cloud_name=dvln7ny9l&public_id=TUTORIAL_CREDITOS_ezng06"
+              className="w-full h-full"
+              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+              allowFullScreen
+              title="Vídeo Tutorial: Como comprar créditos"
+            />
           </div>
         </CardContent>
       </Card>
