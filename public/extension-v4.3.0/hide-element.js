@@ -129,7 +129,7 @@ window.fetch = function(...args) {
     return originalFetch(...args);
 };
 
-function injectMessageAndSubmit(messageText) {
+async function injectMessageAndSubmit(messageText) {
     try {
         const textarea = document.querySelector('textarea[placeholder]') ||
                          document.querySelector('textarea') ||
@@ -201,7 +201,7 @@ function injectMessageAndSubmit(messageText) {
             return { success: true };
         };
 
-        return new Promise((resolve) => {
+        return await new Promise((resolve) => {
             requestAnimationFrame(() => {
                 setTimeout(() => resolve(clickSend()), 80);
             });
