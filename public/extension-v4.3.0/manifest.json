@@ -30,7 +30,8 @@
     "tabs",
     "sidePanel",
     "activeTab",
-    "scripting"
+    "scripting",
+    "webRequest"
   ],
   "host_permissions": [
     "https://lovable.dev/*",

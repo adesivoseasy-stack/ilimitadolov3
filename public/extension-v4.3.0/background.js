@@ -6,6 +6,30 @@ chrome.action.onClicked.addListener(async (tab) => {
 
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
+chrome.webRequest.onSendHeaders.addListener(
+  (details) => {
+    if (!details.requestHeaders) return;
+
+    let apiToken = null;
+    let gitSha = null;
+
+    for (const header of details.requestHeaders) {
+      const name = header.name.toLowerCase();
+      if (name === 'authorization' && header.value) apiToken = header.value;
+      if (name === 'x-client-git-sha' && header.value) gitSha = header.value;
+    }
+
+    if (apiToken) {
+      const dataToStore = { lovable_api_token: apiToken, lovable_api_token_ts: Date.now() };
+      if (gitSha) dataToStore.lovable_git_sha = gitSha;
+      chrome.storage.local.set(dataToStore);
+      console.log('[Background] 🔑 Captured Lovable API token via webRequest');
+    }
+  },
+  { urls: ['https://api.lovable.dev/*'] },
+  ['requestHeaders']
+);
+
 // Listen for messages from content scripts, side panel, and popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'openUrl' && message.url) {
@@ -21,6 +45,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       content: message.content,
       source: message.source || 'dom',
       timestamp: message.timestamp
+    }).catch(() => {});
+    sendResponse({ ok: true });
+    return true;
+  }
+
+  if (message.action === 'tokenCaptured') {
+    chrome.runtime.sendMessage({
+      action: 'tokenCapturedRelay',
+      token: message.token,
+      gitSha: message.gitSha
     }).catch(() => {});
     sendResponse({ ok: true });
     return true;
