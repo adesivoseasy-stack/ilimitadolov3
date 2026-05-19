@@ -173,12 +173,16 @@ export function useCreateLicense() {
         if (configData?.value) testMessageLimit = parseInt(configData.value, 10) || 10;
       }
 
-      const durationHours = durationDays * 24;
+      // Todas as chaves pagas são mensais (30 dias). Wildcard mantém duração longa.
+      const effectiveDurationDays = isTestLicense
+        ? durationDays
+        : (isWildcard ? Math.max(durationDays, 36500) : 30);
+      const durationHours = effectiveDurationDays * 24;
       const expiresAt = new Date();
       if (isTestLicense) {
         expiresAt.setFullYear(expiresAt.getFullYear() + 100);
       } else {
-        expiresAt.setTime(expiresAt.getTime() + durationDays * 24 * 60 * 60 * 1000);
+        expiresAt.setTime(expiresAt.getTime() + effectiveDurationDays * 24 * 60 * 60 * 1000);
       }
 
       const { data, error } = await supabase
@@ -244,8 +248,10 @@ export function useRenewLicense() {
       const { data: newKey, error: keyError } = await supabase.rpc('generate_license_key');
       if (keyError) throw keyError;
 
+      // Renovação sempre mensal (30 dias), exceto wildcard
+      const effectiveDurationDays = oldLicense.is_wildcard ? Math.max(durationDays, 36500) : 30;
       const newExpiry = new Date();
-      newExpiry.setTime(newExpiry.getTime() + durationDays * 24 * 60 * 60 * 1000);
+      newExpiry.setTime(newExpiry.getTime() + effectiveDurationDays * 24 * 60 * 60 * 1000);
 
       // Create new license with same properties
       const { data: newLicense, error: createError } = await supabase
