@@ -285,7 +285,7 @@ enhanceBtn?.addEventListener('click', async () => {
   enhanceBtn.classList.add('loading');
   const label = enhanceBtn.querySelector('span');
   const prevLabel = label?.textContent;
-  if (label) label.textContent = 'Melhorando...';
+  if (label) label.textContent = 'Otimizando...';
   updateStatus('✨ Melhorando prompt...');
   try {
     const result = await bridge.ai.enhancePrompt(original);
