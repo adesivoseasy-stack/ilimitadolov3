@@ -498,6 +498,27 @@ function setupBridge(iframe) {
           break;
         }
 
+        // ---- AI Prompt Enhancer ----
+        case 'ai.enhancePrompt': {
+          const aiResp = await fetch(`${SUPABASE_URL}/functions/v1/enhance-prompt`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'apikey': SUPABASE_ANON_KEY,
+              'x-session-token': licenseSessionToken,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ prompt: payload?.prompt || '' }),
+          });
+          const aiJson = await aiResp.json().catch(() => ({}));
+          if (!aiResp.ok) {
+            error = aiJson?.error || `Erro HTTP ${aiResp.status}`;
+            break;
+          }
+          result = aiJson;
+          break;
+        }
+
         // ---- Download Project (client-side via background) ----
         case 'lovable.downloadProject': {
           const auth = await getAuthData();
