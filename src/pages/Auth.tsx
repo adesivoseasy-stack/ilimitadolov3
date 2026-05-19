@@ -74,7 +74,7 @@ function HeroLoopingTitle() {
         ))}
       </div>
 
-      {/* Logo original — desce do topo, cresce e vira Super Saiyajin */}
+      {/* Logo original — desce do topo e cresce */}
       <motion.div
         className="absolute inset-0 flex items-center justify-center pointer-events-none"
         animate={{
@@ -89,132 +89,11 @@ function HeroLoopingTitle() {
           repeat: Infinity,
         }}
       >
-        <div className="relative flex items-center justify-center">
-          {/* Aura SSJ: halo dourado pulsante */}
-          <motion.div
-            className="absolute -inset-16 rounded-full pointer-events-none"
-            style={{
-              background:
-                'radial-gradient(circle, rgba(255,221,87,0.55) 0%, rgba(255,170,0,0.35) 35%, rgba(255,80,0,0.15) 60%, transparent 75%)',
-              filter: 'blur(14px)',
-            }}
-            animate={{
-              scale: [0, 0, 0, 0, 1, 1.15, 0],
-              opacity: [0, 0, 0, 0, 0.95, 0.7, 0],
-            }}
-            transition={{
-              duration: CYCLE,
-              times: [0, 0.4, 0.6, 0.66, 0.82, 0.94, 1],
-              repeat: Infinity,
-            }}
-          />
-          {/* Aura interna piscando rápido */}
-          <motion.div
-            className="absolute -inset-10 rounded-full pointer-events-none"
-            style={{
-              background:
-                'radial-gradient(circle, rgba(255,255,200,0.85) 0%, rgba(255,210,80,0.5) 40%, transparent 70%)',
-              filter: 'blur(6px)',
-            }}
-            animate={{
-              opacity: [0, 0, 0, 0, 0.9, 0.4, 0.95, 0.5, 0.95, 0],
-              scale: [0.8, 0.8, 0.8, 0.8, 1, 1.08, 1.02, 1.1, 1.05, 0.8],
-            }}
-            transition={{
-              duration: CYCLE,
-              times: [0, 0.4, 0.6, 0.66, 0.82, 0.86, 0.9, 0.92, 0.94, 1],
-              repeat: Infinity,
-            }}
-          />
-          {/* Chamas subindo (spikes) */}
-          {Array.from({ length: 7 }).map((_, i) => {
-            const angle = (i / 7) * Math.PI - Math.PI / 2; // arco superior
-            const dx = Math.cos(angle) * 70;
-            const dy = Math.sin(angle) * 70 - 20;
-            return (
-              <motion.div
-                key={`flame-${i}`}
-                className="absolute w-2 h-16 rounded-full pointer-events-none"
-                style={{
-                  background:
-                    'linear-gradient(180deg, transparent 0%, rgba(255,200,60,0.95) 40%, rgba(255,120,0,0.9) 100%)',
-                  filter: 'blur(1.5px)',
-                  transformOrigin: '50% 100%',
-                  left: '50%',
-                  top: '50%',
-                }}
-                animate={{
-                  x: [0, 0, 0, 0, dx, dx, 0],
-                  y: [0, 0, 0, 0, dy, dy - 8, 0],
-                  scaleY: [0, 0, 0, 0, 1, 1.25, 0],
-                  opacity: [0, 0, 0, 0, 1, 0.6, 0],
-                  rotate: [0, 0, 0, 0, (angle * 180) / Math.PI + 90, (angle * 180) / Math.PI + 90, 0],
-                }}
-                transition={{
-                  duration: CYCLE,
-                  times: [0, 0.4, 0.6, 0.66, 0.82, 0.94, 1],
-                  repeat: Infinity,
-                }}
-              />
-            );
-          })}
-          {/* Raios elétricos (lightning) */}
-          {Array.from({ length: 5 }).map((_, i) => {
-            const angle = (i / 5) * Math.PI * 2;
-            const dx = Math.cos(angle) * 90;
-            const dy = Math.sin(angle) * 90;
-            return (
-              <motion.div
-                key={`bolt-${i}`}
-                className="absolute h-px w-24 pointer-events-none"
-                style={{
-                  background:
-                    'linear-gradient(90deg, transparent, rgba(180,220,255,1) 50%, transparent)',
-                  boxShadow: '0 0 8px rgba(120,200,255,0.95)',
-                  left: '50%',
-                  top: '50%',
-                  transform: `rotate(${(angle * 180) / Math.PI}deg)`,
-                  transformOrigin: '0 50%',
-                }}
-                animate={{
-                  x: [0, 0, 0, 0, dx * 0.2, dx, 0],
-                  y: [0, 0, 0, 0, dy * 0.2, dy, 0],
-                  opacity: [0, 0, 0, 0, 1, 0, 1, 0, 1, 0],
-                  scaleX: [0, 0, 0, 0, 1, 1.4, 0.8, 1.3, 1, 0],
-                }}
-                transition={{
-                  duration: CYCLE,
-                  times: [0, 0.4, 0.6, 0.66, 0.82, 0.86, 0.89, 0.92, 0.95, 1],
-                  repeat: Infinity,
-                  delay: i * 0.05,
-                }}
-              />
-            );
-          })}
-          {/* Logo com glow dourado durante a transformação */}
-          <motion.img
-            src={logoImg}
-            alt="Logo"
-            className="relative z-10 h-28 lg:h-32 xl:h-36 w-auto"
-            animate={{
-              filter: [
-                'drop-shadow(0 0 12px hsl(var(--primary) / 0.5))',
-                'drop-shadow(0 0 12px hsl(var(--primary) / 0.5))',
-                'drop-shadow(0 0 12px hsl(var(--primary) / 0.5))',
-                'drop-shadow(0 0 12px hsl(var(--primary) / 0.5))',
-                'drop-shadow(0 0 40px rgba(255,210,80,0.95)) drop-shadow(0 0 80px rgba(255,150,0,0.7))',
-                'drop-shadow(0 0 60px rgba(255,230,120,1)) drop-shadow(0 0 100px rgba(255,170,0,0.8))',
-                'drop-shadow(0 0 12px hsl(var(--primary) / 0.5))',
-              ],
-              scale: [1, 1, 1, 1, 1.02, 1.05, 1],
-            }}
-            transition={{
-              duration: CYCLE,
-              times: [0, 0.4, 0.6, 0.66, 0.82, 0.94, 1],
-              repeat: Infinity,
-            }}
-          />
-        </div>
+        <img
+          src={logoImg}
+          alt="Logo"
+          className="h-28 lg:h-32 xl:h-36 w-auto drop-shadow-[0_0_40px_hsl(var(--primary)/0.55)]"
+        />
       </motion.div>
     </div>
   );
