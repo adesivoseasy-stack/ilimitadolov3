@@ -51,6 +51,9 @@ const bridge = {
   templates: {
     getAll: () => bridge._call('templates.getAll'),
   },
+  ai: {
+    enhancePrompt: (prompt) => bridge._call('ai.enhancePrompt', { prompt }),
+  },
   runtime: {
     openUrl: (url) => bridge._call('runtime.openUrl', { url }),
   },
