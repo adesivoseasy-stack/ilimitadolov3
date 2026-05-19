@@ -152,18 +152,13 @@ export default function ResellerLicenses() {
                   <div><Label className="font-display text-xs uppercase tracking-wider">Email do cliente</Label><Input type="email" placeholder="cliente@exemplo.com" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="bg-background/50 border-border/30" /></div>
                   <div>
                     <Label className="font-display text-xs uppercase tracking-wider">Duração</Label>
-                    <div className="grid grid-cols-4 gap-2 mt-2">
+                    <div className="grid grid-cols-2 gap-2 mt-2">
                     {[
                       { label: '7 dias', value: '7' },
                       { label: '30 dias', value: '30' },
-                      { label: '1 ano', value: '365' },
                     ].map((option) => (
                         <Button key={option.value} type="button" variant={newDuration === option.value ? 'default' : 'outline'} size="sm" className={`text-xs font-display ${newDuration === option.value ? 'bg-gradient' : 'border-border/30 hover:bg-primary/10'}`} onClick={() => setNewDuration(option.value)}>{option.label}</Button>
                       ))}
-                    </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Input type="number" placeholder="Ou dias..." value={!['7', '30', '365'].includes(newDuration) ? newDuration : ''} onChange={(e) => setNewDuration(e.target.value)} className="flex-1 bg-background/50 border-border/30" />
-                      <span className="text-xs text-muted-foreground font-display">dias</span>
                     </div>
                   </div>
                   <div><Label className="font-display text-xs uppercase tracking-wider">Preço (R$)</Label><Input type="number" step="0.01" placeholder="0.00" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} className="bg-background/50 border-border/30" /></div>
@@ -247,11 +242,11 @@ export default function ResellerLicenses() {
                           {!license.license_key.startsWith('TESTE-') && (
                             <>
                               <DropdownMenuItem onClick={() => { setEditNameLicense({ id: license.id, currentName: license.customer_name || '' }); setEditNameValue(license.customer_name || ''); }}><UserPen className="mr-2 h-4 w-4" />Editar cliente</DropdownMenuItem>
-                              {license.status === 'active' && (
+                              {license.status === 'expired' && (
                                 <>
                                   <DropdownMenuSeparator className="bg-border/20" />
                                   <DropdownMenuItem onClick={() => { setRenewDialog({ licenseId: license.id, licenseKey: license.license_key }); setRenewDays('30'); }}>
-                                    <RefreshCw className="mr-2 h-4 w-4" />Renovar chave
+                                    <RefreshCw className="mr-2 h-4 w-4" />Renovar +30 dias
                                   </DropdownMenuItem>
                                 </>
                               )}
@@ -310,23 +305,12 @@ export default function ResellerLicenses() {
             <DialogHeader>
               <DialogTitle className="font-display">Renovar Licença</DialogTitle>
               <DialogDescription>
-                A chave atual <code className="font-mono text-xs">{renewDialog?.licenseKey}</code> será expirada e uma nova chave será gerada.
+                A chave <code className="font-mono text-xs">{renewDialog?.licenseKey}</code> está vencida. Ao renovar por 30 dias, 1 crédito (valor da licença) será consumido e uma nova chave será gerada.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-2">
-              <div className="grid grid-cols-4 gap-2">
-                {[7, 30, 90, 365].map((days) => (
-                  <Button key={days} type="button" variant={renewDays === String(days) ? 'default' : 'outline'} size="sm" className={`text-xs font-display ${renewDays === String(days) ? 'bg-gradient' : 'border-border/30 hover:bg-primary/10'}`} onClick={() => setRenewDays(String(days))}>{days} dias</Button>
-                ))}
-              </div>
-              <div className="flex items-center gap-2">
-                <Input type="number" placeholder="Ou dias..." value={![7, 30, 90, 365].map(String).includes(renewDays) ? renewDays : ''} onChange={(e) => setRenewDays(e.target.value)} className="flex-1 bg-background/50 border-border/30" />
-                <span className="text-xs text-muted-foreground font-display">dias</span>
-              </div>
-            </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setRenewDialog(null)} className="border-border/30">Cancelar</Button>
-              <Button onClick={() => { if (renewDialog) { renewLicense.mutate({ licenseId: renewDialog.licenseId, durationDays: parseInt(renewDays) || 30 }); setRenewDialog(null); } }} disabled={renewLicense.isPending} className="bg-gradient font-display">{renewLicense.isPending ? 'Renovando...' : 'Renovar'}</Button>
+              <Button onClick={() => { if (renewDialog) { renewLicense.mutate({ licenseId: renewDialog.licenseId, durationDays: 30 }); setRenewDialog(null); } }} disabled={renewLicense.isPending} className="bg-gradient font-display">{renewLicense.isPending ? 'Renovando...' : 'Renovar +30 dias'}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
