@@ -1018,60 +1018,33 @@ export default function ResellerDashboard() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl">
                 <Flame className="h-6 w-6 text-orange-500" />
-                🔥 Promoção Relâmpago
+                🎉 Promoção de Inauguração
               </DialogTitle>
               <p className="text-sm text-muted-foreground">
-                Chaves promocionais a <span className="font-bold text-orange-500">R$ 29,90</span> — só hoje, até às 20:00!
+                Pacote especial: <span className="font-bold text-orange-500">10 chaves por R$ 249,90</span> — só nas próximas 24h!
               </p>
             </DialogHeader>
             <div className="space-y-5 py-4">
               <div className="text-center space-y-2">
-                <Label className="text-sm text-muted-foreground">Quantas chaves você quer?</Label>
-                <div className="flex items-center justify-center gap-4">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10 rounded-xl"
-                    onClick={() => setPromoQty(Math.max(1, promoQty - 1))}
-                  >
-                    -
-                  </Button>
-                  <span className="text-4xl font-bold text-foreground min-w-[60px] text-center">{promoQty}</span>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10 rounded-xl"
-                    onClick={() => setPromoQty(promoQty + 1)}
-                  >
-                    +
-                  </Button>
+                <Label className="text-sm text-muted-foreground">Pacote fixo</Label>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-5xl font-bold text-foreground">{PROMO_QTY}</span>
+                  <span className="text-lg text-muted-foreground">chaves</span>
                 </div>
-                <div className="flex justify-center gap-2 mt-3">
-                  {[1, 3, 5, 10].map(q => (
-                    <Button
-                      key={q}
-                      variant={promoQty === q ? 'default' : 'outline'}
-                      size="sm"
-                      className={`rounded-full text-xs ${promoQty === q ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white border-0' : ''}`}
-                      onClick={() => setPromoQty(q)}
-                    >
-                      {q} {q === 1 ? 'chave' : 'chaves'}
-                    </Button>
-                  ))}
-                </div>
+                <p className="text-xs text-muted-foreground">Equivalente a R$ 24,99 por chave</p>
               </div>
               <div className="rounded-2xl bg-card border border-border/50 p-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Preço por chave</span>
-                  <span className="font-semibold text-orange-500">R$ 29,90</span>
+                  <span className="font-semibold text-orange-500">R$ 24,99</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Quantidade</span>
-                  <span className="font-semibold">{promoQty}</span>
+                  <span className="font-semibold">{PROMO_QTY}</span>
                 </div>
                 <div className="border-t border-border/50 pt-2 flex justify-between">
                   <span className="font-semibold text-foreground">Total</span>
-                  <span className="text-xl font-bold text-orange-500">R$ {getPromoTotal(promoQty).toFixed(2)}</span>
+                  <span className="text-xl font-bold text-orange-500">R$ {PROMO_TOTAL.toFixed(2)}</span>
                 </div>
               </div>
               <Button
