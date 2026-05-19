@@ -306,6 +306,38 @@ export function LvbCreditsTab() {
     return () => clearInterval(interval);
   }, [step, pixState?.orderId, pixState?.creditos, toast, fetchOrders, lvb]);
 
+  // Detecta cancelamento (admin) durante created/promote/tracking e limpa a tela
+  useEffect(() => {
+    if (!['created', 'promote', 'tracking'].includes(step)) return;
+    if (!order?.pedidoId && !pixState?.orderId) return;
+
+    const interval = setInterval(async () => {
+      const query = supabase
+        .from('lvb_credit_orders' as any)
+        .select('status')
+        .limit(1);
+      const { data } = order?.pedidoId
+        ? await query.eq('external_order_id', order.pedidoId).maybeSingle()
+        : await query.eq('id', pixState!.orderId).maybeSingle();
+      const status = (data as any)?.status;
+      if (status === 'cancelado' || status === 'falha') {
+        clearInterval(interval);
+        toast({
+          title: status === 'cancelado' ? 'Pedido cancelado' : 'Pedido com falha',
+          description: 'O pedido foi cancelado. Você pode iniciar uma nova compra.',
+          variant: 'destructive',
+        });
+        setStep('select');
+        setOrder(null);
+        setPixState(null);
+        localStorage.removeItem(WIZARD_STORAGE_KEY);
+        fetchOrders();
+      }
+    }, 8000);
+
+    return () => clearInterval(interval);
+  }, [step, order?.pedidoId, pixState?.orderId, toast, fetchOrders]);
+
   useEffect(() => {
     if (!order?.pedidoId || order.emailBot) return;
 
