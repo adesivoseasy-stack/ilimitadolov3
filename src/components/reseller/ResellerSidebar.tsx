@@ -24,25 +24,23 @@ export function ResellerSidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const downloadExtension = async () => {
+  const EXTENSION_URL =
+    'https://wvelcefgihlxcnrmslul.supabase.co/storage/v1/object/public/public-assets/extensions/ilimitado-lov-v4.3.0.zip';
+
+  const downloadExtension = () => {
     if (isDownloading) return;
     setIsDownloading(true);
     try {
-      const res = await fetch(`/ilimitado-lov-v4.3.0.zip?t=${Date.now()}`, { cache: 'no-store' });
-      if (!res.ok) throw new Error(`Falha ao baixar (${res.status})`);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = url;
+      link.href = `${EXTENSION_URL}?t=${Date.now()}`;
       link.download = 'ilimitado-lov-v4.3.0.zip';
+      link.target = '_blank';
+      link.rel = 'noopener';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (err: any) {
-      alert(err?.message || 'Erro ao baixar a extensão');
     } finally {
-      setIsDownloading(false);
+      setTimeout(() => setIsDownloading(false), 800);
     }
   };
 
