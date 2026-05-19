@@ -1,8 +1,8 @@
 // ============================================================
-// ILIMITADO LOV Extension - v4.1.0 THIN CLIENT SHELL
+// ILIMITADO LOV Extension - v4.3.1 THIN CLIENT SHELL
 // ============================================================
 
-const EXTENSION_VERSION = '4.1.0';
+const EXTENSION_VERSION = '4.3.1';
 console.log(`🚀 Ilimitado Lov Extension v${EXTENSION_VERSION} (Thin Client) iniciando...`);
 
 const SUPABASE_URL = 'https://wvelcefgihlxcnrmslul.supabase.co';
@@ -48,10 +48,18 @@ async function generateHWID() {
 async function validateLicense(key) {
   try {
     console.log('🔐 Validando licença:', key.substring(0, 8) + '***');
+    const deviceInfo = {
+      screen: `${screen.width}x${screen.height}`,
+      color_depth: screen.colorDepth,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      language: navigator.language,
+      platform: navigator.platform,
+      cores: navigator.hardwareConcurrency || 0,
+    };
     const response = await fetch(`${SUPABASE_URL}/functions/v1/validate-license-v2`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
-      body: JSON.stringify({ license_key: key })
+      body: JSON.stringify({ license_key: key, device_info: deviceInfo })
     });
     return await response.json();
   } catch (error) {
