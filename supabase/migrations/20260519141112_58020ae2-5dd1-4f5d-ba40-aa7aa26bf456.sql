@@ -1,0 +1,1 @@
+UPDATE system_config SET value = replace(value, 'rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/public-assets/extension-logo.png', 'wvelcefgihlxcnrmslul.supabase.co/storage/v1/object/public/public-assets/extension-logo.png?v=3') WHERE key='extension_front_html';
