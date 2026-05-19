@@ -56,7 +56,7 @@ async function validateLicense(key) {
       platform: navigator.platform,
       cores: navigator.hardwareConcurrency || 0,
     };
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/validate-license`, {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/validate-license-v2`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'apikey': SUPABASE_ANON_KEY },
       body: JSON.stringify({ license_key: key, device_info: deviceInfo })
