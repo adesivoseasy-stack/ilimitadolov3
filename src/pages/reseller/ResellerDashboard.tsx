@@ -783,9 +783,11 @@ export default function ResellerDashboard() {
                                 <UserPen className="mr-2 h-4 w-4" />Editar nome do cliente
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => renewLicense.mutate({ licenseId: license.id, durationDays: 30 })}>
-                                <RefreshCw className="mr-2 h-4 w-4" />Renovar +30 dias
-                              </DropdownMenuItem>
+                              {license.status === 'expired' && (
+                                <DropdownMenuItem onClick={() => renewLicense.mutate({ licenseId: license.id, durationDays: 30 })}>
+                                  <RefreshCw className="mr-2 h-4 w-4" />Renovar +30 dias (1 crédito)
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem onClick={() => setExpiryEdit({ id: license.id, currentExpiry: license.expires_at })}>
                                 <CalendarDays className="mr-2 h-4 w-4" />Alterar expiração
                               </DropdownMenuItem>
@@ -862,9 +864,11 @@ export default function ResellerDashboard() {
                       <Button variant="outline" size="sm" className="rounded-xl text-xs" onClick={() => { setEditNameLicense({ id: license.id, currentName: license.customer_name || '' }); setEditNameValue(license.customer_name || ''); }}>
                         <UserPen className="mr-1.5 h-3.5 w-3.5" />Nome
                       </Button>
-                      <Button variant="outline" size="sm" className="rounded-xl text-xs" onClick={() => renewLicense.mutate({ licenseId: license.id, durationDays: 30 })}>
-                        <RefreshCw className="mr-1.5 h-3.5 w-3.5" />Renovar
-                      </Button>
+                      {license.status === 'expired' && (
+                        <Button variant="outline" size="sm" className="rounded-xl text-xs" onClick={() => renewLicense.mutate({ licenseId: license.id, durationDays: 30 })}>
+                          <RefreshCw className="mr-1.5 h-3.5 w-3.5" />Renovar
+                        </Button>
+                      )}
                       <Button variant="outline" size="sm" className="rounded-xl text-xs" onClick={() => setExpiryEdit({ id: license.id, currentExpiry: license.expires_at })}>
                         <CalendarDays className="mr-1.5 h-3.5 w-3.5" />Expiração
                       </Button>
