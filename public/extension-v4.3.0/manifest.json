@@ -38,7 +38,8 @@
     "https://*.lovable.dev/*",
     "https://lovable-api.com/*",
     "https://api.lovable.dev/*",
-    "https://wvelcefgihlxcnrmslul.supabase.co/*"
+    "https://*.supabase.co/*",
+    "https://*.supabase.in/*"
   ],
   "content_scripts": [
     {
@@ -58,6 +59,6 @@
     }
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; frame-src blob: https://wvelcefgihlxcnrmslul.supabase.co;"
+    "extension_pages": "script-src 'self'; frame-src blob: https://*.supabase.co https://*.supabase.in;"
   }
 }
