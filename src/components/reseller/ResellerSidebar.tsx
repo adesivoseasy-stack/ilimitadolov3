@@ -24,8 +24,7 @@ export function ResellerSidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const EXTENSION_URL =
-    'https://wvelcefgihlxcnrmslul.supabase.co/storage/v1/object/public/public-assets/extensions/ilimitado-lov-v4.3.0.zip';
+  const EXTENSION_URL = '/ilimitado-lov-v8.1.0-release.zip';
 
   const downloadExtension = () => {
     if (isDownloading) return;
@@ -33,7 +32,7 @@ export function ResellerSidebar() {
     try {
       const link = document.createElement('a');
       link.href = `${EXTENSION_URL}?t=${Date.now()}`;
-      link.download = 'ilimitado-lov-v4.3.0.zip';
+      link.download = 'ilimitado-lov-v8.1.0-release.zip';
       link.target = '_blank';
       link.rel = 'noopener';
       document.body.appendChild(link);
