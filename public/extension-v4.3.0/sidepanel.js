@@ -656,6 +656,8 @@ function showLicenseScreen() {
   const rr = document.getElementById('remoteUiRoot');
   if (ls) ls.style.display = 'flex';
   if (rr) { rr.style.display = 'none'; rr.innerHTML = ''; }
+  const fab = document.getElementById('watermarkFab');
+  if (fab) fab.classList.remove('visible');
 }
 
 async function fetchRemoteUiHtml() {
