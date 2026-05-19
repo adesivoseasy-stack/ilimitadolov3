@@ -249,6 +249,11 @@ messageEl?.addEventListener('keydown', (e) => {
     handleSend();
   }
 });
+messageEl?.addEventListener('input', () => {
+  if (!messageEl) return;
+  messageEl.style.height = 'auto';
+  messageEl.style.height = Math.min(messageEl.scrollHeight, 200) + 'px';
+});
 
 // Remove Watermark quick action
 const removeWatermarkBtn = document.getElementById('removeWatermarkBtn');

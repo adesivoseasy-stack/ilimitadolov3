@@ -319,12 +319,14 @@ body {
   box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 20px rgba(139,92,246,0.08);
 }
 .input-wrapper textarea {
-  flex: 1; min-height: 22px; max-height: 120px;
+  flex: 1; min-height: 60px; max-height: 200px;
   resize: none; border: none; background: transparent;
   color: var(--text); font-size: 14px;
   font-family: inherit; line-height: 1.4;
   padding: 0; outline: none;
-  overflow-y: hidden;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
   transition: height 0.1s ease;
 }
 .input-wrapper textarea::placeholder { color: var(--text-muted); }
