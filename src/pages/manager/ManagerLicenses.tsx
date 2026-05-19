@@ -338,7 +338,8 @@ function ExpiryInfo({ expiresAt, durationHours, firstActivatedAt }: { expiresAt:
   if (durationHours && !firstActivatedAt) {
     const totalMinutes = durationHours * 60;
     if (totalMinutes < 60) return <span className="text-xs text-muted-foreground">⏳ {Math.round(totalMinutes)}min (aguardando)</span>;
-    return <span className="text-xs text-muted-foreground">⏳ {Math.round(durationHours)}h (aguardando)</span>;
+    const days = Math.round(durationHours / 24);
+    return <span className="text-xs text-muted-foreground">⏳ {days}d (aguardando ativação)</span>;
   }
   const now = new Date();
   const expiry = parseISO(expiresAt);

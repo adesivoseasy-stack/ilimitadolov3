@@ -173,13 +173,15 @@ export function useCreateLicense() {
         if (configData?.value) testMessageLimit = parseInt(configData.value, 10) || 10;
       }
 
-      // Todas as chaves pagas são mensais (30 dias). Wildcard mantém duração longa.
+      // Paid keys: 30 dias contados a partir da primeira ativação por dispositivo.
+      // Wildcard: duração longa imediata. Test: comportamento original.
       const effectiveDurationDays = isTestLicense
         ? durationDays
         : (isWildcard ? Math.max(durationDays, 36500) : 30);
       const durationHours = effectiveDurationDays * 24;
       const expiresAt = new Date();
-      if (isTestLicense) {
+      if (isTestLicense || !isWildcard) {
+        // Test e pagas: placeholder de 100 anos. A expiração real é definida na 1ª ativação.
         expiresAt.setFullYear(expiresAt.getFullYear() + 100);
       } else {
         expiresAt.setTime(expiresAt.getTime() + effectiveDurationDays * 24 * 60 * 60 * 1000);
@@ -193,8 +195,8 @@ export function useCreateLicense() {
           expires_at: expiresAt.toISOString(),
           price: price || 0,
           notes,
-          duration_hours: isTestLicense ? durationHours : null,
-          first_activated_at: isTestLicense ? null : new Date().toISOString(),
+          duration_hours: isWildcard ? null : durationHours,
+          first_activated_at: isWildcard ? new Date().toISOString() : null,
           is_wildcard: isWildcard || false,
           max_messages: isTestLicense ? testMessageLimit : null,
           created_by: user?.id || null,
@@ -268,12 +270,15 @@ export function useRenewLicense() {
       const { data: newKey, error: keyError } = await supabase.rpc('generate_license_key');
       if (keyError) throw keyError;
 
-      // Renovação sempre mensal (30 dias), exceto wildcard
+      // Renovação: 30 dias contados a partir da 1ª ativação da nova chave (exceto wildcard)
       const effectiveDurationDays = oldLicense.is_wildcard ? Math.max(durationDays, 36500) : 30;
       const newExpiry = new Date();
-      newExpiry.setTime(newExpiry.getTime() + effectiveDurationDays * 24 * 60 * 60 * 1000);
+      if (oldLicense.is_wildcard) {
+        newExpiry.setTime(newExpiry.getTime() + effectiveDurationDays * 24 * 60 * 60 * 1000);
+      } else {
+        newExpiry.setFullYear(newExpiry.getFullYear() + 100);
+      }
 
-      // Create new license with same properties
       const { data: newLicense, error: createError } = await supabase
         .from('licenses')
         .insert({
@@ -282,8 +287,8 @@ export function useRenewLicense() {
           expires_at: newExpiry.toISOString(),
           price: oldLicense.price,
           notes: `Renovação da chave ${oldLicense.license_key}`,
-          duration_hours: null,
-          first_activated_at: new Date().toISOString(),
+          duration_hours: oldLicense.is_wildcard ? null : effectiveDurationDays * 24,
+          first_activated_at: oldLicense.is_wildcard ? new Date().toISOString() : null,
           is_wildcard: oldLicense.is_wildcard,
           created_by: oldLicense.created_by,
           max_messages: oldLicense.max_messages,

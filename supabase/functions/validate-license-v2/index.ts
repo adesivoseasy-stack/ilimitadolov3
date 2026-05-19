@@ -172,37 +172,42 @@ Deno.serve(async (req) => {
     let expiresAt = new Date(license.expires_at);
     const now = new Date();
 
+    const isTestLike = !!license.duration_hours && license.duration_hours <= 0.5;
+
     if (license.duration_hours && !license.first_activated_at) {
-      // First activation of a test license - cap at 10 minutes max
-      const MAX_TEST_MINUTES = 10;
-      const maxDurationHours = MAX_TEST_MINUTES / 60;
-      const cappedDuration = Math.min(license.duration_hours, maxDurationHours);
-      const durationMs = cappedDuration * 60 * 60 * 1000;
+      // 1ª ativação — test licenses respeitam cap de 10min; pagas usam duration_hours integral (ex.: 720h = 30d)
+      let effectiveDuration = license.duration_hours;
+      if (isTestLike) {
+        const MAX_TEST_MINUTES = 10;
+        const maxDurationHours = MAX_TEST_MINUTES / 60;
+        effectiveDuration = Math.min(license.duration_hours, maxDurationHours);
+      }
+      const durationMs = effectiveDuration * 60 * 60 * 1000;
       expiresAt = new Date(now.getTime() + durationMs);
-      
-      console.log(`[validate-license-v2] First activation of test license. Duration: ${cappedDuration}h (max ${maxDurationHours}h), Expires: ${expiresAt.toISOString()}`);
-      
+
+      console.log(`[validate-license-v2] Primeira ativação. Duration: ${effectiveDuration}h, Expires: ${expiresAt.toISOString()}`);
+
       await supabase
         .from('licenses')
-        .update({ 
+        .update({
           first_activated_at: now.toISOString(),
           expires_at: expiresAt.toISOString(),
-          duration_hours: cappedDuration,
+          duration_hours: effectiveDuration,
         })
         .eq('id', license.id);
 
       await supabase.from('license_logs').insert({
         license_id: license.id,
-        action: 'test_license_activated',
-        details: { 
-          duration_hours: cappedDuration,
+        action: isTestLike ? 'test_license_activated' : 'license_activated',
+        details: {
+          duration_hours: effectiveDuration,
           expires_at: expiresAt.toISOString(),
           hwid,
           ip: clientIP,
         },
       });
-    } else if (license.duration_hours && license.first_activated_at) {
-      // Already activated test license - enforce max 10 min from first activation
+    } else if (license.duration_hours && license.first_activated_at && isTestLike) {
+      // Test license já ativada — força cap de 10min desde a 1ª ativação
       const MAX_TEST_MINUTES = 10;
       const maxExpiry = new Date(new Date(license.first_activated_at).getTime() + MAX_TEST_MINUTES * 60 * 1000);
       if (expiresAt > maxExpiry) {
