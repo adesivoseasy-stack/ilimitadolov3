@@ -9,6 +9,7 @@ import { Loader2, ArrowLeft, User, Mail, Lock, Building, Phone, Shield, Trending
 import { z } from 'zod';
 import logoImg from '@/assets/logo.png';
 import { motion } from 'framer-motion';
+import { translateAuthError } from '@/lib/authErrors';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Nome deve ter no mínimo 2 caracteres').max(100),
@@ -93,7 +94,7 @@ export default function ResellerRegister() {
     if (authError) {
       toast({
         title: 'Erro no cadastro',
-        description: authError.message === 'User already registered' ? 'Este email já está cadastrado.' : authError.message,
+        description: translateAuthError(authError.message),
         variant: 'destructive',
       });
       setIsSubmitting(false);

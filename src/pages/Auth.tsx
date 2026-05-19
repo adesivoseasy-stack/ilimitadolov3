@@ -11,6 +11,7 @@ import { Loader2, ArrowLeft, KeyRound, Lock, Mail, Shield, Zap, Globe, Sparkles,
 import { z } from 'zod';
 import logoImg from '@/assets/logo.png';
 import { motion, AnimatePresence } from 'framer-motion';
+import { translateAuthError } from '@/lib/authErrors';
 
 /**
  * Looping hero: letras de "Gestão de Licenças Inteligente" caem no chão,
@@ -157,7 +158,7 @@ export default function Auth() {
       if (error) {
         toast({
           title: 'Erro no cadastro',
-          description: error.message === 'User already registered' ? 'Este email já está cadastrado. Faça login.' : error.message,
+          description: translateAuthError(error.message),
           variant: 'destructive',
         });
         setIsSubmitting(false);
@@ -176,18 +177,9 @@ export default function Auth() {
     }
     const { error } = await signIn(data.email, data.password);
     if (error) {
-      const msg = error.message || '';
-      let description = msg;
-      if (msg === 'Invalid login credentials') {
-        description = 'Credenciais inválidas. Verifique seu email e senha.';
-      } else if (msg.toLowerCase().includes('failed to fetch') || msg.toLowerCase().includes('networkerror') || msg.toLowerCase().includes('load failed')) {
-        description = 'Erro de conexão. Verifique sua internet e tente novamente.';
-      } else if (msg.toLowerCase().includes('email not confirmed')) {
-        description = 'Email não confirmado. Verifique sua caixa de entrada.';
-      }
       toast({
         title: 'Erro no login',
-        description,
+        description: translateAuthError(error.message),
         variant: 'destructive',
       });
       setIsSubmitting(false);
