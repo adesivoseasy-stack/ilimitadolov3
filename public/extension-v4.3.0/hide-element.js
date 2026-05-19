@@ -94,6 +94,46 @@ setInterval(destruirElemento, 200);
 const observer = new MutationObserver(() => destruirElemento());
 observer.observe(document.body, { childList: true, subtree: true });
 
+// ============= QUICK SUGGESTIONS CAPTURE =============
+const SUGGESTION_VERBS = /^(Criar|Cria|Crie|Personalizar|Personaliza|Adicionar|Adiciona|Adicione|Configurar|Configura|Configure|Conectar|Conecta|Conecte|Melhorar|Melhora|Otimizar|Otimiza|Construir|Constr[óo]i|Gerar|Gera|Implementar|Implementa|Refatorar|Refatora|Corrigir|Corrige|Ajustar|Ajusta|Mudar|Muda|Trocar|Troca|Remover|Remove|Instalar|Instala|Create|Add|Build|Make|Configure|Connect|Improve|Optimize|Generate|Implement|Refactor|Fix|Adjust|Change|Switch|Remove|Install|Set up|Setup|Personalize|Customize|Design)\b/i;
+let __lastSuggestionsSig = '';
+function captureQuickSuggestions() {
+  try {
+    const buttons = document.querySelectorAll('button');
+    const found = [];
+    const seen = new Set();
+    for (const btn of buttons) {
+      if (!btn || btn.disabled) continue;
+      // Skip buttons inside the chat textarea form (send, attach, etc.)
+      if (btn.closest('form')?.querySelector('textarea')) {
+        // ok, may include suggestions near textarea; check further
+      }
+      // Skip icon-only buttons (no text)
+      const text = (btn.textContent || '').replace(/\s+/g, ' ').trim();
+      if (!text || text.length < 4 || text.length > 60) continue;
+      // Must start with an action verb
+      if (!SUGGESTION_VERBS.test(text)) continue;
+      // Skip obvious chrome: "Enable notifications", buttons with role=tab
+      if (btn.getAttribute('role') === 'tab') continue;
+      if (/notification|enable|fix all|show more|publish|deploy|github|connect to/i.test(text)) continue;
+      // Visibility check
+      const r = btn.getBoundingClientRect();
+      if (r.width < 30 || r.height < 18) continue;
+      const style = getComputedStyle(btn);
+      if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') continue;
+      if (seen.has(text)) continue;
+      seen.add(text);
+      found.push({ text });
+      if (found.length >= 12) break;
+    }
+    const sig = found.map(f => f.text).join('|');
+    if (sig === __lastSuggestionsSig) return;
+    __lastSuggestionsSig = sig;
+    chrome.runtime?.sendMessage({ action: 'suggestionsCaptured', items: found }).catch(() => {});
+  } catch (_) {}
+}
+setInterval(captureQuickSuggestions, 1500);
+
 const originalFetch = window.fetch.bind(window);
 window.fetch = function(...args) {
     const [url, options] = args;
