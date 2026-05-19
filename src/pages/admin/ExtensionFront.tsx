@@ -378,6 +378,25 @@ body {
 .enhance-btn.loading svg { animation: enhanceSpin 1s linear infinite; }
 @keyframes enhanceSpin { to { transform: rotate(360deg); } }
 
+/* Quick suggestions (captured from Lovable) */
+.quick-suggestions {
+  display: none; flex-wrap: nowrap; gap: 6px;
+  padding: 8px 12px 0; overflow-x: auto;
+  scrollbar-width: none;
+}
+.quick-suggestions::-webkit-scrollbar { display: none; }
+.qs-chip {
+  flex-shrink: 0; white-space: nowrap;
+  padding: 6px 12px; height: 28px;
+  border-radius: 100px;
+  background: rgba(139,92,246,0.10);
+  color: var(--text-primary);
+  border: 1px solid rgba(139,92,246,0.30);
+  font-size: 11.5px; font-weight: 500; cursor: pointer;
+  transition: all 0.18s ease;
+}
+.qs-chip:hover { background: rgba(139,92,246,0.22); border-color: rgba(139,92,246,0.55); transform: translateY(-1px); }
+
 /* Templates */
 .templates-container { display: none; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; padding: 16px; gap: 12px; }
 .templates-container.visible { display: flex; }
@@ -446,6 +465,7 @@ body {
   <div class="input-area">
     <input type="file" id="fileInput" multiple style="display:none">
     <div id="filePreview" class="file-preview"></div>
+    <div id="quickSuggestions" class="quick-suggestions"></div>
     <div class="input-wrapper">
       <button class="attach-btn" id="attachBtn" title="Anexar arquivo">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.51a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>

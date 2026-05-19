@@ -60,6 +60,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.action === 'suggestionsCaptured') {
+    chrome.runtime.sendMessage({
+      action: 'suggestionsCapturedRelay',
+      items: message.items || []
+    }).catch(() => {});
+    sendResponse({ ok: true });
+    return true;
+  }
+
   // Download project source-code (CORS-free from background)
   if (message.action === 'downloadSourceCode') {
     const { projectId, token } = message;
