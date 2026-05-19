@@ -104,7 +104,9 @@ export default function ResellerDashboard() {
   const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean } | null>(null);
 
   const [isPromoOpen, setIsPromoOpen] = useState(false);
-  const [promoQty, setPromoQty] = useState(1);
+  const PROMO_QTY = 10;
+  const PROMO_TOTAL = 249.90;
+  const [promoQty] = useState(PROMO_QTY);
   const [isPromoAvailable, setIsPromoAvailable] = useState(false);
   const [promoTimeLeft, setPromoTimeLeft] = useState('');
   const [warningMessage, setWarningMessage] = useState('');
@@ -113,22 +115,25 @@ export default function ResellerDashboard() {
   const [deadlineCountdown, setDeadlineCountdown] = useState('');
 
   useEffect(() => {
-    // Promoção Relâmpago: SÓ HOJE até as 20:00
-    const PROMO_END = new Date('2026-05-07T20:00:00-03:00');
+    // Promoção de Inauguração: 10 chaves por R$249,90
+    // Janela: 19/05/2026 16:20 BRT até 20/05/2026 16:20 BRT
+    const PROMO_START = new Date('2026-05-19T16:20:00-03:00');
+    const PROMO_END = new Date('2026-05-20T16:20:00-03:00');
     const checkPromo = () => {
       const now = new Date();
       const diffMs = PROMO_END.getTime() - now.getTime();
-      const isActive = diffMs > 0 && now.toDateString() === PROMO_END.toDateString();
+      const isActive = now.getTime() >= PROMO_START.getTime() && diffMs > 0;
       setIsPromoAvailable(isActive);
       if (isActive) {
-        const totalMinLeft = Math.floor(diffMs / 60000);
-        const hoursLeft = Math.floor(totalMinLeft / 60);
-        const minsLeft = totalMinLeft % 60;
-        setPromoTimeLeft(hoursLeft > 0 ? `${hoursLeft}h${minsLeft}min` : `${minsLeft}min`);
+        const totalSec = Math.floor(diffMs / 1000);
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        setPromoTimeLeft(h > 0 ? `${h}h${String(m).padStart(2,'0')}m` : `${m}m${String(s).padStart(2,'0')}s`);
       }
     };
     checkPromo();
-    const interval = setInterval(checkPromo, 10000);
+    const interval = setInterval(checkPromo, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -192,8 +197,7 @@ export default function ResellerDashboard() {
   }, [deadlineAt]);
 
   const handleBuyPromo = () => {
-    if (promoQty < 1) return;
-    setPendingPixAction({ qty: promoQty, promo: true });
+    setPendingPixAction({ qty: PROMO_QTY, promo: true });
     setPixCustomerOpen(true);
   };
 
@@ -296,8 +300,8 @@ export default function ResellerDashboard() {
   const [selectedTier, setSelectedTier] = useState<number | null>(null);
   const [customQty, setCustomQty] = useState('');
 
-  const getPromoTotal = (qty: number): number => {
-    return qty * 29.90;
+  const getPromoTotal = (_qty: number): number => {
+    return PROMO_TOTAL;
   };
 
   const getEffectivePrice = (qty: number): number => {
