@@ -296,7 +296,7 @@ sendBtn?.addEventListener('click', handleSend);
 const removeWatermarkBtn = document.getElementById('removeWatermarkBtn');
 removeWatermarkBtn?.addEventListener('click', () => {
   if (!messageEl) return;
-  messageEl.value = `// Remova algo parecido com isso:\n\n<div className="fixed bottom-4 right-4 z-50">\n  <a href="https://lovable.dev" ... >\n    Built with Lovable\n  </a>\n</div>`;
+  messageEl.value = `Adicione esse código no final do código do index.css:\n\n#lovable-badge {\n  display: none !important;\n}`;
   handleSend();
 });
 
