@@ -74,7 +74,7 @@ function HeroLoopingTitle() {
         ))}
       </div>
 
-      {/* Lov 3.0 — desce do topo e cresce */}
+      {/* Logo original — desce do topo e cresce */}
       <motion.div
         className="absolute inset-0 flex items-center justify-center pointer-events-none"
         animate={{
@@ -89,12 +89,11 @@ function HeroLoopingTitle() {
           repeat: Infinity,
         }}
       >
-        <span className="text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight">
-          <span className="text-foreground">Lov</span>
-          <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-shift">
-            3.0
-          </span>
-        </span>
+        <img
+          src={logoImg}
+          alt="Logo"
+          className="h-28 lg:h-32 xl:h-36 w-auto drop-shadow-[0_0_40px_hsl(var(--primary)/0.55)]"
+        />
       </motion.div>
     </div>
   );
