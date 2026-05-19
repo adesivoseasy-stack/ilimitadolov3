@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { lovable } from '@/integrations/lovable/index';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
@@ -110,7 +109,6 @@ const emailSchema = z.object({
 
 export default function Auth() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -166,7 +164,12 @@ export default function Auth() {
         return;
       }
       if (needsAdminRole) {
-        toast({ title: 'Conta criada!', description: 'Sua conta foi criada. Agora você precisa receber permissão de admin para acessar o painel.' });
+        toast({
+          title: 'Cadastro recebido!',
+          description: 'Sua conta foi criada e está aguardando aprovação de um administrador. Você receberá acesso assim que for aprovada.',
+        });
+        setActiveTab('login');
+        form.reset();
       }
       setIsSubmitting(false);
       return;
@@ -191,22 +194,6 @@ export default function Auth() {
       return;
     }
     setTimeout(() => setIsSubmitting(false), 1500);
-  };
-
-  const handleGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
-    try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
-      });
-      if (result.error) {
-        toast({ title: 'Erro', description: 'Não foi possível conectar com o Google.', variant: 'destructive' });
-      }
-      if (result.redirected) return;
-    } catch {
-      toast({ title: 'Erro', description: 'Falha na autenticação com Google.', variant: 'destructive' });
-    }
-    setIsGoogleLoading(false);
   };
 
   if (isLoading) {
