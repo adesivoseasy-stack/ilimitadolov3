@@ -365,6 +365,18 @@ body {
 }
 .send-btn:hover { box-shadow: 0 3px 12px rgba(139,92,246,0.4); transform: scale(1.05); }
 .send-btn:disabled { background: var(--bg-tertiary); color: var(--text-muted); cursor: not-allowed; opacity: 0.4; box-shadow: none; transform: none; }
+.enhance-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 28px; padding: 0 10px; border-radius: 100px;
+  background: linear-gradient(135deg, rgba(139,92,246,0.18), rgba(139,92,246,0.08));
+  color: var(--accent); border: 1px solid rgba(139,92,246,0.35);
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s ease; flex-shrink: 0;
+}
+.enhance-btn:hover { background: linear-gradient(135deg, rgba(139,92,246,0.32), rgba(139,92,246,0.18)); box-shadow: 0 2px 10px rgba(139,92,246,0.3); transform: translateY(-1px); }
+.enhance-btn:disabled { opacity: 0.5; cursor: wait; transform: none; }
+.enhance-btn.loading svg { animation: enhanceSpin 1s linear infinite; }
+@keyframes enhanceSpin { to { transform: rotate(360deg); } }
 
 /* Templates */
 .templates-container { display: none; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; padding: 16px; gap: 12px; }
