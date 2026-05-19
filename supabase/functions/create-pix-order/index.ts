@@ -150,9 +150,18 @@ Deno.serve(async (req) => {
     let pricePerKey: number
 
     if (promo) {
-      // Promoção Relâmpago: preço fixo R$29,90 por chave (só hoje até 20h)
-      pricePerKey = 29.90
-      totalReais = parseFloat((quantity * pricePerKey).toFixed(2))
+      // Promoção de Inauguração: pacote fixo 10 chaves por R$249,90 (24h)
+      const PROMO_START = new Date('2026-05-19T16:20:00-03:00').getTime()
+      const PROMO_END = new Date('2026-05-20T16:20:00-03:00').getTime()
+      const nowMs = Date.now()
+      if (nowMs < PROMO_START || nowMs >= PROMO_END) {
+        return new Response(JSON.stringify({ error: 'Promoção de inauguração encerrada' }), { status: 400, headers: corsHeaders })
+      }
+      if (quantity !== 10) {
+        return new Response(JSON.stringify({ error: 'Pacote promocional exige exatamente 10 chaves' }), { status: 400, headers: corsHeaders })
+      }
+      totalReais = 249.90
+      pricePerKey = 24.99
     } else if (profile.custom_key_price != null && profile.custom_key_price > 0) {
       pricePerKey = parseFloat(profile.custom_key_price)
       totalReais = parseFloat((quantity * pricePerKey).toFixed(2))
