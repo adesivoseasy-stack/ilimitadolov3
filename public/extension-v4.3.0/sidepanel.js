@@ -108,6 +108,20 @@ function openWhatsAppSupport() {
 
 async function getAuthData() {
   try {
+    const stored = await chrome.storage.local.get(['lovable_api_token', 'lovable_api_token_ts', 'lovable_git_sha']);
+    if (stored.lovable_api_token) {
+      const age = Date.now() - (stored.lovable_api_token_ts || 0);
+      if (age < 3600000) {
+        const rawToken = stored.lovable_api_token.replace(/^Bearer\s+/i, '');
+        return {
+          token: rawToken,
+          sessionId: null,
+          gitSha: stored.lovable_git_sha || null,
+          source: 'captured'
+        };
+      }
+    }
+
     let token = null, sessionId = null;
 
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -238,10 +252,10 @@ async function getAuthData() {
       } catch {}
     }
 
-    return { token, sessionId };
+    return { token, sessionId, gitSha: stored?.lovable_git_sha || null, source: 'fallback' };
   } catch (e) {
     console.error('Error getting auth data:', e);
-    return { token: null, sessionId: null };
+    return { token: null, sessionId: null, gitSha: null, source: 'error' };
   }
 }
 
@@ -359,12 +373,16 @@ function setupBridge(iframe) {
             license_key: licenseKey
           };
 
+          if (auth.gitSha) {
+            msgPayload.git_sha = auth.gitSha;
+          }
+
           // Include files if provided (base64 array from remote-ui)
           if (payload?.files && payload.files.length > 0) {
             msgPayload.files = payload.files;
           }
 
-          const response = await fetch(`${SUPABASE_URL}/functions/v1/process-message`, {
+          const sendRequest = async () => fetch(`${SUPABASE_URL}/functions/v1/process-message`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -375,7 +393,44 @@ function setupBridge(iframe) {
             body: JSON.stringify(msgPayload)
           });
 
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          let response = await sendRequest();
+
+          if (!response.ok) {
+            let parsed = null;
+            const rawErrorText = await response.text();
+            try { parsed = JSON.parse(rawErrorText); } catch {}
+
+            const errorMessage = parsed?.message || `HTTP ${response.status}`;
+
+            if (response.status === 401 && /invalid token/i.test(errorMessage)) {
+              await chrome.storage.local.remove(['lovable_api_token', 'lovable_api_token_ts', 'lovable_git_sha']);
+              const refreshedAuth = await getAuthData();
+              if (refreshedAuth?.token && refreshedAuth.token !== auth.token) {
+                msgPayload.lovable_token = refreshedAuth.token;
+                if (refreshedAuth.gitSha) msgPayload.git_sha = refreshedAuth.gitSha;
+                response = await sendRequest();
+              } else {
+                throw new Error('Token do Lovable inválido. Recarregue a aba do projeto e tente novamente.');
+              }
+            } else if (response.status === 429 && parsed?.wait_seconds) {
+              throw new Error(`⏳ Aguarde ${parsed.wait_seconds} segundo(s) antes de enviar outra mensagem.`);
+            } else if (response.status === 401) {
+              throw new Error(errorMessage || 'Sessão inválida. Reative a licença.');
+            } else {
+              throw new Error(errorMessage);
+            }
+          }
+
+          if (!response.ok) {
+            const retryText = await response.text();
+            let retryJson = null;
+            try { retryJson = JSON.parse(retryText); } catch {}
+            if (response.status === 429 && retryJson?.wait_seconds) {
+              throw new Error(`⏳ Aguarde ${retryJson.wait_seconds} segundo(s) antes de enviar outra mensagem.`);
+            }
+            throw new Error(retryJson?.message || `HTTP ${response.status}`);
+          }
+
           const responseText = await response.text();
           if (!responseText || responseText.trim() === '') {
             // API returns 202 with empty body — treat as success
