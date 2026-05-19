@@ -1,0 +1,1 @@
+UPDATE public.lvb_credit_orders SET status='cancelado', updated_at=now() WHERE id='0c9e8b35-4e26-42b5-8c87-09aaaed8e619';
