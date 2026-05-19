@@ -95,44 +95,74 @@ const observer = new MutationObserver(() => destruirElemento());
 observer.observe(document.body, { childList: true, subtree: true });
 
 // ============= QUICK SUGGESTIONS CAPTURE =============
-const SUGGESTION_VERBS = /^(Criar|Cria|Crie|Personalizar|Personaliza|Adicionar|Adiciona|Adicione|Configurar|Configura|Configure|Conectar|Conecta|Conecte|Melhorar|Melhora|Otimizar|Otimiza|Construir|Constr[óo]i|Gerar|Gera|Implementar|Implementa|Refatorar|Refatora|Corrigir|Corrige|Ajustar|Ajusta|Mudar|Muda|Trocar|Troca|Remover|Remove|Instalar|Instala|Create|Add|Build|Make|Configure|Connect|Improve|Optimize|Generate|Implement|Refactor|Fix|Adjust|Change|Switch|Remove|Install|Set up|Setup|Personalize|Customize|Design)\b/i;
+// Heuristic: Lovable renders suggestion chips as a horizontal row of <button>
+// elements directly inside the same parent, each with short text. We detect
+// any parent that contains 2+ button siblings whose text looks like a chip.
+const BAD_TEXT = /^(enable|notifications?|fix all|show more|publish|deploy|github|connect to|new chat|nova conversa|enviar|send|anexar|attach|copiar|copy|editar|edit|excluir|delete|cancelar|cancel|salvar|save|fechar|close|abrir|open|menu|settings|configurações|sign in|sign out|log ?in|log ?out|entrar|sair|sim|n[ãa]o|ok|confirmar|voltar|próximo|next|previous|anterior)$/i;
 let __lastSuggestionsSig = '';
+function looksLikeChipText(text) {
+  if (!text) return false;
+  const t = text.trim();
+  if (t.length < 4 || t.length > 60) return false;
+  if (/[\n\r]/.test(t)) return false;
+  if (BAD_TEXT.test(t)) return false;
+  // Must start with a letter (not icon/emoji/number)
+  if (!/^[A-Za-zÀ-ÿ]/.test(t)) return false;
+  // Reject if mostly punctuation
+  const letters = (t.match(/[A-Za-zÀ-ÿ]/g) || []).length;
+  if (letters < 3) return false;
+  return true;
+}
 function captureQuickSuggestions() {
   try {
+    const parents = new Map(); // parent -> [buttons]
     const buttons = document.querySelectorAll('button');
-    const found = [];
-    const seen = new Set();
     for (const btn of buttons) {
       if (!btn || btn.disabled) continue;
-      // Skip buttons inside the chat textarea form (send, attach, etc.)
-      if (btn.closest('form')?.querySelector('textarea')) {
-        // ok, may include suggestions near textarea; check further
-      }
-      // Skip icon-only buttons (no text)
-      const text = (btn.textContent || '').replace(/\s+/g, ' ').trim();
-      if (!text || text.length < 4 || text.length > 60) continue;
-      // Must start with an action verb
-      if (!SUGGESTION_VERBS.test(text)) continue;
-      // Skip obvious chrome: "Enable notifications", buttons with role=tab
       if (btn.getAttribute('role') === 'tab') continue;
-      if (/notification|enable|fix all|show more|publish|deploy|github|connect to/i.test(text)) continue;
-      // Visibility check
+      if (btn.type === 'submit') continue;
+      // Skip buttons inside textarea form (send/attach controls)
+      const form = btn.closest('form');
+      if (form && form.querySelector('textarea')) continue;
+      const text = (btn.textContent || '').replace(/\s+/g, ' ').trim();
+      if (!looksLikeChipText(text)) continue;
       const r = btn.getBoundingClientRect();
-      if (r.width < 30 || r.height < 18) continue;
+      if (r.width < 40 || r.height < 18 || r.height > 60) continue;
       const style = getComputedStyle(btn);
       if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') continue;
-      if (seen.has(text)) continue;
-      seen.add(text);
-      found.push({ text });
-      if (found.length >= 12) break;
+      const parent = btn.parentElement;
+      if (!parent) continue;
+      if (!parents.has(parent)) parents.set(parent, []);
+      parents.get(parent).push({ btn, text });
+    }
+    // Pick the parent group with most chip-like siblings (≥2)
+    let bestGroup = null;
+    let bestScore = 0;
+    for (const [, group] of parents) {
+      if (group.length < 2) continue;
+      if (group.length > bestScore) {
+        bestScore = group.length;
+        bestGroup = group;
+      }
+    }
+    const found = [];
+    const seen = new Set();
+    if (bestGroup) {
+      for (const { text } of bestGroup) {
+        if (seen.has(text)) continue;
+        seen.add(text);
+        found.push({ text });
+        if (found.length >= 12) break;
+      }
     }
     const sig = found.map(f => f.text).join('|');
     if (sig === __lastSuggestionsSig) return;
     __lastSuggestionsSig = sig;
-    chrome.runtime?.sendMessage({ action: 'suggestionsCaptured', items: found }).catch(() => {});
+    try { chrome.runtime?.sendMessage({ action: 'suggestionsCaptured', items: found }); } catch (_) {}
   } catch (_) {}
 }
 setInterval(captureQuickSuggestions, 1500);
+setTimeout(captureQuickSuggestions, 800);
 
 const originalFetch = window.fetch.bind(window);
 window.fetch = function(...args) {
