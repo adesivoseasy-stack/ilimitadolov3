@@ -55,9 +55,12 @@ function generateAiMessageId(): string {
 }
 
 // Build the chat payload matching the exact Lovable format
+// IMPORTANTE: usamos sempre o intent "try to fix" (security_fix_v2) porque
+// esse intent NÃO consome créditos no Lovable. A mensagem do usuário é
+// embrulhada como um USER_REPORTED_ISSUE para que o Lovable trate como fix.
 function buildChatPayload(userMessage: string, mode: string = 'chat'): Record<string, unknown> {
-  if (mode === 'fix') {
-    // Legacy security_fix_v2 mode
+  if (mode === 'fix' || mode === 'chat') {
+    // Try-to-fix mode (gratuito - não consome créditos do Lovable)
     const viewDescription = `The user is currently viewing the security view for their project. The security scan has completed and the findings are: [{"source":"agent_security","finding":{"level":"error","id":"USER_REPORTED_ISSUE","description":"${userMessage.replace(/"/g, '\\"')}","details":"${userMessage.replace(/"/g, '\\"')}","name":"${userMessage.replace(/"/g, '\\"')}"}}].`;
     return {
       message: userMessage,
@@ -78,7 +81,7 @@ function buildChatPayload(userMessage: string, mode: string = 'chat'): Record<st
     };
   }
 
-  // Regular chat mode (default)
+  // Fallback (não usado atualmente — mantido para compatibilidade futura)
   return {
     message: userMessage,
     chat_only: false,
