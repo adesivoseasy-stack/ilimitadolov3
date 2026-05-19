@@ -3,7 +3,7 @@ export function translateAuthError(message: string | undefined | null): string {
   if (!msg) return 'Erro desconhecido. Tente novamente.';
 
   if (msg.includes('known to be weak') || msg.includes('pwned') || msg.includes('compromised')) {
-    return 'Essa senha é muito fraca ou já vazou em outros sites. Escolha uma senha mais forte, com letras, números e símbolos.';
+    return 'Essa senha é fraca. Escolha uma senha mais forte, com letras, números e símbolos.';
   }
   if (msg.includes('password should be at least') || msg.includes('password is too short')) {
     return 'A senha é muito curta. Use no mínimo 6 caracteres.';
