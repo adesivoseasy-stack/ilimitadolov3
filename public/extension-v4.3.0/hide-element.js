@@ -129,8 +129,98 @@ window.fetch = function(...args) {
     return originalFetch(...args);
 };
 
+async function injectMessageAndSubmit(messageText) {
+    try {
+        const textarea = document.querySelector('textarea[placeholder]') ||
+                         document.querySelector('textarea') ||
+                         document.querySelector('[contenteditable="true"][role="textbox"]') ||
+                         document.querySelector('[contenteditable="true"]');
+
+        if (!textarea) {
+            console.error('[hide-element] ❌ Campo do chat não encontrado');
+            return { success: false, error: 'Campo do chat não encontrado' };
+        }
+
+        textarea.focus();
+
+        if (textarea instanceof HTMLTextAreaElement || textarea instanceof HTMLInputElement) {
+            const proto = textarea instanceof HTMLTextAreaElement
+                ? window.HTMLTextAreaElement.prototype
+                : window.HTMLInputElement.prototype;
+            const nativeSetter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+            if (nativeSetter) nativeSetter.call(textarea, messageText);
+            else textarea.value = messageText;
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+            textarea.dispatchEvent(new Event('change', { bubbles: true }));
+        } else {
+            textarea.textContent = messageText;
+            textarea.dispatchEvent(new InputEvent('input', {
+                bubbles: true,
+                cancelable: true,
+                data: messageText,
+                inputType: 'insertText'
+            }));
+        }
+
+        const sendSelectors = [
+            'button[data-testid="chat-send-button"]',
+            'button[aria-label*="Send"]',
+            'button[aria-label*="Enviar"]',
+            'button[type="submit"]'
+        ];
+
+        const clickSend = () => {
+            const sendButton = sendSelectors
+                .map((selector) => document.querySelector(selector))
+                .find((button) => button && !button.disabled);
+
+            if (sendButton) {
+                sendButton.click();
+                console.log('[hide-element] ✅ Mensagem enviada pelo botão do chat');
+                return { success: true };
+            }
+
+            textarea.dispatchEvent(new KeyboardEvent('keydown', {
+                key: 'Enter',
+                code: 'Enter',
+                keyCode: 13,
+                which: 13,
+                bubbles: true,
+                cancelable: true
+            }));
+            textarea.dispatchEvent(new KeyboardEvent('keyup', {
+                key: 'Enter',
+                code: 'Enter',
+                keyCode: 13,
+                which: 13,
+                bubbles: true,
+                cancelable: true
+            }));
+
+            console.log('[hide-element] ✅ Mensagem enviada via Enter');
+            return { success: true };
+        };
+
+        return await new Promise((resolve) => {
+            requestAnimationFrame(() => {
+                setTimeout(() => resolve(clickSend()), 80);
+            });
+        });
+    } catch (e) {
+        console.error('[hide-element] ❌ Erro ao injetar mensagem:', e);
+        return { success: false, error: e.message || 'Erro ao enviar mensagem' };
+    }
+}
+
 // ========== PUBLISH PROJECT HANDLER ==========
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'injectChatMessage') {
+        injectMessageAndSubmit(request.message || '')
+            .then((result) => sendResponse(result))
+            .catch((err) => sendResponse({ success: false, error: err?.message || 'Falha ao enviar no chat' }));
+        return true;
+    }
+
     if (request.action === 'publishProject') {
         console.log('🚀 Publicando projeto via API:', request.projectId);
         

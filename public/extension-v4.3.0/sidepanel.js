@@ -732,42 +732,31 @@ async function showMainApp() {
 
 // ========== DIRECT SEND (used by watermark FAB, bypasses iframe) ==========
 async function sendDirectLovableMessage(messageText) {
-  const auth = await getAuthData();
-  if (!auth?.token) throw new Error('Token do Lovable não encontrado. Abra o projeto no Lovable.dev.');
-
-  const pId = await getProjectFromActiveTab();
-  if (!pId) throw new Error('Abra um projeto no Lovable.dev primeiro.');
-
   const check = await revalidateLicense();
   if (!check.valid) throw new Error(check.message || 'Licença inválida');
 
-  const msgPayload = {
-    message: messageText,
-    project_id: pId,
-    lovable_token: auth.token,
-    license_key: licenseKey,
-  };
-  if (auth.gitSha) msgPayload.git_sha = auth.gitSha;
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id || !tab?.url || !/lovable\.dev|lovableproject\.com/.test(tab.url)) {
+    throw new Error('Abra um projeto do Lovable na aba ativa primeiro.');
+  }
 
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/process-message`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      'apikey': SUPABASE_ANON_KEY,
-      'x-session-token': licenseSessionToken,
-    },
-    body: JSON.stringify(msgPayload),
+  const result = await new Promise((resolve) => {
+    chrome.tabs.sendMessage(tab.id, {
+      action: 'injectChatMessage',
+      message: messageText,
+    }, (response) => {
+      if (chrome.runtime.lastError) {
+        resolve({ success: false, error: 'Recarregue a aba do Lovable e tente novamente.' });
+        return;
+      }
+      resolve(response || { success: false, error: 'Sem resposta da aba do Lovable.' });
+    });
   });
 
-  if (!response.ok) {
-    let parsed = null;
-    try { parsed = JSON.parse(await response.text()); } catch {}
-    if (response.status === 429 && parsed?.wait_seconds) {
-      throw new Error(`Aguarde ${parsed.wait_seconds}s antes de enviar novamente`);
-    }
-    throw new Error(parsed?.message || `HTTP ${response.status}`);
+  if (!result?.success) {
+    throw new Error(result?.error || 'Falha ao enviar mensagem no chat.');
   }
+
   return true;
 }
 
