@@ -178,6 +178,28 @@ Deno.serve(async (req) => {
       });
     }
 
+    // 🛡️ ANTI-PROXY: a license_key do body DEVE bater com a da sessão.
+    if (bodyLicenseKey !== license.license_key) {
+      console.warn('[send-message] license_key mismatch — possible proxy/resale attempt', {
+        session_id: session.id,
+        body_key_prefix: bodyLicenseKey.substring(0, 8),
+        session_key_prefix: license.license_key.substring(0, 8),
+      });
+      await supabase.from('sessions').delete().eq('id', session.id);
+      await supabase.from('license_logs').insert({
+        license_id: license.id,
+        action: 'session_revoked_key_mismatch',
+        details: { reason: 'license_key in body did not match session license_key', endpoint: 'send-message' },
+      });
+      return new Response(JSON.stringify({
+        status: 'session_invalid',
+        message: 'Chave da requisição não confere com a sessão. Reative sua licença.',
+      }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const rl = await checkLicenseRateLimit(bodyLicenseKey);
     if (!rl.allowed && rl.waitSeconds && rl.waitSeconds > 0) {
       console.log(`[send-message] Rate limited: ${rl.waitSeconds}s remaining for key ${bodyLicenseKey.substring(0, 8)}***`);
