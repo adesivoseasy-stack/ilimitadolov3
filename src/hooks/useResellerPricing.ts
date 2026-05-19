@@ -10,14 +10,14 @@ export type PlanType = '197' | '297' | '997';
 
 const DEFAULT_TIERS: Record<PlanType, KeyTier[]> = {
   '197': [
-    { quantity: 1, pricePerKey: 49.90 },
-    { quantity: 2, pricePerKey: 49.90 },
-    { quantity: 3, pricePerKey: 49.90 },
+    { quantity: 1, pricePerKey: 34.90 },
+    { quantity: 2, pricePerKey: 34.90 },
+    { quantity: 3, pricePerKey: 34.90 },
   ],
   '297': [
-    { quantity: 1, pricePerKey: 29.90 },
-    { quantity: 2, pricePerKey: 29.90 },
-    { quantity: 3, pricePerKey: 29.90 },
+    { quantity: 1, pricePerKey: 34.90 },
+    { quantity: 2, pricePerKey: 34.90 },
+    { quantity: 3, pricePerKey: 34.90 },
   ],
   '997': [],
 };
