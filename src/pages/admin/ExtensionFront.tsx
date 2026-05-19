@@ -395,7 +395,7 @@ body {
 <body>
 <header class="header">
   <div class="header-left">
-    <img class="header-logo" src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/public-assets/extension-logo.png" alt="Logo" />
+    <img class="header-logo" src="https://wvelcefgihlxcnrmslul.supabase.co/storage/v1/object/public/public-assets/extension-logo.png?v=3" alt="Logo" />
   </div>
   <div class="header-right">
     <div class="license-badge" id="licenseBadge"><span class="license-dot"></span><span id="licenseInfo">Ativo</span></div>
@@ -422,7 +422,7 @@ body {
 <div class="chat-container" id="chatPanel">
   <div class="history" id="history">
     <div class="empty-state">
-      <img class="empty-logo" src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/public-assets/extension-logo.png" alt="" />
+      <img class="empty-logo" src="https://wvelcefgihlxcnrmslul.supabase.co/storage/v1/object/public/public-assets/extension-logo.png?v=3" alt="" />
       <h3>Pronto para começar</h3>
       <p>Envie uma mensagem para interagir</p>
       <div class="empty-suggestions">
