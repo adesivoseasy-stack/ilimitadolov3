@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Ilimitado Lov</title>
+  <style>
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #141414;
+      --bg-tertiary: #1a1a1a;
+      --bg-elevated: #1f1f1f;
+      --bg-hover: #262626;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-light: rgba(255, 255, 255, 0.12);
+      --text: #ffffff;
+      --text-secondary: #a1a1a1;
+      --text-muted: #666666;
+      --primary: #8B5CF6;
+      --primary-hover: #A78BFA;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *::-webkit-scrollbar { display: none; }
+    * { scrollbar-width: none; -ms-overflow-style: none; }
+
+    body {
+      width: 100%;
+      height: 100vh;
+      background: var(--bg-primary);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      color: var(--text);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== LICENSE SCREEN ===== */
+    #licenseScreen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 32px 24px;
+      background: var(--bg-primary);
+    }
+
+    .license-logo { width: 72px; height: 72px; margin-bottom: 16px; }
+    .license-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .license-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 32px; }
+
+    .security-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 20px;
+      background: rgba(34, 197, 94, 0.1); margin-bottom: 28px;
+    }
+    .security-badge svg { width: 14px; height: 14px; stroke: var(--success); }
+    .security-badge span { font-size: 12px; font-weight: 500; color: var(--success); }
+
+    .license-input-group { width: 100%; margin-bottom: 16px; }
+    .license-input-group label { display: block; font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; }
+    .license-input-group input {
+      width: 100%; padding: 14px 16px; border-radius: var(--radius);
+      border: 1px solid var(--border-light); background: var(--bg-secondary);
+      color: var(--text); font-size: 14px;
+      font-family: 'SF Mono', ui-monospace, monospace;
+      text-align: center; letter-spacing: 2px; text-transform: uppercase;
+      transition: all 0.2s ease;
+    }
+    .license-input-group input:focus { outline: none; border-color: var(--primary); background: var(--bg-tertiary); }
+    .license-input-group input::placeholder { color: var(--text-muted); letter-spacing: 1px; }
+
+    #licenseStatus { font-size: 13px; min-height: 20px; margin-bottom: 16px; text-align: center; font-weight: 500; }
+
+    .btn-primary {
+      width: 100%; padding: 14px 24px; font-size: 14px; font-weight: 600;
+      border-radius: var(--radius); background: var(--primary); color: white;
+      border: none; cursor: pointer; transition: all 0.2s ease;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { background: var(--bg-tertiary); color: var(--text-muted); cursor: not-allowed; }
+
+    .whatsapp-support {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: 24px; padding: 10px 20px; border-radius: 20px;
+      background: #25D366; color: white; font-size: 13px; font-weight: 500;
+      text-decoration: none; transition: all 0.2s ease;
+    }
+    .whatsapp-support:hover { background: #20bd5a; }
+    .whatsapp-support svg { width: 16px; height: 16px; }
+    .whatsapp-support.loading { opacity: 0.6; pointer-events: none; }
+
+    .license-footer { margin-top: 32px; font-size: 11px; color: var(--text-muted); }
+
+    /* ===== REMOTE UI CONTAINER ===== */
+    #remoteUiRoot {
+      display: none;
+      width: 100%;
+      height: 100vh;
+    }
+    #remoteUiRoot iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: var(--bg-primary);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 70px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--bg-elevated); color: var(--text);
+      padding: 10px 16px; border-radius: 8px;
+      font-size: 12px; font-weight: 500;
+      border: 1px solid var(--border);
+      opacity: 0; transition: all 0.25s ease; z-index: 1000;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: var(--success); background: rgba(34, 197, 94, 0.15); }
+    .toast.error { border-color: var(--error); background: rgba(239, 68, 68, 0.15); }
+  </style>
+</head>
+<body>
+  <!-- License Activation Screen -->
+  <div id="licenseScreen">
+    <div class="license-logo">
+      <img src="logo.png" alt="Ilimitado Lov">
+    </div>
+    <p class="license-subtitle">Ative sua licença para começar</p>
+    
+    <div class="security-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+      <span>Conexão segura e criptografada</span>
+    </div>
+    
+    <div class="license-input-group">
+      <label>Chave de Licença</label>
+      <input type="text" id="licenseKey" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" maxlength="23" autocomplete="off">
+    </div>
+    
+    <div id="licenseStatus"></div>
+    
+    <button id="activateBtn" class="btn-primary">Ativar Licença</button>
+    
+    <!-- Suporte WhatsApp movido para dentro do app principal -->
+
+    
+    <div class="license-footer">Ilimitado Lov © 2025 • Todos os direitos reservados</div>
+  </div>
+
+  <!-- Remote UI Container (iframe will be injected here) -->
+  <div id="remoteUiRoot"></div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast"></div>
+
+  <script src="jszip.min.js"></script>
+  <script src="sidepanel.js"></script>
+</body>
+</html>
