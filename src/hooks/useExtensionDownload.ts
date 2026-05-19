@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-const ZIP_PATH = '/extension-v5.1.1.zip';
-const ZIP_FILENAME = 'ilimitado-lov-extension-v5.1.1.zip';
+const ZIP_PATH = '/ilimitado-lov-v8.1.0-release.zip';
+const ZIP_FILENAME = 'ilimitado-lov-v8.1.0-release.zip';
 
 export function useExtensionDownload() {
   const [isDownloading, setIsDownloading] = useState(false);
@@ -35,7 +35,7 @@ export function useExtensionDownload() {
 
       setProgress(100);
       setStatus('done');
-      toast.success('Extensão v5.1.0 baixada com sucesso.');
+      toast.success('Extensão (versão ofuscada mais recente) baixada com sucesso.');
 
       window.setTimeout(() => {
         setProgress(0);
