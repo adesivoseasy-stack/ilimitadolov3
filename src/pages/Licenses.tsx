@@ -234,7 +234,14 @@ export default function Licenses() {
           <DialogHeader><DialogTitle className="font-display">Nova Licença</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div><Label className="font-display text-xs uppercase tracking-wider">Email</Label><Input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="email@exemplo.com" className="bg-background/50 border-border/30" /></div>
-            <div><Label className="font-display text-xs uppercase tracking-wider">Duração (dias)</Label><Input type="number" value={newDuration} onChange={(e) => setNewDuration(e.target.value)} className="bg-background/50 border-border/30" /></div>
+            {!newIsWildcard && (
+              <div>
+                <Label className="font-display text-xs uppercase tracking-wider">Duração</Label>
+                <div className="mt-2 rounded-xl border border-border/20 bg-background/20 px-4 py-3 text-sm font-display">
+                  30 dias <span className="text-xs text-muted-foreground">(fixo — apenas chaves coringa têm duração diferente)</span>
+                </div>
+              </div>
+            )}
             <div><Label className="font-display text-xs uppercase tracking-wider">Preço (R$)</Label><Input type="number" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} placeholder="0" className="bg-background/50 border-border/30" /></div>
             <div><Label className="font-display text-xs uppercase tracking-wider">Notas</Label><Input value={newNotes} onChange={(e) => setNewNotes(e.target.value)} placeholder="Opcional" className="bg-background/50 border-border/30" /></div>
             <div className="flex items-center justify-between rounded-xl border border-border/20 bg-background/20 p-4">
@@ -259,10 +266,8 @@ export default function Licenses() {
             <DialogTitle className="font-display">Renovar Licença</DialogTitle>
             <DialogDescription>Escolha o período para {renewDialog?.licenseKey}</DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-3">
-            {[7, 30, 90, 365].map((days) => (
-              <Button key={days} variant="outline" onClick={() => handleRenew(days)} disabled={renewMutation.isPending} className="border-border/30 hover:bg-primary/10 hover:border-primary/20 font-display font-bold">{days} dias</Button>
-            ))}
+          <div className="grid grid-cols-1 gap-3">
+            <Button variant="outline" onClick={() => handleRenew(30)} disabled={renewMutation.isPending} className="border-border/30 hover:bg-primary/10 hover:border-primary/20 font-display font-bold">Renovar +30 dias</Button>
           </div>
         </DialogContent>
       </Dialog>
