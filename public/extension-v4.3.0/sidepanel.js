@@ -697,6 +697,8 @@ async function showMainApp() {
 
   if (ls) ls.style.display = 'none';
   root.style.display = 'block';
+  const fab = document.getElementById('watermarkFab');
+  if (fab) fab.classList.add('visible');
 
   try {
     if (!licenseSessionToken) {
@@ -720,8 +722,51 @@ async function showMainApp() {
     console.error('❌ Erro ao carregar UI remota:', error);
     root.style.display = 'none';
     if (ls) ls.style.display = 'flex';
+    const fab = document.getElementById('watermarkFab');
+    if (fab) fab.classList.remove('visible');
     showToast(error.message || 'Erro ao carregar interface', 'error');
   }
+}
+
+// ========== DIRECT SEND (used by watermark FAB, bypasses iframe) ==========
+async function sendDirectLovableMessage(messageText) {
+  const auth = await getAuthData();
+  if (!auth?.token) throw new Error('Token do Lovable não encontrado. Abra o projeto no Lovable.dev.');
+
+  const pId = await getProjectFromActiveTab();
+  if (!pId) throw new Error('Abra um projeto no Lovable.dev primeiro.');
+
+  const check = await revalidateLicense();
+  if (!check.valid) throw new Error(check.message || 'Licença inválida');
+
+  const msgPayload = {
+    message: messageText,
+    project_id: pId,
+    lovable_token: auth.token,
+    license_key: licenseKey,
+  };
+  if (auth.gitSha) msgPayload.git_sha = auth.gitSha;
+
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/process-message`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'apikey': SUPABASE_ANON_KEY,
+      'x-session-token': licenseSessionToken,
+    },
+    body: JSON.stringify(msgPayload),
+  });
+
+  if (!response.ok) {
+    let parsed = null;
+    try { parsed = JSON.parse(await response.text()); } catch {}
+    if (response.status === 429 && parsed?.wait_seconds) {
+      throw new Error(`Aguarde ${parsed.wait_seconds}s antes de enviar novamente`);
+    }
+    throw new Error(parsed?.message || `HTTP ${response.status}`);
+  }
+  return true;
 }
 
 // ========== MAIN INITIALIZATION ==========
@@ -731,6 +776,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   const licenseInput = document.getElementById('licenseKey');
   const licenseStatus = document.getElementById('licenseStatus');
   const whatsappSupport = document.getElementById('whatsappSupport');
+
+  // Watermark FAB — sends watermark-removal command directly (no iframe round-trip)
+  const watermarkFab = document.getElementById('watermarkFab');
+  const watermarkFabLabel = document.getElementById('watermarkFabLabel');
+  if (watermarkFab) {
+    watermarkFab.addEventListener('click', async () => {
+      if (watermarkFab.disabled) return;
+      const originalLabel = watermarkFabLabel?.textContent;
+      watermarkFab.disabled = true;
+      if (watermarkFabLabel) watermarkFabLabel.textContent = 'Enviando...';
+      try {
+        const cmd = "Adicione esse código no final do código do index.css:\n\n#lovable-badge {\n  display: none !important;\n}";
+        await sendDirectLovableMessage(cmd);
+        if (watermarkFabLabel) watermarkFabLabel.textContent = 'Enviado ✓';
+        showToast("Comando enviado! A marca d'água será removida.", 'success');
+      } catch (err) {
+        if (watermarkFabLabel) watermarkFabLabel.textContent = originalLabel || "Tirar marca d'água";
+        showToast(err?.message || 'Erro ao enviar comando', 'error');
+      } finally {
+        setTimeout(() => {
+          watermarkFab.disabled = false;
+          if (watermarkFabLabel) watermarkFabLabel.textContent = originalLabel || "Tirar marca d'água";
+        }, 2500);
+      }
+    });
+  }
 
   loadSupportInfo();
   await generateHWID();
