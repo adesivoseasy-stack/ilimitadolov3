@@ -216,6 +216,14 @@ export function LvbCreditsTab() {
       const latestOrder = data[0] as LvbCreditOrderRecord;
       const nextOrder = buildOrderState(latestOrder, order);
 
+      if (latestOrder.status === 'cancelado' || latestOrder.status === 'falha') {
+        setStep('select');
+        setOrder(null);
+        setPixState(null);
+        localStorage.removeItem(WIZARD_STORAGE_KEY);
+        return;
+      }
+
       if (shouldUseTrackingStep(latestOrder.status)) {
         setOrder(nextOrder);
         setStep('tracking');
