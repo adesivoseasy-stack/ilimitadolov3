@@ -272,6 +272,42 @@ clearBtn?.addEventListener('click', () => {
 });
 logoutBtn?.addEventListener('click', () => bridge.license.logout());
 
+// === Enhance prompt with AI ===
+const enhanceBtn = document.getElementById('enhanceBtn');
+enhanceBtn?.addEventListener('click', async () => {
+  if (!messageEl) return;
+  const original = messageEl.value.trim();
+  if (!original) {
+    updateStatus('⚠️ Digite algo para melhorar');
+    return;
+  }
+  enhanceBtn.disabled = true;
+  enhanceBtn.classList.add('loading');
+  const label = enhanceBtn.querySelector('span');
+  const prevLabel = label?.textContent;
+  if (label) label.textContent = 'Melhorando...';
+  updateStatus('✨ Melhorando prompt...');
+  try {
+    const result = await bridge.ai.enhancePrompt(original);
+    if (result?.improved) {
+      messageEl.value = result.improved;
+      messageEl.style.height = 'auto';
+      messageEl.style.height = Math.min(messageEl.scrollHeight, 200) + 'px';
+      messageEl.focus();
+      updateStatus('✅ Prompt otimizado');
+    } else {
+      throw new Error(result?.error || 'Resposta vazia');
+    }
+  } catch (err) {
+    addMessage('bot', '❌ ' + (err?.message || 'Erro ao melhorar prompt'));
+    updateStatus('❌ Erro');
+  } finally {
+    enhanceBtn.disabled = false;
+    enhanceBtn.classList.remove('loading');
+    if (label && prevLabel) label.textContent = prevLabel;
+  }
+});
+
 const downloadBtn = document.getElementById('downloadBtn');
 downloadBtn?.addEventListener('click', async () => {
   downloadBtn.disabled = true;
