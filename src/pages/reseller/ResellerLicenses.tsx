@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Plus, Search, MoreHorizontal, Monitor, Copy, Eye, Coins, UserPen, RefreshCw, Ban, FlaskConical } from 'lucide-react';
 import { format, parseISO, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -116,11 +117,27 @@ export default function ResellerLicenses() {
             </div>
           </div>
           <div className="flex gap-2">
-            {hasActivePaidLicense && (
-              <Button variant="outline" className="border-border/30 font-display" onClick={() => setIsTestOpen(true)}>
-                <FlaskConical className="mr-2 h-4 w-4" />Chave Teste
-              </Button>
-            )}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Button
+                      variant="outline"
+                      className="border-border/30 font-display"
+                      onClick={() => hasActivePaidLicense && setIsTestOpen(true)}
+                      disabled={!hasActivePaidLicense}
+                    >
+                      <FlaskConical className="mr-2 h-4 w-4" />Chave Teste
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {!hasActivePaidLicense && (
+                  <TooltipContent>
+                    <p>Adquira sua primeira chave para liberar a geração de testes</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-gradient shadow-lg shadow-primary/20 font-display"><Plus className="mr-2 h-4 w-4" />Nova Licença</Button>
