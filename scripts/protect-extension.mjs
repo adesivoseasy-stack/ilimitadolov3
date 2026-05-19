@@ -73,14 +73,21 @@ function buildLoader() {
 }
 
 function patchSource(src) {
-  return src
-    // substitui literais por chamadas
-    .replace(/const\s+SUPABASE_URL\s*=\s*['"][^'"]+['"]\s*;?/g, 'const SUPABASE_URL = __SBU();')
-    .replace(/const\s+SUPABASE_ANON_KEY\s*=\s*['"][^'"]+['"]\s*;?/g, 'const SUPABASE_ANON_KEY = __SBK();')
-    .replace(/const\s+API_BASE\s*=\s*['"][^'"]+['"]\s*;?/g, 'const API_BASE = __SBU() + "/functions/v1";')
-    // qualquer literal restante com o ref ou o jwt real
-    .replace(new RegExp(REAL_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '" + __SBU() + "')
-    .replace(new RegExp(REAL_KEY.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '" + __SBK() + "');
+  let s = src;
+  s = s.replace(/const\s+SUPABASE_URL\s*=\s*['"][^'"]+['"]\s*;?/g, 'const SUPABASE_URL = __SBU();')
+       .replace(/const\s+SUPABASE_ANON_KEY\s*=\s*['"][^'"]+['"]\s*;?/g, 'const SUPABASE_ANON_KEY = __SBK();')
+       .replace(/const\s+API_BASE\s*=\s*['"][^'"]+['"]\s*;?/g, 'const API_BASE = __SBU() + "/functions/v1";');
+  const hasUrl = /const\s+SUPABASE_URL\b/.test(s);
+  const hasKey = /const\s+SUPABASE_ANON_KEY\b/.test(s);
+  let prelude = '';
+  if (!hasUrl && s.includes(REAL_URL)) prelude += 'const SUPABASE_URL = __SBU();\n';
+  if (!hasKey && s.includes(REAL_KEY)) prelude += 'const SUPABASE_ANON_KEY = __SBK();\n';
+  const escUrl = REAL_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escKey = REAL_KEY.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // arquivos usam aspas simples — quebra a string e concatena
+  s = s.replace(new RegExp(escUrl, 'g'), "' + SUPABASE_URL + '");
+  s = s.replace(new RegExp(escKey, 'g'), "' + SUPABASE_ANON_KEY + '");
+  return prelude + s;
 }
 
 const STRONG = {
