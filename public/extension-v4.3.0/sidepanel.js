@@ -673,6 +673,13 @@ function setupBridge(iframe) {
         payload: { content: message.content, source: message.source, timestamp: message.timestamp }
       }, '*');
     }
+    if (message.action === 'suggestionsCapturedRelay' && Array.isArray(message.items)) {
+      iframe.contentWindow?.postMessage({
+        requestId: 'sugg_' + Date.now(),
+        command: 'lovable.suggestions',
+        payload: { items: message.items }
+      }, '*');
+    }
   });
 
   console.log('[Bridge] Setup complete');
