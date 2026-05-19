@@ -21,7 +21,7 @@ function getDeviceInfo() {
 async function validateLicense(licenseKey) {
   try {
     console.log('[NEXO] Validating license:', licenseKey?.substring(0, 8) + '***');
-    const response = await fetch(`${API_BASE}/validate-license`, {
+    const response = await fetch(`${API_BASE}/validate-license-v2`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
