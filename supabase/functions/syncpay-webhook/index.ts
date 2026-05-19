@@ -6,8 +6,10 @@ const corsHeaders: Record<string, string> = {
   'Content-Type': 'application/json; charset=utf-8',
 }
 
-// SyncPay v1 cash-in: only these statuses indicate a real settled payment
-const COMPLETED_STATUSES = new Set(['completed', 'paid', 'approved'])
+// SyncPay v1 cash-in: only these statuses indicate a real settled payment.
+// `paid_out` is sent by SyncPay when the PIX has been confirmed and the
+// amount has already been credited to the merchant account.
+const COMPLETED_STATUSES = new Set(['completed', 'paid', 'approved', 'paid_out'])
 const SYNCPAY_API = 'https://api.syncpayments.com.br'
 
 async function readJson(res: Response): Promise<any> {
