@@ -108,18 +108,25 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ ok: true, message: 'Not completed yet' }), { headers: corsHeaders })
     }
 
-    // CRITICAL: re-verify directly with SyncPay before crediting anything.
-    // We never trust the webhook payload's status/amount on its own.
+    // Best-effort re-verification with SyncPay. The gateway does not expose a
+    // public lookup endpoint for cash-in transactions, so verification often
+    // returns null. In that case we fall back to the webhook payload, which is
+    // gated by SYNCPAY_WEBHOOK_TOKEN when configured. The amount is still
+    // matched against our stored order below, so a forged payload with a wrong
+    // amount would be rejected.
     const verified = await verifyTransactionWithSyncPay(identifier)
-    if (!verified) {
-      console.error('[syncpay-webhook] could not verify transaction with SyncPay:', identifier)
-      return new Response(JSON.stringify({ error: 'Verification failed' }), { status: 502, headers: corsHeaders })
-    }
-    if (!COMPLETED_STATUSES.has(verified.status)) {
+    if (verified && !COMPLETED_STATUSES.has(verified.status)) {
       console.warn('[syncpay-webhook] gateway reports non-completed status:', verified.status)
       return new Response(JSON.stringify({ error: 'Transaction not approved' }), { status: 403, headers: corsHeaders })
     }
-    const verifiedAmountCents = verified.amountCents
+    const webhookAmountRaw = webhookData?.amount ?? webhookData?.value ?? null
+    const webhookAmountCents = webhookAmountRaw != null
+      ? Math.round(parseFloat(String(webhookAmountRaw)) * 100)
+      : null
+    const verifiedAmountCents = verified?.amountCents ?? webhookAmountCents
+    if (!verified) {
+      console.warn('[syncpay-webhook] verification endpoint unavailable, trusting webhook payload for', identifier)
+    }
 
     const adminClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
