@@ -89,6 +89,7 @@ Deno.serve(async (req) => {
           license_key: keyData, email: 'estoque', expires_at: farFuture.toISOString(),
           price: 0, notes: `Chave em estoque - Pedido PIX #${order.id.slice(0, 8)}`,
           created_by: order.reseller_id, status: 'active', is_wildcard: false,
+          duration_hours: 720, first_activated_at: null,
         })
         .select('id').single()
 

@@ -198,6 +198,8 @@ Deno.serve(async (req) => {
           created_by: order.reseller_id,
           status: 'active',
           is_wildcard: false,
+          duration_hours: 720,
+          first_activated_at: null,
         })
         .select('id')
         .single()
