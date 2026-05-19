@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   LogOut, Menu, X, LayoutDashboard, KeyRound, Users,
-  Download, Loader2, GraduationCap, Store, Coins, Wrench, AlertTriangle,
+  Download, Loader2, GraduationCap, Store, Coins, Wrench, AlertTriangle, Lock,
 } from 'lucide-react';
 import logoImg from '@/assets/logo.png';
 import { useState } from 'react';
+import { useResellerLicenses } from '@/hooks/useResellerLicenses';
+import { useToast } from '@/hooks/use-toast';
 
 const navItems: { href: string; label: string; icon: any; disabled?: boolean }[] = [
   { href: '/reseller/dashboard', label: 'Revendedor', icon: LayoutDashboard },
@@ -23,11 +25,24 @@ export function ResellerSidebar() {
   const { signOut, user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const { data: licenses } = useResellerLicenses();
+  const { toast } = useToast();
+  const hasActivePaidLicense = (licenses || []).some(
+    (l: any) => l.status === 'active' && l.max_messages == null
+  );
 
   const EXTENSION_URL = '/ilimitado-lov-v8.1.0-release.zip';
 
   const downloadExtension = () => {
     if (isDownloading) return;
+    if (!hasActivePaidLicense) {
+      toast({
+        title: 'Acesso bloqueado',
+        description: 'Você precisa de pelo menos 1 chave comprada e ativa para baixar a extensão.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setIsDownloading(true);
     try {
       const link = document.createElement('a');
@@ -137,15 +152,28 @@ export function ResellerSidebar() {
           <div className="px-4 pb-2">
             <button
               onClick={downloadExtension}
-              disabled={isDownloading}
-              className="group relative flex w-full items-center gap-3.5 rounded-xl px-3.5 py-3 text-[13px] font-medium transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-primary/[0.06]"
+              disabled={isDownloading || !hasActivePaidLicense}
+              title={!hasActivePaidLicense ? 'Adquira pelo menos 1 chave ativa para liberar' : undefined}
+              className={cn(
+                'group relative flex w-full items-center gap-3.5 rounded-xl px-3.5 py-3 text-[13px] font-medium transition-all duration-200',
+                hasActivePaidLicense
+                  ? 'text-muted-foreground hover:text-foreground hover:bg-primary/[0.06]'
+                  : 'text-muted-foreground/50 cursor-not-allowed opacity-60'
+              )}
             >
               {isDownloading ? (
                 <Loader2 className="h-[18px] w-[18px] shrink-0 animate-spin" />
+              ) : !hasActivePaidLicense ? (
+                <Lock className="h-[18px] w-[18px] shrink-0" />
               ) : (
                 <Download className="h-[18px] w-[18px] shrink-0 transition-all duration-200 group-hover:text-primary" />
               )}
               <span className="truncate font-display">{isDownloading ? 'Baixando...' : 'Baixar Extensão'}</span>
+              {!hasActivePaidLicense && (
+                <Badge variant="outline" className="ml-auto text-[9px] px-1.5 py-0.5 border-yellow-500/30 bg-yellow-500/10 text-yellow-500">
+                  Bloqueado
+                </Badge>
+              )}
             </button>
           </div>
 
