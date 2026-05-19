@@ -905,21 +905,8 @@ export default function ResellerDashboard() {
               </div>
               <div className="space-y-2">
                 <Label>Duração</Label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    { label: '10min Teste', value: '0.006944' },
-                    { label: '7 dias', value: '7' },
-                    { label: '30 dias', value: '30' },
-                    { label: '1 ano', value: '365' },
-                  ].map((option) => (
-                    <Button key={option.value} type="button" variant={newDuration === option.value ? 'default' : 'outline'} size="sm" className="text-xs" onClick={() => setNewDuration(option.value)}>
-                      {option.label}
-                    </Button>
-                  ))}
-                </div>
-                <div className="flex items-center gap-2 mt-2">
-                  <Input type="number" placeholder="Ou digite dias..." value={!['0.006944', '7', '30', '365'].includes(newDuration) ? newDuration : ''} onChange={(e) => setNewDuration(e.target.value)} className="flex-1" />
-                  <span className="text-xs text-muted-foreground">dias</span>
+                <div className="rounded-xl border border-border/20 bg-background/20 px-4 py-3 text-sm">
+                  30 dias <span className="text-xs text-muted-foreground">(fixo — teste continua separado e licença comum não usa mais 1 ano)</span>
                 </div>
               </div>
               <div className="space-y-2">
