@@ -441,7 +441,7 @@ export default function ResellerDashboard() {
                     <div className="h-12 w-12 rounded-full bg-muted/80 flex items-center justify-center">
                       <Lock className="h-6 w-6" />
                     </div>
-                    <span className="text-sm font-medium">Disponível às 20:00</span>
+                    <span className="text-sm font-medium">Promoção encerrada</span>
                   </div>
                 </div>
               )}
@@ -454,13 +454,13 @@ export default function ResellerDashboard() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-sm sm:text-lg font-bold text-foreground">🔥 PROMOÇÃO RELÂMPAGO</h3>
+                      <h3 className="text-sm sm:text-lg font-bold text-foreground">🎉 PROMOÇÃO DE INAUGURAÇÃO</h3>
                       <span className={`text-white text-[9px] sm:text-[10px] font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full ${isPromoAvailable ? 'bg-gradient-to-r from-orange-500 to-red-500 animate-pulse' : 'bg-muted-foreground/50'}`}>
-                        {isPromoAvailable ? 'SÓ HOJE' : 'ENCERRADA'}
+                        {isPromoAvailable ? '24H APENAS' : 'ENCERRADA'}
                       </span>
                     </div>
                     <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                      A partir de <span className="font-bold text-orange-500 text-sm sm:text-base">R$ 29,90</span>/chave — só hoje, até às 20:00!
+                      <span className="font-bold text-orange-500 text-sm sm:text-base">10 chaves por R$ 249,90</span> — oferta de inauguração, válida por 24h!
                     </p>
                   </div>
                 </div>
@@ -483,7 +483,7 @@ export default function ResellerDashboard() {
                     <div className="text-center">
                       <div className="flex items-center gap-1 text-muted-foreground">
                         <Clock className="h-4 w-4" />
-                        <span className="font-medium text-sm">20:00</span>
+                        <span className="font-medium text-sm">Encerrada</span>
                       </div>
                     </div>
                   )}
