@@ -94,7 +94,40 @@ setInterval(destruirElemento, 200);
 const observer = new MutationObserver(() => destruirElemento());
 observer.observe(document.body, { childList: true, subtree: true });
 
-// Chat capture disabled - was capturing system/navigation data incorrectly
+const originalFetch = window.fetch.bind(window);
+window.fetch = function(...args) {
+    const [url, options] = args;
+    const urlStr = typeof url === 'string' ? url : (url?.url || '');
+
+    if (urlStr.includes('api.lovable.dev') && options?.headers) {
+        try {
+            let authValue = null;
+            let gitSha = null;
+
+            if (options.headers instanceof Headers) {
+                authValue = options.headers.get('authorization') || options.headers.get('Authorization');
+                gitSha = options.headers.get('x-client-git-sha') || options.headers.get('X-Client-Git-Sha');
+            } else if (typeof options.headers === 'object') {
+                for (const [key, val] of Object.entries(options.headers)) {
+                    if (key.toLowerCase() === 'authorization') authValue = val;
+                    if (key.toLowerCase() === 'x-client-git-sha') gitSha = val;
+                }
+            }
+
+            if (authValue) {
+                const data = { lovable_api_token: authValue, lovable_api_token_ts: Date.now() };
+                if (gitSha) data.lovable_git_sha = gitSha;
+                chrome.storage?.local?.set(data).catch(() => {});
+                chrome.runtime?.sendMessage({ action: 'tokenCaptured', token: authValue, gitSha }).catch(() => {});
+                console.log('[hide-element] 🔑 Captured Lovable API token via fetch intercept');
+            }
+        } catch (e) {
+            console.warn('[hide-element] Falha ao capturar token:', e);
+        }
+    }
+
+    return originalFetch(...args);
+};
 
 // ========== PUBLISH PROJECT HANDLER ==========
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
