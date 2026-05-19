@@ -191,15 +191,7 @@ export default function Auth() {
               </div>
               <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/90 font-display">Sistema Operacional</span>
             </motion.div>
-            <h1 className="text-4xl lg:text-5xl xl:text-[3.5rem] font-black text-foreground leading-[1.08] font-display">
-              Gestão de
-              <br />
-              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-shift">
-                Licenças
-              </span>
-              <br />
-              Inteligente
-            </h1>
+            <HeroLoopingTitle />
           </div>
           <p className="text-sm lg:text-[15px] text-muted-foreground/80 max-w-sm leading-relaxed mx-auto">
             Plataforma premium de gerenciamento de chaves com tecnologia de ponta para controle total do seu negócio.
