@@ -1,0 +1,1 @@
+UPDATE system_config SET value = replace(value, 'extension-banner.png?v=3', 'extension-banner.png?v=4') WHERE key='extension_front_html';
