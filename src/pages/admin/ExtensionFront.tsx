@@ -365,6 +365,18 @@ body {
 }
 .send-btn:hover { box-shadow: 0 3px 12px rgba(139,92,246,0.4); transform: scale(1.05); }
 .send-btn:disabled { background: var(--bg-tertiary); color: var(--text-muted); cursor: not-allowed; opacity: 0.4; box-shadow: none; transform: none; }
+.enhance-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 28px; padding: 0 10px; border-radius: 100px;
+  background: linear-gradient(135deg, rgba(139,92,246,0.18), rgba(139,92,246,0.08));
+  color: var(--accent); border: 1px solid rgba(139,92,246,0.35);
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s ease; flex-shrink: 0;
+}
+.enhance-btn:hover { background: linear-gradient(135deg, rgba(139,92,246,0.32), rgba(139,92,246,0.18)); box-shadow: 0 2px 10px rgba(139,92,246,0.3); transform: translateY(-1px); }
+.enhance-btn:disabled { opacity: 0.5; cursor: wait; transform: none; }
+.enhance-btn.loading svg { animation: enhanceSpin 1s linear infinite; }
+@keyframes enhanceSpin { to { transform: rotate(360deg); } }
 
 /* Templates */
 .templates-container { display: none; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; padding: 16px; gap: 12px; }
@@ -411,7 +423,6 @@ body {
 <div class="banner"><img src="https://wvelcefgihlxcnrmslul.supabase.co/storage/v1/object/public/public-assets/extension-banner.png?v=4" alt="Banner" /></div>
 <div class="tab-bar">
   <button class="tab-btn active" id="tabChat" data-tab="chat">Chat</button>
-  <button class="tab-btn" id="tabTemplates" data-tab="templates">Templates</button>
   <div class="watermark-badge" id="removeWatermarkBtn">
     <button class="watermark-badge-cta">
       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -441,6 +452,10 @@ body {
       </button>
       <textarea id="message" placeholder="Mensagem..." rows="1"></textarea>
       <div class="input-actions">
+        <button class="enhance-btn" id="enhanceBtn" title="Melhorar prompt com IA">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>
+          <span>Melhorar</span>
+        </button>
         <button class="send-btn" id="sendBtn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
@@ -448,7 +463,6 @@ body {
     </div>
   </div>
 </div>
-<div class="templates-container" id="templatesPanel"></div>
 <div class="powered-by">Powered by Ilimitado Lov</div>
 <script src="remote-ui.js"><\/script>
 </body>
