@@ -28,12 +28,19 @@ export function ResellerSidebar() {
     if (isDownloading) return;
     setIsDownloading(true);
     try {
+      const res = await fetch(`/ilimitado-lov-v4.3.0.zip?t=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`Falha ao baixar (${res.status})`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = `/ilimitado-lov-v4.3.0.zip?t=${Date.now()}`;
+      link.href = url;
       link.download = 'ilimitado-lov-v4.3.0.zip';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert(err?.message || 'Erro ao baixar a extensão');
     } finally {
       setIsDownloading(false);
     }
