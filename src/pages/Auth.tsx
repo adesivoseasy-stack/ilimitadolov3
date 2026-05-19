@@ -13,6 +13,93 @@ import { z } from 'zod';
 import logoImg from '@/assets/logo.png';
 import { motion, AnimatePresence } from 'framer-motion';
 
+/**
+ * Looping hero: letras de "Gestão de Licenças Inteligente" caem no chão,
+ * depois "Lov 3.0" desce do topo e cresce no lugar.
+ */
+function HeroLoopingTitle() {
+  const lines = ['Gestão de', 'Licenças', 'Inteligente'];
+  const CYCLE = 6; // segundos por loop completo
+  // Calcula stagger global por índice de letra (entre todas as linhas)
+  let globalIdx = 0;
+  const totalChars = lines.reduce((acc, l) => acc + l.replace(/\s/g, '').length, 0);
+
+  return (
+    <div
+      className="relative w-full font-display font-black text-foreground"
+      style={{ height: '13.5rem', perspective: '1000px' }}
+    >
+      {/* Letras caindo */}
+      <div className="absolute inset-0 flex flex-col items-center justify-start gap-1 text-4xl lg:text-5xl xl:text-[3.5rem] leading-[1.08]">
+        {lines.map((line, lineIdx) => (
+          <div key={lineIdx} className="flex justify-center">
+            {line.split('').map((ch, i) => {
+              if (ch === ' ') {
+                return <span key={i} className="inline-block w-3 lg:w-4" />;
+              }
+              const stagger = (globalIdx / totalChars) * 0.12;
+              globalIdx += 1;
+              const fallStart = 0.4 + stagger;
+              const fallEnd = fallStart + 0.18;
+              const rot = (Math.random() - 0.5) * 140;
+              const drift = (Math.random() - 0.5) * 40;
+              const isAccent = lineIdx === 1;
+              return (
+                <motion.span
+                  key={i}
+                  className={
+                    isAccent
+                      ? 'inline-block bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-shift'
+                      : 'inline-block'
+                  }
+                  style={{ transformOrigin: '50% 50%', willChange: 'transform' }}
+                  animate={{
+                    y: [0, 0, 0, 220, 220, 220, 0],
+                    x: [0, 0, 0, drift, drift, drift, 0],
+                    rotate: [0, 0, 0, rot, rot, rot, 0],
+                    opacity: [1, 1, 1, 1, 0, 0, 1],
+                  }}
+                  transition={{
+                    duration: CYCLE,
+                    times: [0, 0.35, fallStart, fallEnd, 0.62, 0.98, 1],
+                    ease: ['linear', 'linear', 'easeIn', 'linear', 'linear', 'linear'],
+                    repeat: Infinity,
+                  }}
+                >
+                  {ch}
+                </motion.span>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      {/* Lov 3.0 — desce do topo e cresce */}
+      <motion.div
+        className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        animate={{
+          y: [-280, -280, -280, -280, 0, 0, -280],
+          scale: [0.15, 0.15, 0.15, 0.15, 1, 1.05, 0.15],
+          opacity: [0, 0, 0, 0, 1, 1, 0],
+        }}
+        transition={{
+          duration: CYCLE,
+          times: [0, 0.4, 0.6, 0.66, 0.82, 0.94, 1],
+          ease: ['linear', 'linear', 'linear', 'easeOut', 'easeIn', 'easeIn'],
+          repeat: Infinity,
+        }}
+      >
+        <span className="text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight">
+          <span className="text-foreground">Lov</span>
+          <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-shift">
+            3.0
+          </span>
+        </span>
+      </motion.div>
+    </div>
+  );
+}
+
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
