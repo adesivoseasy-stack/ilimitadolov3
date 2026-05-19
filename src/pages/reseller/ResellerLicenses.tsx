@@ -152,13 +152,8 @@ export default function ResellerLicenses() {
                   <div><Label className="font-display text-xs uppercase tracking-wider">Email do cliente</Label><Input type="email" placeholder="cliente@exemplo.com" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="bg-background/50 border-border/30" /></div>
                   <div>
                     <Label className="font-display text-xs uppercase tracking-wider">Duração</Label>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                    {[
-                      { label: '7 dias', value: '7' },
-                      { label: '30 dias', value: '30' },
-                    ].map((option) => (
-                        <Button key={option.value} type="button" variant={newDuration === option.value ? 'default' : 'outline'} size="sm" className={`text-xs font-display ${newDuration === option.value ? 'bg-gradient' : 'border-border/30 hover:bg-primary/10'}`} onClick={() => setNewDuration(option.value)}>{option.label}</Button>
-                      ))}
+                    <div className="mt-2 rounded-xl border border-border/20 bg-background/20 px-4 py-3 text-sm font-display">
+                      30 dias <span className="text-xs text-muted-foreground">(fixo)</span>
                     </div>
                   </div>
                   <div><Label className="font-display text-xs uppercase tracking-wider">Preço (R$)</Label><Input type="number" step="0.01" placeholder="0.00" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} className="bg-background/50 border-border/30" /></div>
