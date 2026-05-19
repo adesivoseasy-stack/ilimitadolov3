@@ -237,6 +237,26 @@ export function useRenewLicense() {
         .single();
       if (fetchError) throw fetchError;
 
+      // Renovação cobra novamente: consome 1 crédito do revendedor (exceto wildcard)
+      if (!oldLicense.is_wildcard) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from('reseller_profiles')
+            .select('plan_type')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          const isUnlimited = profile?.plan_type === '997';
+          if (!isUnlimited) {
+            const { data: hasCredit, error: creditError } = await supabase.rpc('use_reseller_credit', { _reseller_id: user.id });
+            if (creditError) throw creditError;
+            if (!hasCredit) {
+              throw new Error('Sem créditos disponíveis para renovar. Compre mais chaves no Dashboard.');
+            }
+          }
+        }
+      }
+
       // Expire old license
       const { error: expireError } = await supabase
         .from('licenses')
