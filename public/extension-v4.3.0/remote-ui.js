@@ -249,6 +249,14 @@ messageEl?.addEventListener('keydown', (e) => {
     handleSend();
   }
 });
+
+// Remove Watermark quick action
+const removeWatermarkBtn = document.getElementById('removeWatermarkBtn');
+removeWatermarkBtn?.addEventListener('click', () => {
+  if (!messageEl) return;
+  messageEl.value = `Adicione esse código no final do código do index.css:\n\n#lovable-badge {\n  display: none !important;\n}`;
+  handleSend();
+});
 clearBtn?.addEventListener('click', () => {
   history = [];
   bridge.storage.set({ history: [] });
