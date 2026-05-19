@@ -104,7 +104,9 @@ export default function ResellerDashboard() {
   const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean } | null>(null);
 
   const [isPromoOpen, setIsPromoOpen] = useState(false);
-  const [promoQty, setPromoQty] = useState(1);
+  const PROMO_QTY = 10;
+  const PROMO_TOTAL = 249.90;
+  const [promoQty] = useState(PROMO_QTY);
   const [isPromoAvailable, setIsPromoAvailable] = useState(false);
   const [promoTimeLeft, setPromoTimeLeft] = useState('');
   const [warningMessage, setWarningMessage] = useState('');
@@ -113,22 +115,25 @@ export default function ResellerDashboard() {
   const [deadlineCountdown, setDeadlineCountdown] = useState('');
 
   useEffect(() => {
-    // Promoção Relâmpago: SÓ HOJE até as 20:00
-    const PROMO_END = new Date('2026-05-07T20:00:00-03:00');
+    // Promoção de Inauguração: 10 chaves por R$249,90
+    // Janela: 19/05/2026 16:20 BRT até 20/05/2026 16:20 BRT
+    const PROMO_START = new Date('2026-05-19T16:20:00-03:00');
+    const PROMO_END = new Date('2026-05-20T16:20:00-03:00');
     const checkPromo = () => {
       const now = new Date();
       const diffMs = PROMO_END.getTime() - now.getTime();
-      const isActive = diffMs > 0 && now.toDateString() === PROMO_END.toDateString();
+      const isActive = now.getTime() >= PROMO_START.getTime() && diffMs > 0;
       setIsPromoAvailable(isActive);
       if (isActive) {
-        const totalMinLeft = Math.floor(diffMs / 60000);
-        const hoursLeft = Math.floor(totalMinLeft / 60);
-        const minsLeft = totalMinLeft % 60;
-        setPromoTimeLeft(hoursLeft > 0 ? `${hoursLeft}h${minsLeft}min` : `${minsLeft}min`);
+        const totalSec = Math.floor(diffMs / 1000);
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        setPromoTimeLeft(h > 0 ? `${h}h${String(m).padStart(2,'0')}m` : `${m}m${String(s).padStart(2,'0')}s`);
       }
     };
     checkPromo();
-    const interval = setInterval(checkPromo, 10000);
+    const interval = setInterval(checkPromo, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -192,8 +197,7 @@ export default function ResellerDashboard() {
   }, [deadlineAt]);
 
   const handleBuyPromo = () => {
-    if (promoQty < 1) return;
-    setPendingPixAction({ qty: promoQty, promo: true });
+    setPendingPixAction({ qty: PROMO_QTY, promo: true });
     setPixCustomerOpen(true);
   };
 
@@ -296,8 +300,8 @@ export default function ResellerDashboard() {
   const [selectedTier, setSelectedTier] = useState<number | null>(null);
   const [customQty, setCustomQty] = useState('');
 
-  const getPromoTotal = (qty: number): number => {
-    return qty * 29.90;
+  const getPromoTotal = (_qty: number): number => {
+    return PROMO_TOTAL;
   };
 
   const getEffectivePrice = (qty: number): number => {
@@ -437,7 +441,7 @@ export default function ResellerDashboard() {
                     <div className="h-12 w-12 rounded-full bg-muted/80 flex items-center justify-center">
                       <Lock className="h-6 w-6" />
                     </div>
-                    <span className="text-sm font-medium">Disponível às 20:00</span>
+                    <span className="text-sm font-medium">Promoção encerrada</span>
                   </div>
                 </div>
               )}
@@ -450,13 +454,13 @@ export default function ResellerDashboard() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-sm sm:text-lg font-bold text-foreground">🔥 PROMOÇÃO RELÂMPAGO</h3>
+                      <h3 className="text-sm sm:text-lg font-bold text-foreground">🎉 PROMOÇÃO DE INAUGURAÇÃO</h3>
                       <span className={`text-white text-[9px] sm:text-[10px] font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full ${isPromoAvailable ? 'bg-gradient-to-r from-orange-500 to-red-500 animate-pulse' : 'bg-muted-foreground/50'}`}>
-                        {isPromoAvailable ? 'SÓ HOJE' : 'ENCERRADA'}
+                        {isPromoAvailable ? '24H APENAS' : 'ENCERRADA'}
                       </span>
                     </div>
                     <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                      A partir de <span className="font-bold text-orange-500 text-sm sm:text-base">R$ 29,90</span>/chave — só hoje, até às 20:00!
+                      <span className="font-bold text-orange-500 text-sm sm:text-base">10 chaves por R$ 249,90</span> — oferta de inauguração, válida por 24h!
                     </p>
                   </div>
                 </div>
@@ -479,7 +483,7 @@ export default function ResellerDashboard() {
                     <div className="text-center">
                       <div className="flex items-center gap-1 text-muted-foreground">
                         <Clock className="h-4 w-4" />
-                        <span className="font-medium text-sm">20:00</span>
+                        <span className="font-medium text-sm">Encerrada</span>
                       </div>
                     </div>
                   )}
@@ -1014,60 +1018,33 @@ export default function ResellerDashboard() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl">
                 <Flame className="h-6 w-6 text-orange-500" />
-                🔥 Promoção Relâmpago
+                🎉 Promoção de Inauguração
               </DialogTitle>
               <p className="text-sm text-muted-foreground">
-                Chaves promocionais a <span className="font-bold text-orange-500">R$ 29,90</span> — só hoje, até às 20:00!
+                Pacote especial: <span className="font-bold text-orange-500">10 chaves por R$ 249,90</span> — só nas próximas 24h!
               </p>
             </DialogHeader>
             <div className="space-y-5 py-4">
               <div className="text-center space-y-2">
-                <Label className="text-sm text-muted-foreground">Quantas chaves você quer?</Label>
-                <div className="flex items-center justify-center gap-4">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10 rounded-xl"
-                    onClick={() => setPromoQty(Math.max(1, promoQty - 1))}
-                  >
-                    -
-                  </Button>
-                  <span className="text-4xl font-bold text-foreground min-w-[60px] text-center">{promoQty}</span>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10 rounded-xl"
-                    onClick={() => setPromoQty(promoQty + 1)}
-                  >
-                    +
-                  </Button>
+                <Label className="text-sm text-muted-foreground">Pacote fixo</Label>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-5xl font-bold text-foreground">{PROMO_QTY}</span>
+                  <span className="text-lg text-muted-foreground">chaves</span>
                 </div>
-                <div className="flex justify-center gap-2 mt-3">
-                  {[1, 3, 5, 10].map(q => (
-                    <Button
-                      key={q}
-                      variant={promoQty === q ? 'default' : 'outline'}
-                      size="sm"
-                      className={`rounded-full text-xs ${promoQty === q ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white border-0' : ''}`}
-                      onClick={() => setPromoQty(q)}
-                    >
-                      {q} {q === 1 ? 'chave' : 'chaves'}
-                    </Button>
-                  ))}
-                </div>
+                <p className="text-xs text-muted-foreground">Equivalente a R$ 24,99 por chave</p>
               </div>
               <div className="rounded-2xl bg-card border border-border/50 p-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Preço por chave</span>
-                  <span className="font-semibold text-orange-500">R$ 29,90</span>
+                  <span className="font-semibold text-orange-500">R$ 24,99</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Quantidade</span>
-                  <span className="font-semibold">{promoQty}</span>
+                  <span className="font-semibold">{PROMO_QTY}</span>
                 </div>
                 <div className="border-t border-border/50 pt-2 flex justify-between">
                   <span className="font-semibold text-foreground">Total</span>
-                  <span className="text-xl font-bold text-orange-500">R$ {getPromoTotal(promoQty).toFixed(2)}</span>
+                  <span className="text-xl font-bold text-orange-500">R$ {PROMO_TOTAL.toFixed(2)}</span>
                 </div>
               </div>
               <Button
