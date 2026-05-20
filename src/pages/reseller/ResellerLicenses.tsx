@@ -126,14 +126,14 @@ export default function ResellerLicenses() {
                     <Button
                       variant="outline"
                       className="border-border/30 font-display"
-                      onClick={() => hasActivePaidLicense && setIsTestOpen(true)}
-                      disabled={!hasActivePaidLicense}
+                      onClick={() => canCreateTest && setIsTestOpen(true)}
+                      disabled={!canCreateTest}
                     >
                       <FlaskConical className="mr-2 h-4 w-4" />Chave Teste
                     </Button>
                   </span>
                 </TooltipTrigger>
-                {!hasActivePaidLicense && (
+                {!canCreateTest && (
                   <TooltipContent>
                     <p>Adquira sua primeira chave para liberar a geração de testes</p>
                   </TooltipContent>
