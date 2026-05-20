@@ -52,7 +52,9 @@ export default function ResellerLicenses() {
     (l) => l.status === 'active' && !l.license_key.startsWith('TESTE-') && !l.max_messages && !(l.duration_hours && l.duration_hours <= 0.17)
   ) ?? false;
 
-  const canCreateTest = isAdmin || isManager || hasActivePaidLicense;
+  const WHITELIST_TEST_EMAILS = ['dimatheus.salvador@gmail.com'];
+  const isWhitelisted = !!user?.email && WHITELIST_TEST_EMAILS.includes(user.email.toLowerCase());
+  const canCreateTest = isAdmin || isManager || isWhitelisted || hasActivePaidLicense;
 
   const filteredLicenses = licenses?.filter((license) => {
     const matchesSearch =
