@@ -22,7 +22,7 @@ export default function ResellerLicenses() {
   const createLicense = useResellerCreateLicense();
   const updateCustomerName = useUpdateCustomerName();
   const renewLicense = useRenewLicense();
-  const { user } = useAuth();
+  const { user, isAdmin, isManager } = useAuth();
   const { data: credits } = useResellerCredits(user?.id);
   const resetDevice = useResetDevice();
   const revokeLicense = useRevokeLicense();
@@ -51,6 +51,8 @@ export default function ResellerLicenses() {
   const hasActivePaidLicense = licenses?.some(
     (l) => l.status === 'active' && !l.license_key.startsWith('TESTE-') && !l.max_messages && !(l.duration_hours && l.duration_hours <= 0.17)
   ) ?? false;
+
+  const canCreateTest = isAdmin || isManager || hasActivePaidLicense;
 
   const filteredLicenses = licenses?.filter((license) => {
     const matchesSearch =
@@ -124,14 +126,14 @@ export default function ResellerLicenses() {
                     <Button
                       variant="outline"
                       className="border-border/30 font-display"
-                      onClick={() => hasActivePaidLicense && setIsTestOpen(true)}
-                      disabled={!hasActivePaidLicense}
+                      onClick={() => canCreateTest && setIsTestOpen(true)}
+                      disabled={!canCreateTest}
                     >
                       <FlaskConical className="mr-2 h-4 w-4" />Chave Teste
                     </Button>
                   </span>
                 </TooltipTrigger>
-                {!hasActivePaidLicense && (
+                {!canCreateTest && (
                   <TooltipContent>
                     <p>Adquira sua primeira chave para liberar a geração de testes</p>
                   </TooltipContent>
