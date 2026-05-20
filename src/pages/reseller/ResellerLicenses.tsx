@@ -22,13 +22,14 @@ export default function ResellerLicenses() {
   const createLicense = useResellerCreateLicense();
   const updateCustomerName = useUpdateCustomerName();
   const renewLicense = useRenewLicense();
-  const { user } = useAuth();
+  const { user, isAdmin, isManager } = useAuth();
   const { data: credits } = useResellerCredits(user?.id);
   const resetDevice = useResetDevice();
   const revokeLicense = useRevokeLicense();
   const { toast } = useToast();
 
   const availableCredits = (credits?.credits_total || 0) - (credits?.credits_used || 0);
+  const canCreateTest = isAdmin || isManager || hasActivePaidLicense;
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
