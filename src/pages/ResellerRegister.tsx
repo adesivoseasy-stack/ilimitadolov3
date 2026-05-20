@@ -255,7 +255,7 @@ export default function ResellerRegister() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 1 }}
-          className="flex items-center gap-8"
+          className="flex items-center gap-8 animate-fade-up-delay-4"
         >
           {[
             { value: '500+', label: 'Revendedores' },
