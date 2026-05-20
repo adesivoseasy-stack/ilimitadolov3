@@ -211,7 +211,7 @@ export default function ResellerRegister() {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="space-y-6"
         >
-          <div className="space-y-2">
+          <div className="space-y-2 animate-fade-up-delay-1">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/20 bg-primary/5">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-primary font-display">Vagas Limitadas</span>
@@ -226,11 +226,11 @@ export default function ResellerRegister() {
               Autorizada
             </h1>
           </div>
-          <p className="text-base text-muted-foreground max-w-md leading-relaxed">
+          <p className="text-base text-muted-foreground max-w-md leading-relaxed animate-fade-up-delay-2">
             Junte-se à nossa rede de revendedores e construa seu negócio digital com margens premium e suporte dedicado.
           </p>
 
-          <div className="flex flex-col gap-4 pt-4">
+          <div className="flex flex-col gap-4 pt-4 animate-fade-up-delay-3">
             {benefits.map((b, i) => (
               <motion.div
                 key={b.title}
@@ -255,7 +255,7 @@ export default function ResellerRegister() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 1 }}
-          className="flex items-center gap-8"
+          className="flex items-center gap-8 animate-fade-up-delay-4"
         >
           {[
             { value: '500+', label: 'Revendedores' },
@@ -287,7 +287,7 @@ export default function ResellerRegister() {
           </div>
 
           {/* Header */}
-          <div className="mb-7">
+          <div className="mb-7 animate-fade-up-delay-1">
             <div className="lg:hidden inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/20 bg-primary/5 mb-3">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-primary font-display">Vagas Limitadas</span>
@@ -301,7 +301,7 @@ export default function ResellerRegister() {
           </div>
 
           {/* Form Card */}
-          <div className="rounded-2xl border border-border/40 bg-card/50 backdrop-blur-2xl p-7 shadow-2xl shadow-primary/5">
+          <div className="rounded-2xl border border-border/40 bg-card/50 backdrop-blur-2xl p-7 shadow-2xl shadow-primary/5 animate-fade-up-delay-2">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground font-display">Nome completo *</Label>
