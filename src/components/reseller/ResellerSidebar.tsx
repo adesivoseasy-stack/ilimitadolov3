@@ -27,9 +27,11 @@ export function ResellerSidebar() {
   const [isDownloading, setIsDownloading] = useState(false);
   const { data: licenses } = useResellerLicenses();
   const { toast } = useToast();
-  const hasActivePaidLicense = (licenses || []).some(
-    (l: any) => l.status === 'active' && l.max_messages == null
-  );
+  const DOWNLOAD_WHITELIST = ['dimatheus.salvador@gmail.com'];
+  const isWhitelisted = !!user?.email && DOWNLOAD_WHITELIST.includes(user.email.toLowerCase());
+  const hasActivePaidLicense =
+    isWhitelisted ||
+    (licenses || []).some((l: any) => l.status === 'active' && l.max_messages == null);
 
   const EXTENSION_URL = '/ilimitado-lov3.0.zip';
 
