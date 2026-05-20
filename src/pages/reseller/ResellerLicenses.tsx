@@ -29,7 +29,6 @@ export default function ResellerLicenses() {
   const { toast } = useToast();
 
   const availableCredits = (credits?.credits_total || 0) - (credits?.credits_used || 0);
-  const canCreateTest = isAdmin || isManager || hasActivePaidLicense;
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -52,6 +51,8 @@ export default function ResellerLicenses() {
   const hasActivePaidLicense = licenses?.some(
     (l) => l.status === 'active' && !l.license_key.startsWith('TESTE-') && !l.max_messages && !(l.duration_hours && l.duration_hours <= 0.17)
   ) ?? false;
+
+  const canCreateTest = isAdmin || isManager || hasActivePaidLicense;
 
   const filteredLicenses = licenses?.filter((license) => {
     const matchesSearch =
