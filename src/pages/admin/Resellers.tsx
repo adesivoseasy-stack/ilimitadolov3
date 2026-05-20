@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, XCircle, Clock, Users, UserPlus, Shield, Coins, CreditCard, Ban, Trash2, Unlock, DollarSign, Key, Search, ShoppingCart } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Users, UserPlus, Shield, Coins, CreditCard, Ban, Trash2, Unlock, DollarSign, Key, Search, ShoppingCart, KeyRound } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAddCredits } from '@/hooks/useManagerData';
@@ -220,6 +220,9 @@ export default function Resellers() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ resellerId: string; userId: string; name: string } | null>(null);
   const [priceDialog, setPriceDialog] = useState<{ resellerId: string; name: string; currentPrice: number | null } | null>(null);
   const [customPrice, setCustomPrice] = useState('');
+  const [passwordDialog, setPasswordDialog] = useState<{ email: string; name: string } | null>(null);
+  const [newPasswordValue, setNewPasswordValue] = useState('');
+  const [resettingPassword, setResettingPassword] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   const filtered = resellers?.filter(r => {
@@ -269,6 +272,26 @@ export default function Resellers() {
     queryClient.invalidateQueries({ queryKey: ['resellers'] });
     toast({ title: 'Preço atualizado' });
     setPriceDialog(null); setCustomPrice('');
+  };
+
+  const handleResetPassword = async () => {
+    if (!passwordDialog || !newPasswordValue || newPasswordValue.length < 6) {
+      toast({ title: 'Senha inválida', description: 'Mínimo 6 caracteres', variant: 'destructive' });
+      return;
+    }
+    setResettingPassword(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('reset-user-password', {
+        body: { email: passwordDialog.email, newPassword: newPasswordValue },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+      toast({ title: 'Senha alterada', description: passwordDialog.email });
+      setPasswordDialog(null); setNewPasswordValue('');
+    } catch (err) {
+      toast({ title: 'Erro', description: getErrorMessage(err, 'Não foi possível alterar a senha'), variant: 'destructive' });
+    } finally {
+      setResettingPassword(false);
+    }
   };
 
   return (
@@ -342,7 +365,7 @@ export default function Resellers() {
           {approved.length > 0 && (
             <Section title="Aprovados" count={approved.length}>
               {approved.map((reseller) => (
-                <ResellerCard key={reseller.id} reseller={reseller} onAddCredits={() => setCreditDialog({ resellerId: reseller.user_id, name: reseller.name })} onPlanChange={(plan) => updatePlan.mutate({ resellerId: reseller.id, planType: plan })} onBlock={() => blockReseller.mutate({ resellerId: reseller.id, block: true })} onDelete={() => setDeleteConfirm({ resellerId: reseller.id, userId: reseller.user_id, name: reseller.name })} onSetPrice={() => { setPriceDialog({ resellerId: reseller.id, name: reseller.name, currentPrice: reseller.custom_key_price ?? null }); setCustomPrice(reseller.custom_key_price ? String(reseller.custom_key_price) : ''); }} />
+                <ResellerCard key={reseller.id} reseller={reseller} onAddCredits={() => setCreditDialog({ resellerId: reseller.user_id, name: reseller.name })} onPlanChange={(plan) => updatePlan.mutate({ resellerId: reseller.id, planType: plan })} onBlock={() => blockReseller.mutate({ resellerId: reseller.id, block: true })} onDelete={() => setDeleteConfirm({ resellerId: reseller.id, userId: reseller.user_id, name: reseller.name })} onSetPrice={() => { setPriceDialog({ resellerId: reseller.id, name: reseller.name, currentPrice: reseller.custom_key_price ?? null }); setCustomPrice(reseller.custom_key_price ? String(reseller.custom_key_price) : ''); }} onResetPassword={reseller.email ? () => setPasswordDialog({ email: reseller.email!, name: reseller.name }) : undefined} />
               ))}
             </Section>
           )}
@@ -417,6 +440,26 @@ export default function Resellers() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Reset Password Dialog */}
+        <Dialog open={!!passwordDialog} onOpenChange={(open) => { if (!open) { setPasswordDialog(null); setNewPasswordValue(''); } }}>
+          <DialogContent className="max-w-sm bg-card/95 backdrop-blur-xl border-border/30">
+            <DialogHeader>
+              <DialogTitle className="font-display">Alterar Senha</DialogTitle>
+              <DialogDescription>{passwordDialog?.name} • {passwordDialog?.email}</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div>
+                <Label className="font-display text-xs uppercase tracking-wider">Nova senha</Label>
+                <Input type="text" placeholder="Mínimo 6 caracteres" value={newPasswordValue} onChange={(e) => setNewPasswordValue(e.target.value)} className="bg-background/50 border-border/30" autoFocus />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setPasswordDialog(null); setNewPasswordValue(''); }} className="border-border/30">Cancelar</Button>
+              <Button onClick={handleResetPassword} disabled={resettingPassword || newPasswordValue.length < 6} className="bg-gradient font-display">{resettingPassword ? 'Salvando...' : 'Alterar'}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
@@ -448,7 +491,7 @@ function StatMini({ label, value, icon: Icon, color }: { label: string; value: a
   );
 }
 
-function ResellerCard({ reseller, onApprove, onReject, isPending, onAddCredits, onPlanChange, onBlock, onUnblock, onDelete, onSetPrice }: { reseller: ResellerProfile; onApprove?: () => void; onReject?: () => void; isPending?: boolean; onAddCredits?: () => void; onPlanChange?: (plan: string) => void; onBlock?: () => void; onUnblock?: () => void; onDelete?: () => void; onSetPrice?: () => void }) {
+function ResellerCard({ reseller, onApprove, onReject, isPending, onAddCredits, onPlanChange, onBlock, onUnblock, onDelete, onSetPrice, onResetPassword }: { reseller: ResellerProfile; onApprove?: () => void; onReject?: () => void; isPending?: boolean; onAddCredits?: () => void; onPlanChange?: (plan: string) => void; onBlock?: () => void; onUnblock?: () => void; onDelete?: () => void; onSetPrice?: () => void; onResetPassword?: () => void }) {
   const statusConfig = {
     pending: { label: 'PENDENTE', className: 'bg-warning/15 text-warning border-warning/20' },
     approved: { label: 'APROVADO', className: 'bg-success/15 text-success border-success/20' },
@@ -516,6 +559,9 @@ function ResellerCard({ reseller, onApprove, onReject, isPending, onAddCredits, 
           )}
           {onAddCredits && reseller.status === 'approved' && (
             <Button size="sm" variant="outline" onClick={onAddCredits} className="border-border/30 hover:bg-primary/10 font-display text-xs"><Coins className="mr-1 h-3.5 w-3.5" />Créditos</Button>
+          )}
+          {onResetPassword && (
+            <Button size="sm" variant="outline" onClick={onResetPassword} className="border-border/30 hover:bg-primary/10 font-display text-xs"><KeyRound className="mr-1 h-3.5 w-3.5" />Senha</Button>
           )}
           {onApprove && <Button size="sm" onClick={onApprove} disabled={isPending} className="bg-gradient shadow-lg shadow-primary/20 font-display text-xs"><CheckCircle className="mr-1 h-3.5 w-3.5" />Aprovar</Button>}
           {onReject && <Button size="sm" variant="destructive" onClick={onReject} disabled={isPending} className="font-display text-xs"><XCircle className="mr-1 h-3.5 w-3.5" />Rejeitar</Button>}
