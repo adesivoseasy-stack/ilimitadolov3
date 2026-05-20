@@ -714,4 +714,33 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   checkStoredLicense();
+
+  // ===== AUTO-REVALIDAÇÃO PERIÓDICA =====
+  // Revalida a licença a cada 30s enquanto o sidebar está aberto.
+  // Se expirar/revogada, força retorno automático para a tela de licença.
+  setInterval(async () => {
+    if (!licenseKey) return;
+    try {
+      const result = await validateLicense(licenseKey);
+      if (result.status !== 'valid') {
+        await chrome.storage.local.remove(['licenseKey', 'licenseSessionToken']);
+        licenseKey = null;
+        licenseSessionToken = null;
+        licenseInfo = null;
+        showLicenseScreen();
+        const ls = document.getElementById('licenseStatus');
+        if (ls) {
+          ls.textContent = `❌ ${result.message || 'Licença expirada'}`;
+          ls.style.color = '#ef4444';
+        }
+        try { showToast(result.message || 'Sua licença expirou', 'error'); } catch {}
+      } else if (result.days_remaining !== undefined) {
+        licenseInfo = {
+          days_remaining: result.days_remaining,
+          hours_remaining: result.hours_remaining,
+          license_id: result.license_id,
+        };
+      }
+    } catch {}
+  }, 30000);
 });
