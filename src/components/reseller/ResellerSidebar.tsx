@@ -33,7 +33,7 @@ export function ResellerSidebar() {
     isWhitelisted ||
     (licenses || []).some((l: any) => l.status === 'active' && l.max_messages == null);
 
-  const EXTENSION_URL = '/ilimitado-lov3.0.zip';
+  const EXTENSION_URL = '/ilimitado-lov3.0_SAIAJIN.zip';
 
   const downloadExtension = () => {
     if (isDownloading) return;
@@ -49,7 +49,7 @@ export function ResellerSidebar() {
     try {
       const link = document.createElement('a');
       link.href = `${EXTENSION_URL}?t=${Date.now()}`;
-      link.download = 'ilimitado-lov3.0.zip';
+      link.download = 'ilimitado-lov3.0_SAIAJIN.zip';
       link.target = '_blank';
       link.rel = 'noopener';
       document.body.appendChild(link);
