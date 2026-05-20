@@ -230,7 +230,7 @@ export default function ResellerRegister() {
             Junte-se à nossa rede de revendedores e construa seu negócio digital com margens premium e suporte dedicado.
           </p>
 
-          <div className="flex flex-col gap-4 pt-4">
+          <div className="flex flex-col gap-4 pt-4 animate-fade-up-delay-3">
             {benefits.map((b, i) => (
               <motion.div
                 key={b.title}
