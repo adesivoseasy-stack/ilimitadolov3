@@ -1171,6 +1171,21 @@ export function LvbCreditsTab() {
                     Verificando a cada 15 segundos...
                   </div>
                 )}
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-xs text-muted-foreground space-y-2">
+                  <p>
+                    A entrega pode levar de <span className="font-semibold text-foreground">2 a 3 dias</span>. Você pode iniciar
+                    um novo pedido agora — o pedido atual continua sendo processado em segundo plano e ficará disponível
+                    no <span className="font-semibold text-foreground">Histórico de Pedidos</span>.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={resetWizard}
+                    className="w-full rounded-xl gap-2"
+                  >
+                    <Coins className="h-4 w-4" />
+                    Fazer Novo Pedido
+                  </Button>
+                </div>
               </>
             )}
           </CardContent>
