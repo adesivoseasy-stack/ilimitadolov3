@@ -39,6 +39,7 @@ export default function Licenses() {
   const [newPrice, setNewPrice] = useState('');
   const [newNotes, setNewNotes] = useState('');
   const [newIsWildcard, setNewIsWildcard] = useState(false);
+  const [newIsLifetime, setNewIsLifetime] = useState(false);
   const [newExpiryDate, setNewExpiryDate] = useState('');
 
   const filteredLicenses = (licenses || []).filter((license) =>
@@ -62,13 +63,14 @@ export default function Licenses() {
     try {
       await createMutation.mutateAsync({
         email: newEmail,
-        durationDays: newIsWildcard ? 36500 : (parseInt(newDuration) || 30),
+        durationDays: (newIsWildcard || newIsLifetime) ? 36500 : (parseInt(newDuration) || 30),
         price: parseFloat(newPrice) || 0,
         notes: newNotes || undefined,
         isWildcard: newIsWildcard,
+        isLifetime: newIsLifetime,
       });
       setCreateDialog(false);
-      setNewEmail(''); setNewDuration('30'); setNewPrice(''); setNewNotes(''); setNewIsWildcard(false);
+      setNewEmail(''); setNewDuration('30'); setNewPrice(''); setNewNotes(''); setNewIsWildcard(false); setNewIsLifetime(false);
     } catch (e) {}
   };
 
@@ -238,7 +240,7 @@ export default function Licenses() {
           <DialogHeader><DialogTitle className="font-display">Nova Licença</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div><Label className="font-display text-xs uppercase tracking-wider">Email</Label><Input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="email@exemplo.com" className="bg-background/50 border-border/30" /></div>
-            {!newIsWildcard && (
+            {!newIsWildcard && !newIsLifetime && (
               <div>
                 <Label className="font-display text-xs uppercase tracking-wider">Duração</Label>
                 <div className="mt-2 rounded-xl border border-border/20 bg-background/20 px-4 py-3 text-sm font-display">
@@ -253,7 +255,14 @@ export default function Licenses() {
                 <Label className="text-sm font-bold flex items-center gap-2 font-display"><Infinity className="h-4 w-4 text-primary" /> Chave Coringa</Label>
                 <p className="text-xs text-muted-foreground">Sem limite de dispositivo, mensagens ou validade</p>
               </div>
-              <Switch checked={newIsWildcard} onCheckedChange={setNewIsWildcard} />
+              <Switch checked={newIsWildcard} onCheckedChange={(v) => { setNewIsWildcard(v); if (v) setNewIsLifetime(false); }} />
+            </div>
+            <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary/5 p-4">
+              <div className="space-y-0.5">
+                <Label className="text-sm font-bold flex items-center gap-2 font-display"><Infinity className="h-4 w-4 text-primary" /> Chave Vitalícia</Label>
+                <p className="text-xs text-muted-foreground">1 dispositivo, validade ilimitada (100 anos)</p>
+              </div>
+              <Switch checked={newIsLifetime} onCheckedChange={(v) => { setNewIsLifetime(v); if (v) setNewIsWildcard(false); }} />
             </div>
           </div>
           <DialogFooter>
