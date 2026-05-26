@@ -149,13 +149,14 @@ export function useCreateLicense() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ email, durationDays, price, notes, isTestLicense, isWildcard }: {
+    mutationFn: async ({ email, durationDays, price, notes, isTestLicense, isWildcard, isLifetime }: {
       email: string;
       durationDays: number;
       price?: number;
       notes?: string;
       isTestLicense?: boolean;
       isWildcard?: boolean;
+      isLifetime?: boolean;
     }) => {
       const { data: keyData, error: keyError } = await supabase.rpc('generate_license_key');
       if (keyError) throw keyError;
@@ -174,13 +175,13 @@ export function useCreateLicense() {
       }
 
       // Paid keys: 30 dias contados a partir da primeira ativação por dispositivo.
-      // Wildcard: duração longa imediata. Test: comportamento original.
+      // Wildcard / Vitalícia: duração longa. Test: comportamento original.
       const effectiveDurationDays = isTestLicense
         ? durationDays
-        : (isWildcard ? Math.max(durationDays, 36500) : 30);
+        : ((isWildcard || isLifetime) ? Math.max(durationDays, 36500) : 30);
       const durationHours = effectiveDurationDays * 24;
       const expiresAt = new Date();
-      if (isTestLicense || !isWildcard) {
+      if (isTestLicense || (!isWildcard && !isLifetime)) {
         // Test e pagas: placeholder de 100 anos. A expiração real é definida na 1ª ativação.
         expiresAt.setFullYear(expiresAt.getFullYear() + 100);
       } else {
@@ -196,7 +197,7 @@ export function useCreateLicense() {
           price: price || 0,
           notes,
           duration_hours: isWildcard ? null : durationHours,
-          first_activated_at: isWildcard ? new Date().toISOString() : null,
+          first_activated_at: (isWildcard || isLifetime) ? new Date().toISOString() : null,
           is_wildcard: isWildcard || false,
           max_messages: isTestLicense ? testMessageLimit : null,
           created_by: user?.id || null,
