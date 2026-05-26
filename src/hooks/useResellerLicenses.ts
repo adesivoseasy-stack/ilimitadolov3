@@ -61,14 +61,13 @@ export function useResellerCreateLicense() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ email, durationDays, price, notes, isTestLicense, isWildcard, isLifetime, customerName }: {
+    mutationFn: async ({ email, durationDays, price, notes, isTestLicense, isWildcard, customerName }: {
       email: string;
       durationDays: number;
       price?: number;
       notes?: string;
       isTestLicense?: boolean;
       isWildcard?: boolean;
-      isLifetime?: boolean;
       customerName?: string;
     }) => {
       // Test licenses are FREE and unlimited - no credit consumption
@@ -99,7 +98,7 @@ export function useResellerCreateLicense() {
       // Chaves pagas: mensais (30 dias) por padrão. Vitalícia: 100 anos. Wildcard: 100 anos.
       const effectiveDurationDays = isTestLicense
         ? durationDays
-        : (isWildcard || isLifetime ? 36500 : 30);
+        : (isWildcard ? 36500 : 30);
       const expiresAt = new Date();
       if (isTestLicense || !isWildcard) {
         // Test e pagas: placeholder de 100 anos. Expiração real é setada na 1ª ativação.
@@ -110,7 +109,6 @@ export function useResellerCreateLicense() {
 
       const testDurationHours = 10 / 60; // ~0.1667 (10 minutes)
       const paidDurationHours = 30 * 24; // 720h (30 dias)
-      const lifetimeDurationHours = 36500 * 24; // 100 anos
 
       const { data, error } = await supabase
         .from('licenses')
@@ -122,7 +120,7 @@ export function useResellerCreateLicense() {
           notes,
           duration_hours: isWildcard
             ? null
-            : (isTestLicense ? testDurationHours : (isLifetime ? lifetimeDurationHours : paidDurationHours)),
+            : (isTestLicense ? testDurationHours : paidDurationHours),
           first_activated_at: isWildcard ? new Date().toISOString() : null,
           is_wildcard: isWildcard || false,
           created_by: user?.id,
