@@ -657,9 +657,15 @@ export default function ResellerDashboard() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
-                            Exclusivo
-                          </span>
+                          {isLifetimePromoActive ? (
+                            <span className="bg-gradient-to-r from-pink-500 to-red-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider animate-pulse">
+                              🔥 Promo Relâmpago
+                            </span>
+                          ) : (
+                            <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                              Exclusivo
+                            </span>
+                          )}
                           <span className="text-[10px] font-bold text-purple-300 uppercase tracking-wider">Validade ∞</span>
                         </div>
                         <h3 className="text-xl sm:text-2xl font-black text-foreground font-display">
@@ -668,12 +674,30 @@ export default function ResellerDashboard() {
                         <p className="text-sm text-muted-foreground mt-1 max-w-md">
                           1 chave com validade ilimitada para o cliente final. Venda como produto premium.
                         </p>
+                        {isLifetimePromoActive && (
+                          <p className="text-xs font-bold text-pink-300 mt-2 flex items-center gap-1.5">
+                            <Clock className="h-3.5 w-3.5" />
+                            Somente hoje até 20h • Termina em <span className="font-mono text-pink-200">{lifetimePromoTimeLeft}</span>
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex flex-col items-stretch sm:items-end gap-2 w-full sm:w-auto">
                       <div className="text-right">
-                        <span className="text-3xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">R$ 147,90</span>
-                        <p className="text-[11px] text-muted-foreground">pagamento único</p>
+                        {isLifetimePromoActive ? (
+                          <>
+                            <div className="flex items-baseline gap-2 justify-end">
+                              <span className="text-sm text-muted-foreground line-through">R$ 147,90</span>
+                              <span className="text-3xl font-black bg-gradient-to-r from-pink-400 to-red-400 bg-clip-text text-transparent">R$ 99,00</span>
+                            </div>
+                            <p className="text-[11px] text-pink-300 font-bold">economize R$ 48,90</p>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-3xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">R$ 147,90</span>
+                            <p className="text-[11px] text-muted-foreground">pagamento único</p>
+                          </>
+                        )}
                       </div>
                       <Button
                         disabled={loadingQty !== null}
