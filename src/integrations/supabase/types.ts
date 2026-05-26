@@ -82,6 +82,7 @@ export type Database = {
           id: string
           pagseguro_order_id: string | null
           paid_at: string | null
+          product_type: string
           qr_code_image_url: string | null
           qr_code_text: string | null
           quantity: number
@@ -99,6 +100,7 @@ export type Database = {
           id?: string
           pagseguro_order_id?: string | null
           paid_at?: string | null
+          product_type?: string
           qr_code_image_url?: string | null
           qr_code_text?: string | null
           quantity: number
@@ -116,6 +118,7 @@ export type Database = {
           id?: string
           pagseguro_order_id?: string | null
           paid_at?: string | null
+          product_type?: string
           qr_code_image_url?: string | null
           qr_code_text?: string | null
           quantity?: number

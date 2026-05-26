@@ -101,7 +101,7 @@ export default function ResellerDashboard() {
   const [isPixModalOpen, setIsPixModalOpen] = useState(false);
   const pixStatus = usePixOrderPolling(pixOrder?.order_id || null);
   const [pixCustomerOpen, setPixCustomerOpen] = useState(false);
-  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean } | null>(null);
+  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean } | null>(null);
 
   const [isPromoOpen, setIsPromoOpen] = useState(false);
   const PROMO_QTY = 10;
@@ -203,10 +203,10 @@ export default function ResellerDashboard() {
 
   const handlePixCustomerConfirm = async (customerData: PixCustomerFormData) => {
     if (!pendingPixAction) return;
-    const { qty, promo } = pendingPixAction;
+    const { qty, promo, lifetime } = pendingPixAction;
     setPixCustomerOpen(false);
-    setLoadingQty(promo ? -1 : qty);
-    const order = await createOrder(qty, customerData, promo);
+    setLoadingQty(lifetime ? -2 : promo ? -1 : qty);
+    const order = await createOrder(qty, customerData, promo, lifetime);
     setLoadingQty(null);
     if (order) {
       setPixOrder(order);
@@ -318,6 +318,11 @@ export default function ResellerDashboard() {
 
   const handleBuyKeys = (qty: number) => {
     setPendingPixAction({ qty });
+    setPixCustomerOpen(true);
+  };
+
+  const handleBuyLifetime = () => {
+    setPendingPixAction({ qty: 1, lifetime: true });
     setPixCustomerOpen(true);
   };
 
@@ -609,6 +614,53 @@ export default function ResellerDashboard() {
                         </div>
                       );
                     })}
+                  </div>
+                </div>
+
+                {/* Lifetime Key */}
+                <div className="relative">
+                  <div
+                    className="absolute -inset-[2px] rounded-[1.3rem] z-0 animate-pulse opacity-80"
+                    style={{
+                      background: 'linear-gradient(135deg, #a855f7, #ec4899, #8b5cf6, #6366f1)',
+                      backgroundSize: '300% 300%',
+                      animation: 'fire-glow 4s ease infinite',
+                    }}
+                  />
+                  <div className="relative p-6 sm:p-7 rounded-3xl bg-card border border-transparent z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+                    <div className="flex items-start gap-4">
+                      <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center shrink-0">
+                        <img src={keyIcon} alt="Chave Vitalícia" className="h-[44px] w-[44px] object-contain" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                            Exclusivo
+                          </span>
+                          <span className="text-[10px] font-bold text-purple-300 uppercase tracking-wider">Validade ∞</span>
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-black text-foreground font-display">
+                          Chave <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Vitalícia</span>
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1 max-w-md">
+                          1 chave com validade ilimitada para o cliente final. Venda como produto premium.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-stretch sm:items-end gap-2 w-full sm:w-auto">
+                      <div className="text-right">
+                        <span className="text-3xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">R$ 147,90</span>
+                        <p className="text-[11px] text-muted-foreground">pagamento único</p>
+                      </div>
+                      <Button
+                        disabled={loadingQty !== null}
+                        onClick={handleBuyLifetime}
+                        className="rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold hover:opacity-90 shadow-lg shadow-purple-500/20 w-full sm:w-auto"
+                      >
+                        {loadingQty === -2 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
+                        {loadingQty === -2 ? 'Gerando PIX...' : 'Comprar Vitalícia'}
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
