@@ -16,6 +16,7 @@ const BodySchema = z.object({
   customerPhone: z.string().trim().max(20).optional().default(''),
   customerDocument: z.string().trim().max(20).optional().default(''),
   promo: z.boolean().optional(),
+  lifetime: z.boolean().optional(),
 })
 
 async function readResponseData(res: Response) {
@@ -124,7 +125,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const { quantity, customerName, customerEmail, customerPhone, customerDocument, promo } = bodyResult.data
+    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime } = bodyResult.data
     const userId = authUser.id
 
     const adminClient = createClient(
@@ -149,7 +150,13 @@ Deno.serve(async (req) => {
     let totalReais: number
     let pricePerKey: number
 
-    if (promo) {
+    if (lifetime) {
+      // Chave Vitalícia: 1 chave por R$ 147,90 com validade ilimitada (100 anos)
+      quantity = 1
+      totalReais = 147.90
+      pricePerKey = 147.90
+      promo = false
+    } else if (promo) {
       // Promoção de Inauguração: pacote fixo 10 chaves por R$249,90 (24h)
       const PROMO_START = new Date('2026-05-19T16:20:00-03:00').getTime()
       const PROMO_END = new Date('2026-05-20T16:20:00-03:00').getTime()
@@ -217,6 +224,7 @@ Deno.serve(async (req) => {
         customer_email: email,
         customer_phone: phoneNumber,
         customer_document: document,
+        product_type: lifetime ? 'lifetime' : 'standard',
       })
       .select()
       .single()
