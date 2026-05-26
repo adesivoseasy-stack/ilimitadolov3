@@ -1,0 +1,1 @@
+ALTER TABLE public.credit_orders ADD COLUMN IF NOT EXISTS product_type text NOT NULL DEFAULT 'standard';
