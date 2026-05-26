@@ -40,7 +40,7 @@ export default function ResellerLicenses() {
   const [newPrice, setNewPrice] = useState('');
   const [newNotes, setNewNotes] = useState('');
   const [newCustomerName, setNewCustomerName] = useState('');
-  const [isLifetime, setIsLifetime] = useState(false);
+  
   const [editNameLicense, setEditNameLicense] = useState<{ id: string; currentName: string } | null>(null);
   const [editNameValue, setEditNameValue] = useState('');
   const [renewDialog, setRenewDialog] = useState<{ licenseId: string; licenseKey: string } | null>(null);
