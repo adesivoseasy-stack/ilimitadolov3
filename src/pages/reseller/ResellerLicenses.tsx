@@ -40,6 +40,7 @@ export default function ResellerLicenses() {
   const [newPrice, setNewPrice] = useState('');
   const [newNotes, setNewNotes] = useState('');
   const [newCustomerName, setNewCustomerName] = useState('');
+  const [isLifetime, setIsLifetime] = useState(false);
   const [editNameLicense, setEditNameLicense] = useState<{ id: string; currentName: string } | null>(null);
   const [editNameValue, setEditNameValue] = useState('');
   const [renewDialog, setRenewDialog] = useState<{ licenseId: string; licenseKey: string } | null>(null);
@@ -74,12 +75,13 @@ export default function ResellerLicenses() {
     }
     await createLicense.mutateAsync({
       email: newEmail, durationDays: durationValue,
-      price: newPrice ? parseFloat(newPrice) : undefined,
+      price: newPrice ? parseFloat(newPrice) : (isLifetime ? 147.90 : undefined),
       notes: newNotes || undefined, isTestLicense: false,
+      isLifetime,
       customerName: newCustomerName || undefined,
     });
     setIsCreateOpen(false);
-    setNewEmail(''); setNewDuration('30'); setNewPrice(''); setNewNotes(''); setNewCustomerName('');
+    setNewEmail(''); setNewDuration('30'); setNewPrice(''); setNewNotes(''); setNewCustomerName(''); setIsLifetime(false);
   };
 
   const handleCreateTest = async () => {
@@ -156,8 +158,23 @@ export default function ResellerLicenses() {
                   <div><Label className="font-display text-xs uppercase tracking-wider">Email do cliente</Label><Input type="email" placeholder="cliente@exemplo.com" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="bg-background/50 border-border/30" /></div>
                   <div>
                     <Label className="font-display text-xs uppercase tracking-wider">Duração</Label>
-                    <div className="mt-2 rounded-xl border border-border/20 bg-background/20 px-4 py-3 text-sm font-display">
-                      30 dias <span className="text-xs text-muted-foreground">(fixo)</span>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { setIsLifetime(false); if (!newPrice) setNewPrice(''); }}
+                        className={`rounded-xl border px-3 py-3 text-sm font-display transition-all ${!isLifetime ? 'border-primary/60 bg-primary/10 text-foreground' : 'border-border/20 bg-background/20 text-muted-foreground hover:border-border/40'}`}
+                      >
+                        <div className="font-bold">30 dias</div>
+                        <div className="text-[10px] uppercase tracking-wider opacity-70">Mensal</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setIsLifetime(true); setNewPrice('147.90'); }}
+                        className={`rounded-xl border px-3 py-3 text-sm font-display transition-all ${isLifetime ? 'border-primary/60 bg-primary/10 text-foreground' : 'border-border/20 bg-background/20 text-muted-foreground hover:border-border/40'}`}
+                      >
+                        <div className="font-bold">Vitalícia ∞</div>
+                        <div className="text-[10px] uppercase tracking-wider opacity-70">R$ 147,90</div>
+                      </button>
                     </div>
                   </div>
                   <div><Label className="font-display text-xs uppercase tracking-wider">Preço (R$)</Label><Input type="number" step="0.01" placeholder="0.00" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} className="bg-background/50 border-border/30" /></div>
