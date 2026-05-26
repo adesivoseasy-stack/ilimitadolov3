@@ -109,6 +109,8 @@ export default function ResellerDashboard() {
   const [promoQty] = useState(PROMO_QTY);
   const [isPromoAvailable, setIsPromoAvailable] = useState(false);
   const [promoTimeLeft, setPromoTimeLeft] = useState('');
+  const [isLifetimePromoActive, setIsLifetimePromoActive] = useState(false);
+  const [lifetimePromoTimeLeft, setLifetimePromoTimeLeft] = useState('');
   const [warningMessage, setWarningMessage] = useState('');
   const [warningEnabled, setWarningEnabled] = useState(false);
   const [deadlineAt, setDeadlineAt] = useState<string | null>(null);
@@ -134,6 +136,27 @@ export default function ResellerDashboard() {
     };
     checkPromo();
     const interval = setInterval(checkPromo, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    // Promoção Relâmpago Chave Vitalícia: R$ 99,00 até hoje (26/05/2026) às 20h
+    const LIFETIME_PROMO_END = new Date('2026-05-26T20:00:00-03:00');
+    const tick = () => {
+      const now = new Date();
+      const diffMs = LIFETIME_PROMO_END.getTime() - now.getTime();
+      const active = diffMs > 0;
+      setIsLifetimePromoActive(active);
+      if (active) {
+        const totalSec = Math.floor(diffMs / 1000);
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        setLifetimePromoTimeLeft(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
+      }
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
   }, []);
 
