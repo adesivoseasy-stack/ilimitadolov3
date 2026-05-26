@@ -177,6 +177,8 @@ Deno.serve(async (req) => {
 
     // Generate license keys and add to reseller's stock
     const generatedKeys: string[] = []
+    const isLifetime = order.product_type === 'lifetime'
+    const lifetimeHours = 36500 * 24 // ~100 anos
     for (let i = 0; i < order.quantity; i++) {
       const { data: keyData, error: keyError } = await adminClient.rpc('generate_license_key')
       if (keyError) {
@@ -194,11 +196,13 @@ Deno.serve(async (req) => {
           email: 'estoque',
           expires_at: farFuture.toISOString(),
           price: 0,
-          notes: `Chave em estoque - Pedido PIX #${order.id.slice(0, 8)}`,
+          notes: isLifetime
+            ? `Chave VITALÍCIA em estoque - Pedido PIX #${order.id.slice(0, 8)}`
+            : `Chave em estoque - Pedido PIX #${order.id.slice(0, 8)}`,
           created_by: order.reseller_id,
           status: 'active',
           is_wildcard: false,
-          duration_hours: 720,
+          duration_hours: isLifetime ? lifetimeHours : 720,
           first_activated_at: null,
         })
         .select('id')
