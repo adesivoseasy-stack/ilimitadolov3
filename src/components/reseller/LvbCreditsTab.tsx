@@ -251,59 +251,90 @@ export function LvbCreditsTab() {
   useEffect(() => {
     if (step !== 'pix' || !pixState?.orderId) return;
 
-    const interval = setInterval(async () => {
-      const { data } = await supabase
-        .from('lvb_credit_orders' as any)
-        .select('status, external_order_id, link_cliente, email_bot')
-        .eq('id', pixState.orderId)
-        .single();
+    let cancelled = false;
 
-      if (data) {
-        const d = data as any;
-        if (shouldUseTrackingStep(d.status) && d.external_order_id) {
-          clearInterval(interval);
-
-          setOrder({
-            pedidoId: d.external_order_id,
-            creditos: pixState.creditos,
-            linkCliente: d.link_cliente || '',
-            emailBot: d.email_bot || '',
-            workspaceName: d.workspace_name || '',
-            status: normalizeOrderStatus(d.status),
-          });
-          setStep('tracking');
-          fetchOrders();
-        } else if (d.status === 'configurando' && d.external_order_id) {
-          clearInterval(interval);
-
-          let emailBot = d.email_bot || '';
-          let linkCliente = d.link_cliente || '';
-
-          if (!emailBot) {
-            const liveOrder = await lvb.getOrder(d.external_order_id);
-            emailBot = liveOrder?.emailConviteBot || emailBot;
-            linkCliente = liveOrder?.linkCliente || linkCliente;
-          }
-
-          setOrder({
-            pedidoId: d.external_order_id,
-            creditos: pixState.creditos,
-            linkCliente,
-            emailBot,
-            status: 'configurando',
-          });
-          setStep('created');
-          toast({ title: '✅ Pagamento confirmado!', description: 'Agora configure o workspace do cliente.' });
-          fetchOrders();
-        } else if (d.status === 'falha') {
-          clearInterval(interval);
-          toast({ title: '❌ Falha no pedido', description: 'Erro ao processar. Tente novamente.', variant: 'destructive' });
-          setStep('select');
+    const handleStatusChange = async (d: any) => {
+      if (cancelled || !d) return;
+      if (shouldUseTrackingStep(d.status) && d.external_order_id) {
+        cancelled = true;
+        setOrder({
+          pedidoId: d.external_order_id,
+          creditos: pixState.creditos,
+          linkCliente: d.link_cliente || '',
+          emailBot: d.email_bot || '',
+          workspaceName: d.workspace_name || '',
+          status: normalizeOrderStatus(d.status),
+        });
+        setStep('tracking');
+        fetchOrders();
+      } else if (d.status === 'configurando' && d.external_order_id) {
+        cancelled = true;
+        let emailBot = d.email_bot || '';
+        let linkCliente = d.link_cliente || '';
+        if (!emailBot) {
+          const liveOrder = await lvb.getOrder(d.external_order_id);
+          emailBot = liveOrder?.emailConviteBot || emailBot;
+          linkCliente = liveOrder?.linkCliente || linkCliente;
         }
+        setOrder({
+          pedidoId: d.external_order_id,
+          creditos: pixState.creditos,
+          linkCliente,
+          emailBot,
+          workspaceName: d.workspace_name || '',
+          status: 'configurando',
+        });
+        setStep(d.workspace_name ? 'promote' : 'created');
+        toast({ title: '✅ Pagamento confirmado!', description: 'Agora configure o workspace do cliente.' });
+        fetchOrders();
+      } else if (d.status === 'falha' || d.status === 'cancelado') {
+        cancelled = true;
+        toast({ title: '❌ Falha no pedido', description: 'Erro ao processar. Tente novamente.', variant: 'destructive' });
+        setStep('select');
       }
-    }, 5000);
+    };
 
-    return () => clearInterval(interval);
+    const fetchOnce = async () => {
+      const { data, error } = await supabase
+        .from('lvb_credit_orders' as any)
+        .select('status, external_order_id, link_cliente, email_bot, workspace_name')
+        .eq('id', pixState.orderId)
+        .maybeSingle();
+      if (error) {
+        console.error('[LvbCreditsTab] polling error', error);
+        return;
+      }
+      await handleStatusChange(data);
+    };
+
+    // Initial fetch — catches webhooks that fired before subscription was ready
+    fetchOnce();
+
+    // Realtime subscription for instant updates
+    const channel = supabase
+      .channel(`lvb_order_${pixState.orderId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'lvb_credit_orders',
+          filter: `id=eq.${pixState.orderId}`,
+        },
+        (payload) => {
+          handleStatusChange(payload.new);
+        }
+      )
+      .subscribe();
+
+    // Polling fallback (every 3s)
+    const interval = setInterval(fetchOnce, 3000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, [step, pixState?.orderId, pixState?.creditos, toast, fetchOrders, lvb]);
 
   // Detecta cancelamento (admin) durante created/promote/tracking e limpa a tela
