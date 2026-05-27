@@ -179,6 +179,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error };
     }
 
+    // Cria perfil de revendedor pendente para aprovação
+    // (necessário para o usuário aparecer na lista de aprovações do admin)
+    try {
+      await supabase.functions.invoke('register-reseller-self', {
+        body: {
+          name: email.split('@')[0],
+        },
+      });
+    } catch (e) {
+      console.error('[signUp] register-reseller-self failed:', e);
+    }
+
     return { error: null, needsAdminRole: true };
   };
 
