@@ -140,8 +140,8 @@ export default function ResellerDashboard() {
   }, []);
 
   useEffect(() => {
-    // Promoção Relâmpago Chave Vitalícia: R$ 99,00 até hoje (26/05/2026) às 20h
-    const LIFETIME_PROMO_END = new Date('2026-05-26T20:00:00-03:00');
+    // Promoção Relâmpago Chave Vitalícia: R$ 99,00 até hoje (27/05/2026) às 20h
+    const LIFETIME_PROMO_END = new Date('2026-05-27T20:00:00-03:00');
     const tick = () => {
       const now = new Date();
       const diffMs = LIFETIME_PROMO_END.getTime() - now.getTime();
