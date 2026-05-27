@@ -113,6 +113,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setIsManager(manager);
               setResellerStatus(status);
               setIsLoading(false);
+
+              // Se logou e não tem nenhum papel nem perfil de revendedor,
+              // cria perfil pending automaticamente (fallback para signups
+              // que exigem confirmação de email — naquele caso o signUp
+              // não tem sessão e a chamada inicial falha com 401).
+              if (
+                (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') &&
+                !admin && !reseller && !manager && !status
+              ) {
+                supabase.functions
+                  .invoke('register-reseller-self', {
+                    body: { name: session.user.email?.split('@')[0] || 'Revendedor' },
+                  })
+                  .then(() => {
+                    checkResellerStatus(session.user.id).then((s) => setResellerStatus(s));
+                  })
+                  .catch((e) => console.error('[auth] auto register-reseller-self failed:', e));
+              }
             }).catch(() => {
               setIsLoading(false);
             });
