@@ -131,6 +131,28 @@ function loadWizardState(): { step: WizardStep; pixState: PixState | null; order
 }
 
 export function LvbCreditsTab() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
+      <div className="relative">
+        <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
+        <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 border border-primary/30 flex items-center justify-center backdrop-blur-xl">
+          <Coins className="w-10 h-10 text-primary" />
+        </div>
+      </div>
+      <h2 className="mt-6 text-2xl font-bold text-foreground">Em manutenção</h2>
+      <p className="mt-3 max-w-md text-muted-foreground">
+        A aba de Créditos está temporariamente desativada para manutenção. Estamos trabalhando para
+        normalizar o serviço o mais rápido possível. Tente novamente em breve.
+      </p>
+      <Badge variant="outline" className="mt-6 border-primary/30 text-primary">
+        <Clock className="w-3 h-3 mr-1" /> Indisponível no momento
+      </Badge>
+    </div>
+  );
+}
+
+function LvbCreditsTabDisabled() {
+
   const { user } = useAuth();
   const { toast } = useToast();
   const lvb = useLvbCredits();
