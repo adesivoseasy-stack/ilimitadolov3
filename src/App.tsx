@@ -4,42 +4,63 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import Auth from "./pages/Auth";
-import ResetPassword from "./pages/ResetPassword";
-import Dashboard from "./pages/Dashboard";
-import Licenses from "./pages/Licenses";
-import Customers from "./pages/Customers";
-import ExtensionDownload from "./pages/ExtensionDownload";
-import Templates from "./pages/Templates";
-import Settings from "./pages/Settings";
-import NotFound from "./pages/NotFound";
-import ResellerRegister from "./pages/ResellerRegister";
-import ResellerDashboard from "./pages/reseller/ResellerDashboard";
-import ResellerLicenses from "./pages/reseller/ResellerLicenses";
-import ResellerCustomers from "./pages/reseller/ResellerCustomers";
-import Resellers from "./pages/admin/Resellers";
-import Managers from "./pages/admin/Managers";
-import ExtensionFront from "./pages/admin/ExtensionFront";
-import ResellerLanding from "./pages/ResellerLanding";
-import ManagerDashboard from "./pages/manager/ManagerDashboard";
-import ManagerLicenses from "./pages/manager/ManagerLicenses";
-import ManagerResellers from "./pages/manager/ManagerResellers";
-import ManagerCustomers from "./pages/manager/ManagerCustomers";
-import ManagerCredits from "./pages/manager/ManagerCredits";
-import ManagerRemarketing from "./pages/manager/ManagerRemarketing";
-import ExtensionChat from "./pages/ExtensionChat";
-import TokenMetrics from "./pages/admin/TokenMetrics";
-import LvbCreditsAdmin from "./pages/admin/LvbCreditsAdmin";
-import AdminRemarketing from "./pages/admin/AdminRemarketing";
-import CreditosPage from "./pages/CreditosPage";
-import CreditosLoginPage from "./pages/CreditosLoginPage";
-import CreditosConfig from "./pages/admin/CreditosConfig";
-import MyApprovals from "./pages/MyApprovals";
-import IpAudit from "./pages/admin/IpAudit";
-import ProjectAudit from "./pages/admin/ProjectAudit";
 import { HelmetProvider } from "react-helmet-async";
+import { lazy, Suspense } from "react";
+import { Loader2 } from "lucide-react";
 
-const queryClient = new QueryClient();
+// Eager: auth + landing (likely first paint)
+import Auth from "./pages/Auth";
+import ResellerLanding from "./pages/ResellerLanding";
+
+// Lazy: everything else (code-split per route)
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Licenses = lazy(() => import("./pages/Licenses"));
+const Customers = lazy(() => import("./pages/Customers"));
+const ExtensionDownload = lazy(() => import("./pages/ExtensionDownload"));
+const Templates = lazy(() => import("./pages/Templates"));
+const Settings = lazy(() => import("./pages/Settings"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const ResellerRegister = lazy(() => import("./pages/ResellerRegister"));
+const ResellerDashboard = lazy(() => import("./pages/reseller/ResellerDashboard"));
+const ResellerLicenses = lazy(() => import("./pages/reseller/ResellerLicenses"));
+const ResellerCustomers = lazy(() => import("./pages/reseller/ResellerCustomers"));
+const Resellers = lazy(() => import("./pages/admin/Resellers"));
+const Managers = lazy(() => import("./pages/admin/Managers"));
+const ExtensionFront = lazy(() => import("./pages/admin/ExtensionFront"));
+const ManagerDashboard = lazy(() => import("./pages/manager/ManagerDashboard"));
+const ManagerLicenses = lazy(() => import("./pages/manager/ManagerLicenses"));
+const ManagerResellers = lazy(() => import("./pages/manager/ManagerResellers"));
+const ManagerCustomers = lazy(() => import("./pages/manager/ManagerCustomers"));
+const ManagerCredits = lazy(() => import("./pages/manager/ManagerCredits"));
+const ManagerRemarketing = lazy(() => import("./pages/manager/ManagerRemarketing"));
+const ExtensionChat = lazy(() => import("./pages/ExtensionChat"));
+const TokenMetrics = lazy(() => import("./pages/admin/TokenMetrics"));
+const LvbCreditsAdmin = lazy(() => import("./pages/admin/LvbCreditsAdmin"));
+const AdminRemarketing = lazy(() => import("./pages/admin/AdminRemarketing"));
+const CreditosPage = lazy(() => import("./pages/CreditosPage"));
+const CreditosLoginPage = lazy(() => import("./pages/CreditosLoginPage"));
+const CreditosConfig = lazy(() => import("./pages/admin/CreditosConfig"));
+const MyApprovals = lazy(() => import("./pages/MyApprovals"));
+const IpAudit = lazy(() => import("./pages/admin/IpAudit"));
+const ProjectAudit = lazy(() => import("./pages/admin/ProjectAudit"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
+
+const RouteFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -49,6 +70,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/auth" element={<Auth />} />
@@ -85,6 +107,7 @@ const App = () => (
               <Route path="/admin/project-audit" element={<ProjectAudit />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
