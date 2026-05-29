@@ -53,6 +53,8 @@ export function useOnlineUsers() {
         } as OnlineUser;
       });
     },
-    refetchInterval: 15000, // Auto-refresh every 15s
+    refetchInterval: 45000, // Auto-refresh every 45s
+    staleTime: 30000,
+    refetchOnWindowFocus: false,
   });
 }

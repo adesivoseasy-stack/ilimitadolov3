@@ -18,4 +18,24 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    target: "es2020",
+    cssCodeSplit: true,
+    sourcemap: false,
+    chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (!id.includes("node_modules")) return;
+          if (id.includes("react-router")) return "react-vendor";
+          if (/[\\/]react(-dom)?[\\/]/.test(id)) return "react-vendor";
+          if (id.includes("@supabase")) return "supabase-vendor";
+          if (id.includes("@tanstack/react-query")) return "query-vendor";
+          if (id.includes("recharts") || id.includes("d3-")) return "charts-vendor";
+          if (id.includes("framer-motion")) return "motion-vendor";
+          if (id.includes("@radix-ui")) return "radix-vendor";
+        },
+      },
+    },
+  },
 }));
