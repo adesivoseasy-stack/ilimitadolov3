@@ -615,7 +615,7 @@ export default function ResellerDashboard() {
                                 <span className={`text-xl font-bold ${isBestSeller ? 'text-orange-400' : 'text-primary'}`}>R$ {total.toFixed(2)}</span>
                                 <p className="text-[11px] text-muted-foreground">total por {tier.quantity === 1 ? 'chave' : `${tier.quantity} chaves`}</p>
                               </div>
-                              <p className="text-sm font-semibold text-foreground">R$ {effectivePrice.toFixed(2)} por chave</p>
+                              <p className="text-sm font-semibold text-foreground">R$ {effectivePrice.toFixed(2)} por chave/mês</p>
                               <Button
                                 className={`w-full rounded-xl ${
                                   isBestSeller
