@@ -159,6 +159,53 @@ Deno.serve(async (req) => {
         });
         const externalText = await externalRes.text();
         console.log(`[validate-license-v2] External panel responded ${externalRes.status}`);
+
+        // Mirror external session locally so serve-extension-ui / send-message work
+        try {
+          const parsed = JSON.parse(externalText) as ValidateResponse;
+          if (parsed.status === 'valid' && parsed.session_token) {
+            // Upsert shadow license row so we have a license_id locally
+            const shadowExpires = new Date(Date.now() + (parsed.hours_remaining || 24) * 60 * 60 * 1000);
+            const { data: shadow } = await supabase
+              .from('licenses')
+              .upsert({
+                license_key,
+                status: 'active',
+                expires_at: shadowExpires.toISOString(),
+                duration_hours: parsed.hours_remaining || 720,
+                first_activated_at: new Date().toISOString(),
+                notes: '[External Panel Mirror]',
+                is_wildcard: false,
+              }, { onConflict: 'license_key' })
+              .select('id')
+              .maybeSingle();
+
+            if (shadow?.id) {
+              // Clean old session for this hwid/license
+              await supabase.from('sessions')
+                .delete()
+                .eq('license_id', shadow.id)
+                .eq('hwid', hwid);
+
+              await supabase.from('sessions').insert({
+                license_id: shadow.id,
+                session_token: parsed.session_token,
+                hwid,
+                expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+              });
+
+              parsed.license_id = shadow.id;
+              console.log('[validate-license-v2] Mirrored external session locally');
+              return new Response(JSON.stringify(parsed), {
+                status: 200,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              });
+            }
+          }
+        } catch (mirrorErr) {
+          console.error('[validate-license-v2] Mirror error:', mirrorErr);
+        }
+
         return new Response(externalText, {
           status: externalRes.status,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
