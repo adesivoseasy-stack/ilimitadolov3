@@ -100,8 +100,12 @@ export function useResellerCreateLicense() {
         ? durationDays
         : (isWildcard ? 36500 : 30);
       const expiresAt = new Date();
-      if (isTestLicense || !isWildcard) {
-        // Test e pagas: placeholder de 100 anos. Expiração real é setada na 1ª ativação.
+      if (isTestLicense) {
+        // Test: placeholder de 24h. Se não ativada nesse prazo, é purgada.
+        // Na 1ª ativação cai para 10min.
+        expiresAt.setTime(expiresAt.getTime() + 24 * 60 * 60 * 1000);
+      } else if (!isWildcard) {
+        // Pagas: placeholder de 100 anos. Expiração real setada na 1ª ativação.
         expiresAt.setFullYear(expiresAt.getFullYear() + 100);
       } else {
         expiresAt.setTime(expiresAt.getTime() + effectiveDurationDays * 24 * 60 * 60 * 1000);
