@@ -203,9 +203,10 @@ Deno.serve(async (req) => {
     const durationMinutes = 10;
     const durationHours = durationMinutes / 60; // ~0.1667
     
-    // For test licenses, set a short fallback expiration (1 hour from now)
-    // Will be recalculated to exactly 10 min on first activation
-    const fallbackExpiry = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    // For test licenses, set a short fallback expiration (24h window to first activate)
+    // Will be recalculated to exactly 10 min on first activation.
+    // If never activated within 24h, will be auto-purged by cleanup.
+    const fallbackExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
     // Create the test license
     const { data: newLicense, error: insertError } = await supabase
