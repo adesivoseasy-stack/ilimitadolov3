@@ -76,10 +76,6 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // External panel for cross-validation (cascade lookup)
-    const EXTERNAL_PANEL_URL = 'https://rmetppilvfrxosvxzhgj.supabase.co';
-    const EXTERNAL_PANEL_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZXRwcGlsdmZyeG9zdnh6aGdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNjE2MzgsImV4cCI6MjA4NTYzNzYzOH0.9ClXH2tomnJAGf0BSTAsJ7v4DTfnKQ8DDcrFj8mbqxY';
-
     // Extract client IP and User-Agent for server-side HWID
     const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
                      req.headers.get('x-real-ip') || 
@@ -143,84 +139,15 @@ Deno.serve(async (req) => {
     }
 
     if (!license) {
-      console.log('[validate-license-v2] Not found locally, trying external panel');
-      try {
-        const externalRes = await fetch(`${EXTERNAL_PANEL_URL}/functions/v1/validate-license-v2`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': EXTERNAL_PANEL_ANON,
-            'Authorization': `Bearer ${EXTERNAL_PANEL_ANON}`,
-            'x-forwarded-hwid': hwid,
-            'user-agent': userAgent,
-            'x-forwarded-for': clientIP,
-          },
-          body: JSON.stringify({ license_key, device_name, device_info, hwid }),
-        });
-        const externalText = await externalRes.text();
-        console.log(`[validate-license-v2] External panel responded ${externalRes.status}`);
-
-        // Mirror external session locally so serve-extension-ui / send-message work
-        try {
-          const parsed = JSON.parse(externalText) as ValidateResponse;
-          if (parsed.status === 'valid' && parsed.session_token) {
-            // Upsert shadow license row so we have a license_id locally
-            const shadowExpires = new Date(Date.now() + (parsed.hours_remaining || 24) * 60 * 60 * 1000);
-            const { data: shadow } = await supabase
-              .from('licenses')
-              .upsert({
-                license_key,
-                status: 'active',
-                expires_at: shadowExpires.toISOString(),
-                duration_hours: parsed.hours_remaining || 720,
-                first_activated_at: new Date().toISOString(),
-                notes: '[External Panel Mirror]',
-                is_wildcard: false,
-              }, { onConflict: 'license_key' })
-              .select('id')
-              .maybeSingle();
-
-            if (shadow?.id) {
-              // Clean old session for this hwid/license
-              await supabase.from('sessions')
-                .delete()
-                .eq('license_id', shadow.id)
-                .eq('hwid', hwid);
-
-              await supabase.from('sessions').insert({
-                license_id: shadow.id,
-                session_token: parsed.session_token,
-                hwid,
-                expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-              });
-
-              parsed.license_id = shadow.id;
-              console.log('[validate-license-v2] Mirrored external session locally');
-              return new Response(JSON.stringify(parsed), {
-                status: 200,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              });
-            }
-          }
-        } catch (mirrorErr) {
-          console.error('[validate-license-v2] Mirror error:', mirrorErr);
-        }
-
-        return new Response(externalText, {
-          status: externalRes.status,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      } catch (e) {
-        console.error('[validate-license-v2] External panel error:', e);
-        const response: ValidateResponse = {
-          status: 'not_found',
-          message: 'License not found',
-        };
-        return new Response(JSON.stringify(response), {
-          status: 404,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
+      console.log('[validate-license-v2] License not found');
+      const response: ValidateResponse = {
+        status: 'not_found',
+        message: 'License not found',
+      };
+      return new Response(JSON.stringify(response), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Check if license is revoked
