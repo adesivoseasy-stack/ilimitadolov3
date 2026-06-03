@@ -693,9 +693,9 @@ export default function ResellerDashboard() {
                           <>
                             <div className="flex items-baseline gap-2 justify-end">
                               <span className="text-sm text-muted-foreground line-through">R$ 147,90</span>
-                              <span className="text-3xl font-black bg-gradient-to-r from-pink-400 to-red-400 bg-clip-text text-transparent">R$ 89,90</span>
+                              <span className="text-3xl font-black bg-gradient-to-r from-pink-400 to-red-400 bg-clip-text text-transparent">R$ 99,90</span>
                             </div>
-                            <p className="text-[11px] text-pink-300 font-bold">economize R$ 58,00</p>
+                            <p className="text-[11px] text-pink-300 font-bold">economize R$ 48,00</p>
                           </>
                         ) : (
                           <>
