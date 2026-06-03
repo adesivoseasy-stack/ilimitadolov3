@@ -16,19 +16,34 @@ export function useResellerLicenses() {
     queryKey: ['reseller-licenses', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      await supabase.rpc('update_expired_licenses');
-      const { data, error } = await supabase
-        .from('licenses')
-        .select('*, devices (*)')
-        .eq('created_by', user.id)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data || []).map((license: any) => ({
+      // Fire-and-forget: don't block the main query
+      supabase.rpc('update_expired_licenses').then(() => {});
+      // Paginate to bypass default 1000-row cap
+      const PAGE_SIZE = 1000;
+      const all: any[] = [];
+      let from = 0;
+      for (let i = 0; i < 50; i++) {
+        const { data, error } = await supabase
+          .from('licenses')
+          .select('*, devices (*)')
+          .eq('created_by', user.id)
+          .order('created_at', { ascending: false })
+          .range(from, from + PAGE_SIZE - 1);
+        if (error) throw error;
+        const page = data || [];
+        if (page.length === 0) break;
+        all.push(...page);
+        if (page.length < PAGE_SIZE) break;
+        from += PAGE_SIZE;
+      }
+      return all.map((license: any) => ({
         ...license,
         devices: normalizeDevices(license.devices),
       })) as LicenseWithDevice[];
     },
     enabled: !!user,
+    initialData: [],
+    staleTime: 15_000,
   });
 }
 
