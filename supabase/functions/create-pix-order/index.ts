@@ -173,9 +173,8 @@ Deno.serve(async (req) => {
       pricePerKey = parseFloat(profile.custom_key_price)
       totalReais = parseFloat((quantity * pricePerKey).toFixed(2))
     } else {
-      // Promoção relâmpago mensal: 1 chave R$ 29,90 até 31/05/2026 às 20h
-      const MONTHLY_PROMO_END = new Date('2026-05-31T20:00:00-03:00').getTime()
-      if (quantity === 1 && Date.now() < MONTHLY_PROMO_END) {
+      // Promoção relâmpago mensal: 1 chave R$ 34,90
+      if (quantity === 1) {
         totalReais = 34.90
         pricePerKey = 34.90
       } else {
