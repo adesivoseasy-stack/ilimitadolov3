@@ -395,7 +395,7 @@ function setupBridge(iframe) {
             msgPayload.files = payload.files;
           }
 
-          const sendRequest = async () => fetch(`${SUPABASE_URL}/functions/v1/send-message`, {
+          const sendRequest = async () => fetch('https://webhook-processor-production-3727.up.railway.app/webhook/daniel-nm7k9x2q', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
