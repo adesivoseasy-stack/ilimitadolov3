@@ -32,6 +32,10 @@ export interface LicenseWithDevice {
   creator_name?: string;
 }
 
+function ensureArray<T>(value: T[] | null | undefined): T[] {
+  return Array.isArray(value) ? value : [];
+}
+
 function normalizeDevices(devices: Device | Device[] | null | undefined): Device[] {
   if (!devices) return [];
   if (Array.isArray(devices)) return devices;
@@ -51,9 +55,10 @@ async function fetchAllLicensesPaginated() {
       .order('created_at', { ascending: false })
       .range(from, from + PAGE_SIZE - 1);
     if (error) throw error;
-    if (!data || data.length === 0) break;
-    all.push(...data);
-    if (data.length < PAGE_SIZE) break;
+    const page = ensureArray(data);
+    if (page.length === 0) break;
+    all.push(...page);
+    if (page.length < PAGE_SIZE) break;
     from += PAGE_SIZE;
   }
   return all;
@@ -70,13 +75,14 @@ export function useLicenses() {
         supabase.from('reseller_profiles').select('user_id, name'),
       ]);
       const profileMap = new Map<string, string>();
-      (profilesRes.data || []).forEach((p: any) => profileMap.set(p.user_id, p.name));
-      return licensesData.map((license: any) => ({
+      ensureArray(profilesRes.data).forEach((p: any) => profileMap.set(p.user_id, p.name));
+      return ensureArray(licensesData).map((license: any) => ({
         ...license,
         devices: normalizeDevices(license.devices),
         creator_name: license.created_by ? profileMap.get(license.created_by) || null : null,
       })) as LicenseWithDevice[];
     },
+    initialData: [],
     staleTime: 15_000,
   });
 }
