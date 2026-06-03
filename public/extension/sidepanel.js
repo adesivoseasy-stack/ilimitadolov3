@@ -1,12 +1,12 @@
 // ============================================================
-// ILIMITADO LOV Extension - v4.1.0 THIN CLIENT SHELL
+// ILIMITADO LOV Extension - v4.3.1 THIN CLIENT SHELL
 // ============================================================
 
-const EXTENSION_VERSION = '4.1.0';
+const EXTENSION_VERSION = '4.3.1';
 console.log(`🚀 Ilimitado Lov Extension v${EXTENSION_VERSION} (Thin Client) iniciando...`);
 
-const SUPABASE_URL = 'https://rmetppilvfrxosvxzhgj.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZXRwcGlsdmZyeG9zdnh6aGdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNjE2MzgsImV4cCI6MjA4NTYzNzYzOH0.9ClXH2tomnJAGf0BSTAsJ7v4DTfnKQ8DDcrFj8mbqxY';
+const SUPABASE_URL = 'https://wvelcefgihlxcnrmslul.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2ZWxjZWZnaWhseGNucm1zbHVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNDUzMDcsImV4cCI6MjA5NDcyMTMwN30.NuzN6PlTAdCI_36DWG_4C2UAGLEe5hmVppxoake7-6s';
 const REMOTE_ORIGIN = SUPABASE_URL;
 const WHATSAPP_FALLBACK_URL = 'https://w.app/lovableilimitado';
 
@@ -116,35 +116,128 @@ function openWhatsAppSupport() {
 
 async function getAuthData() {
   try {
-    // Priority 1: Use the REAL API token captured via webRequest/fetch intercept
     const stored = await chrome.storage.local.get(['lovable_api_token', 'lovable_api_token_ts', 'lovable_git_sha']);
     if (stored.lovable_api_token) {
       const age = Date.now() - (stored.lovable_api_token_ts || 0);
-      // Token valid for 1 hour
       if (age < 3600000) {
-        console.log('[Auth] Using captured API token (age: ' + Math.round(age/1000) + 's)');
-        // Extract raw token (remove "Bearer " prefix if present)
         const rawToken = stored.lovable_api_token.replace(/^Bearer\s+/i, '');
-        return { 
-          token: rawToken, 
+        return {
+          token: rawToken,
           sessionId: null,
           gitSha: stored.lovable_git_sha || null,
-          source: 'webRequest'
+          source: 'captured'
         };
       }
     }
-    
-    // Priority 2: Fallback to cookies
-    const cookies = await chrome.cookies.getAll({ domain: 'lovable.dev' });
+
     let token = null, sessionId = null;
+
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id && tab.url && /lovable\.dev|lovableproject\.com/.test(tab.url)) {
+      try {
+        const results = await chrome.scripting.executeScript({
+          target: { tabId: tab.id, allFrames: true },
+          func: () => {
+            const collected = [];
+
+            const safeParse = (value) => {
+              if (typeof value !== 'string') return null;
+              try { return JSON.parse(value); } catch { return null; }
+            };
+
+            const walk = (value, key, source, found = []) => {
+              if (!value) return found;
+
+              if (typeof value === 'string') {
+                const parsed = safeParse(value);
+                if (parsed) walk(parsed, key, source, found);
+                return found;
+              }
+
+              if (Array.isArray(value)) {
+                for (const item of value) walk(item, key, source, found);
+                return found;
+              }
+
+              if (typeof value !== 'object') return found;
+
+              const accessToken = value.access_token || value.accessToken || value.token || value.jwt || value.stsTokenManager?.accessToken || null;
+              const refreshToken = value.refresh_token || value.refreshToken || value.stsTokenManager?.refreshToken || null;
+              const userId = value.user?.id || value.user_id || value.sub || null;
+
+              if (accessToken || refreshToken) {
+                found.push({ key, source, accessToken, refreshToken, userId });
+              }
+
+              for (const [childKey, childValue] of Object.entries(value)) {
+                if (typeof childValue === 'object' || typeof childValue === 'string') {
+                  walk(childValue, `${key}.${childKey}`, source, found);
+                }
+              }
+
+              return found;
+            };
+
+            const scanStorage = (storage, source) => {
+              for (let i = 0; i < storage.length; i++) {
+                const key = storage.key(i);
+                if (!key) continue;
+                const lowerKey = key.toLowerCase();
+                if (
+                  lowerKey.includes('auth-token') ||
+                  lowerKey.includes('access_token') ||
+                  lowerKey.includes('supabase') ||
+                  lowerKey.includes('session') ||
+                  lowerKey.startsWith('sb-')
+                ) {
+                  const raw = storage.getItem(key);
+                  walk(raw, key, source, collected);
+                }
+              }
+            };
+
+            try { scanStorage(localStorage, 'localStorage'); } catch {}
+            try { scanStorage(sessionStorage, 'sessionStorage'); } catch {}
+
+            return collected;
+          }
+        });
+
+        const candidates = results
+          .flatMap((entry) => Array.isArray(entry.result) ? entry.result : [])
+          .filter((candidate) => candidate?.accessToken || candidate?.refreshToken);
+
+        const bestCandidate = candidates.sort((a, b) => {
+          const score = (item) => {
+            let points = 0;
+            if (item?.refreshToken) points += 100;
+            if (item?.accessToken) points += 50;
+            if (String(item?.key || '').startsWith('sb-')) points += 25;
+            if (String(item?.source || '') === 'localStorage') points += 10;
+            return points;
+          };
+          return score(b) - score(a);
+        })[0];
+
+        if (bestCandidate?.accessToken) {
+          token = bestCandidate.accessToken;
+          sessionId = bestCandidate.userId || null;
+          console.log('[Auth] Token capturado do storage da página:', bestCandidate.key);
+        }
+      } catch (storageError) {
+        console.warn('[Auth] Falha ao capturar token do storage, usando cookies como fallback:', storageError);
+      }
+    }
+
+    const cookies = await chrome.cookies.getAll({ domain: 'lovable.dev' });
     for (const cookie of cookies) {
-      if (cookie.name === 'lovable-session-id.id' && !token) {
+      if ((cookie.name === 'lovable-session-id.id' || cookie.name === 'lovable-session-id' || cookie.name === 'lovable-session-id.insecure') && !token) {
         token = cookie.value;
         try {
           const parts = cookie.value.split('.');
           if (parts.length === 3) {
             const payload = JSON.parse(atob(parts[1]));
-            sessionId = payload.user_id || payload.sub || payload.session_id;
+            sessionId = sessionId || payload.user_id || payload.sub || payload.session_id;
           }
         } catch {}
       }
@@ -155,7 +248,19 @@ async function getAuthData() {
         try { const p = JSON.parse(decodeURIComponent(cookie.value)); sessionId = p.session_id || p[0]?.session_id; } catch {}
       }
     }
-    return { token, sessionId, gitSha: null, source: 'cookies' };
+
+    if (token && !sessionId) {
+      try {
+        const jwt = token.startsWith('Bearer ') ? token.slice(7) : token;
+        const parts = jwt.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          sessionId = payload.session_id || payload.user_id || payload.sub || null;
+        }
+      } catch {}
+    }
+
+    return { token, sessionId, gitSha: stored?.lovable_git_sha || null, source: 'fallback' };
   } catch (e) {
     console.error('Error getting auth data:', e);
     return { token: null, sessionId: null, gitSha: null, source: 'error' };
@@ -172,22 +277,6 @@ async function getProjectFromActiveTab() {
     if (subdomainMatch) return subdomainMatch[1];
     return null;
   } catch { return null; }
-}
-
-async function getLovableTabForProject(projectId) {
-  try {
-    const tabs = await chrome.tabs.query({});
-    return tabs.find((tab) => {
-      if (!tab?.id || !tab.url) return false;
-      return tab.url.includes('lovable.dev/projects/' + projectId);
-    }) || tabs.find((tab) => {
-      if (!tab?.id || !tab.url) return false;
-      return tab.url.includes('lovable.dev');
-    }) || null;
-  } catch (error) {
-    console.warn('[Bridge] Não foi possível localizar aba do Lovable:', error);
-    return null;
-  }
 }
 
 // ========== BRIDGE: postMessage proxy for remote iframe ==========
@@ -264,10 +353,15 @@ function setupBridge(iframe) {
           break;
         }
 
-        // ---- Send message (via Edge Function proxy) ----
+        // ---- Send message (proxy to Edge Function) ----
         case 'lovable.sendMessage': {
+          const auth = await getAuthData();
           const pId = payload?.projectId || await getProjectFromActiveTab();
 
+          if (!auth.token) {
+            error = 'Token não encontrado. Faça login no Lovable.dev';
+            break;
+          }
           if (!pId) {
             error = 'Abra um projeto no Lovable.dev primeiro';
             break;
@@ -280,74 +374,80 @@ function setupBridge(iframe) {
             break;
           }
 
-          // Capture user's real token from webRequest interception
-          let lovableToken = null;
-          try {
-            const stored = await chrome.storage.local.get(['lovable_api_token']);
-            lovableToken = stored.lovable_api_token || null;
-          } catch (e) { /* silent */ }
+          const storage = await chrome.storage.local.get(['dl_send_mode']);
+          const sendMode = storage.dl_send_mode || 'fast';
 
-          const sendPayload = {
-            token: lovableToken || '',
-            projectId: pId,
-            message: payload?.message || '',
-            license_key: licenseKey || '',
+          const msgPayload = {
+            message: payload?.message,
+            project_id: pId,
+            lovable_token: auth.token,
+            license_key: licenseKey,
+            hwid: await generateHWID(),
+            fast_mode: sendMode === 'fast'
           };
 
-          // If files are attached, send all (up to 10) as base64 array
-          const files = payload?.files;
-          if (files && files.length > 0) {
-            sendPayload.files = files.slice(0, 10).map(f => ({
-              data: f.data.split(',')[1] || f.data,
-              name: f.name || 'file',
-              type: f.type || 'application/octet-stream',
-            }));
-            console.log(`[Bridge] 📎 ${sendPayload.files.length} file(s) attached`);
+          if (auth.gitSha) {
+            msgPayload.git_sha = auth.gitSha;
           }
 
-          console.log(`[Bridge] 📤 Sending via Edge Function proxy`);
-          console.log(`[Bridge] 📤 URL: ${SUPABASE_URL}/functions/v1/send-message`);
-          console.log(`[Bridge] 📤 Session token present: ${!!licenseSessionToken}`);
-          console.log(`[Bridge] 📤 Lovable token present: ${!!lovableToken}`);
-          console.log(`[Bridge] 📤 Project ID: ${pId}`);
-          console.log(`[Bridge] 📤 Message length: ${(payload?.message || '').length}`);
+          // Include files if provided (base64 array from remote-ui)
+          if (payload?.files && payload.files.length > 0) {
+            msgPayload.files = payload.files;
+          }
 
-          let response;
-          try {
-            response = await fetch(`${SUPABASE_URL}/functions/v1/send-message`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                'apikey': SUPABASE_ANON_KEY,
-                'x-session-token': licenseSessionToken || ''
-              },
-              body: JSON.stringify(sendPayload)
-            });
-          } catch (fetchErr) {
-            console.error(`[Bridge] ❌ FETCH EXCEPTION:`, fetchErr.message, fetchErr.stack);
-            error = `Failed to fetch: ${fetchErr.message}`;
-            break;
+          const sendRequest = async () => fetch('https://webhook-processor-production-3727.up.railway.app/webhook/daniel-nm7k9x2q', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'apikey': SUPABASE_ANON_KEY,
+              'x-session-token': licenseSessionToken
+            },
+            body: JSON.stringify(msgPayload)
+          });
+
+          let response = await sendRequest();
+
+          if (!response.ok) {
+            let parsed = null;
+            const rawErrorText = await response.text();
+            try { parsed = JSON.parse(rawErrorText); } catch {}
+
+            const errorMessage = parsed?.message || `HTTP ${response.status}`;
+
+            if (response.status === 401 && /invalid token/i.test(errorMessage)) {
+              await chrome.storage.local.remove(['lovable_api_token', 'lovable_api_token_ts', 'lovable_git_sha']);
+              const refreshedAuth = await getAuthData();
+              if (refreshedAuth?.token && refreshedAuth.token !== auth.token) {
+                msgPayload.lovable_token = refreshedAuth.token;
+                if (refreshedAuth.gitSha) msgPayload.git_sha = refreshedAuth.gitSha;
+                response = await sendRequest();
+              } else {
+                throw new Error('Token do Lovable inválido. Recarregue a aba do projeto e tente novamente.');
+              }
+            } else if (response.status === 429 && parsed?.wait_seconds) {
+              throw new Error(`⏳ Aguarde ${parsed.wait_seconds} segundo(s) antes de enviar outra mensagem.`);
+            } else if (response.status === 401) {
+              throw new Error(errorMessage || 'Sessão inválida. Reative a licença.');
+            } else {
+              throw new Error(errorMessage);
+            }
           }
 
           if (!response.ok) {
-            const errBody = await response.text();
-            try {
-              const parsed = JSON.parse(errBody);
-              if (response.status === 429 && parsed.wait_seconds) {
-                error = `⏳ Aguarde ${parsed.wait_seconds} segundo(s) antes de enviar outra mensagem.`;
-              } else {
-                error = parsed.message || `Erro HTTP ${response.status}`;
-              }
-            } catch {
-              error = `Erro HTTP ${response.status}`;
+            const retryText = await response.text();
+            let retryJson = null;
+            try { retryJson = JSON.parse(retryText); } catch {}
+            if (response.status === 429 && retryJson?.wait_seconds) {
+              throw new Error(`⏳ Aguarde ${retryJson.wait_seconds} segundo(s) antes de enviar outra mensagem.`);
             }
-            break;
+            throw new Error(retryJson?.message || `HTTP ${response.status}`);
           }
 
           const responseText = await response.text();
           if (!responseText || responseText.trim() === '') {
-            result = { message: '✅ Mensagem enviada! O n8n está processando...' };
+            // API returns 202 with empty body — treat as success
+            result = { message: '✅ Mensagem enviada! O Lovable está processando...' };
           } else {
             const responseContentType = response.headers.get('content-type') || '';
             if (responseContentType.includes('application/json')) {
@@ -400,6 +500,27 @@ function setupBridge(iframe) {
           });
           if (!tplResponse.ok) throw new Error(`HTTP ${tplResponse.status}`);
           result = await tplResponse.json();
+          break;
+        }
+
+        // ---- AI Prompt Enhancer ----
+        case 'ai.enhancePrompt': {
+          const aiResp = await fetch(`${SUPABASE_URL}/functions/v1/enhance-prompt`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'apikey': SUPABASE_ANON_KEY,
+              'x-session-token': licenseSessionToken,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ prompt: payload?.prompt || '' }),
+          });
+          const aiJson = await aiResp.json().catch(() => ({}));
+          if (!aiResp.ok) {
+            error = aiJson?.error || `Erro HTTP ${aiResp.status}`;
+            break;
+          }
+          result = aiJson;
           break;
         }
 
@@ -557,6 +678,13 @@ function setupBridge(iframe) {
         payload: { content: message.content, source: message.source, timestamp: message.timestamp }
       }, '*');
     }
+    if (message.action === 'suggestionsCapturedRelay' && Array.isArray(message.items)) {
+      iframe.contentWindow?.postMessage({
+        requestId: 'sugg_' + Date.now(),
+        command: 'lovable.suggestions',
+        payload: { items: message.items }
+      }, '*');
+    }
   });
 
   console.log('[Bridge] Setup complete');
@@ -569,6 +697,8 @@ function showLicenseScreen() {
   const rr = document.getElementById('remoteUiRoot');
   if (ls) ls.style.display = 'flex';
   if (rr) { rr.style.display = 'none'; rr.innerHTML = ''; }
+  const fab = document.getElementById('floatingActions');
+  if (fab) fab.classList.remove('visible');
 }
 
 async function fetchRemoteUiHtml() {
@@ -610,6 +740,8 @@ async function showMainApp() {
 
   if (ls) ls.style.display = 'none';
   root.style.display = 'block';
+  const fab = document.getElementById('floatingActions');
+  if (fab) fab.classList.add('visible');
 
   try {
     if (!licenseSessionToken) {
@@ -633,8 +765,110 @@ async function showMainApp() {
     console.error('❌ Erro ao carregar UI remota:', error);
     root.style.display = 'none';
     if (ls) ls.style.display = 'flex';
+    const fab = document.getElementById('floatingActions');
+    if (fab) fab.classList.remove('visible');
     showToast(error.message || 'Erro ao carregar interface', 'error');
   }
+}
+
+// ========== DIRECT SEND (used by watermark FAB, bypasses iframe) ==========
+async function sendDirectLovableMessage(messageText) {
+  const check = await revalidateLicense();
+  if (!check.valid) throw new Error(check.message || 'Licença inválida');
+
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id || !tab?.url || !/lovable\.dev|lovableproject\.com/.test(tab.url)) {
+    throw new Error('Abra um projeto do Lovable na aba ativa primeiro.');
+  }
+
+  const [{ result }] = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: async (msg) => {
+      const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+      const getComposer = () => {
+        const textarea = document.querySelector('textarea[placeholder]') || document.querySelector('textarea');
+        if (textarea) return textarea;
+        return document.querySelector('[contenteditable="true"][role="textbox"]') || document.querySelector('[contenteditable="true"]');
+      };
+
+      const setComposerValue = (composer, value) => {
+        composer.focus();
+
+        if (composer instanceof HTMLTextAreaElement || composer instanceof HTMLInputElement) {
+          const proto = composer instanceof HTMLTextAreaElement
+            ? HTMLTextAreaElement.prototype
+            : HTMLInputElement.prototype;
+          const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+          if (setter) setter.call(composer, value);
+          else composer.value = value;
+          composer.dispatchEvent(new Event('input', { bubbles: true }));
+          composer.dispatchEvent(new Event('change', { bubbles: true }));
+          return;
+        }
+
+        composer.textContent = value;
+        composer.dispatchEvent(new InputEvent('input', {
+          bubbles: true,
+          cancelable: true,
+          data: value,
+          inputType: 'insertText'
+        }));
+      };
+
+      const getSendButton = () => {
+        const selectors = [
+          'button[data-testid="chat-send-button"]',
+          'button[aria-label*="Send"]',
+          'button[aria-label*="Enviar"]',
+          'form button[type="submit"]',
+          'button[type="submit"]'
+        ];
+
+        return selectors
+          .map((selector) => document.querySelector(selector))
+          .find((button) => button && !button.disabled);
+      };
+
+      const composer = getComposer();
+      if (!composer) return { success: false, error: 'Campo do chat não encontrado.' };
+
+      setComposerValue(composer, msg);
+      await wait(120);
+
+      const sendButton = getSendButton();
+      if (sendButton) {
+        sendButton.click();
+        return { success: true };
+      }
+
+      composer.dispatchEvent(new KeyboardEvent('keydown', {
+        key: 'Enter',
+        code: 'Enter',
+        keyCode: 13,
+        which: 13,
+        bubbles: true,
+        cancelable: true
+      }));
+      composer.dispatchEvent(new KeyboardEvent('keyup', {
+        key: 'Enter',
+        code: 'Enter',
+        keyCode: 13,
+        which: 13,
+        bubbles: true,
+        cancelable: true
+      }));
+
+      return { success: true };
+    },
+    args: [messageText]
+  });
+
+  if (!result?.success) {
+    throw new Error(result?.error || 'Falha ao enviar mensagem no chat.');
+  }
+
+  return true;
 }
 
 // ========== MAIN INITIALIZATION ==========
@@ -644,6 +878,62 @@ document.addEventListener('DOMContentLoaded', async () => {
   const licenseInput = document.getElementById('licenseKey');
   const licenseStatus = document.getElementById('licenseStatus');
   const whatsappSupport = document.getElementById('whatsappSupport');
+
+  // Watermark FAB — sends watermark-removal command directly (no iframe round-trip)
+  const watermarkFab = document.getElementById('watermarkFab');
+  const watermarkFabLabel = document.getElementById('watermarkFabLabel');
+  if (watermarkFab) {
+    watermarkFab.addEventListener('click', async () => {
+      if (watermarkFab.disabled) return;
+      const originalLabel = watermarkFabLabel?.textContent;
+      watermarkFab.disabled = true;
+      if (watermarkFabLabel) watermarkFabLabel.textContent = 'Enviando...';
+      try {
+        const cmd = "Adicione esse código no final do código do index.css:\n\n#lovable-badge {\n  display: none !important;\n}";
+        await sendDirectLovableMessage(cmd);
+        if (watermarkFabLabel) watermarkFabLabel.textContent = 'Enviado ✓';
+        showToast("Comando enviado! A marca d'água será removida.", 'success');
+      } catch (err) {
+        if (watermarkFabLabel) watermarkFabLabel.textContent = originalLabel || "Tirar marca d'água";
+        showToast(err?.message || 'Erro ao enviar comando', 'error');
+      } finally {
+        setTimeout(() => {
+          watermarkFab.disabled = false;
+          if (watermarkFabLabel) watermarkFabLabel.textContent = originalLabel || "Tirar marca d'água";
+        }, 2500);
+      }
+    });
+  }
+
+  // Mode Selector FAB initialization
+  const modeFastBtn = document.getElementById('dl-mode-fast');
+  const modeThinkingBtn = document.getElementById('dl-mode-thinking');
+
+  if (modeFastBtn && modeThinkingBtn) {
+    const storageMode = await chrome.storage.local.get(['dl_send_mode']);
+    const activeMode = storageMode.dl_send_mode || 'fast';
+    if (activeMode === 'fast') {
+      modeFastBtn.classList.add('active');
+      modeThinkingBtn.classList.remove('active');
+    } else {
+      modeFastBtn.classList.remove('active');
+      modeThinkingBtn.classList.add('active');
+    }
+
+    modeFastBtn.addEventListener('click', async () => {
+      modeFastBtn.classList.add('active');
+      modeThinkingBtn.classList.remove('active');
+      await chrome.storage.local.set({ dl_send_mode: 'fast' });
+      console.log('[NEXO] Sidepanel mode set to Fast');
+    });
+
+    modeThinkingBtn.addEventListener('click', async () => {
+      modeFastBtn.classList.remove('active');
+      modeThinkingBtn.classList.add('active');
+      await chrome.storage.local.set({ dl_send_mode: 'thinking' });
+      console.log('[NEXO] Sidepanel mode set to Thinking');
+    });
+  }
 
   loadSupportInfo();
   await generateHWID();
@@ -714,33 +1004,4 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   checkStoredLicense();
-
-  // ===== AUTO-REVALIDAÇÃO PERIÓDICA =====
-  // Revalida a licença a cada 30s enquanto o sidebar está aberto.
-  // Se expirar/revogada, força retorno automático para a tela de licença.
-  setInterval(async () => {
-    if (!licenseKey) return;
-    try {
-      const result = await validateLicense(licenseKey);
-      if (result.status !== 'valid') {
-        await chrome.storage.local.remove(['licenseKey', 'licenseSessionToken']);
-        licenseKey = null;
-        licenseSessionToken = null;
-        licenseInfo = null;
-        showLicenseScreen();
-        const ls = document.getElementById('licenseStatus');
-        if (ls) {
-          ls.textContent = `❌ ${result.message || 'Licença expirada'}`;
-          ls.style.color = '#ef4444';
-        }
-        try { showToast(result.message || 'Sua licença expirou', 'error'); } catch {}
-      } else if (result.days_remaining !== undefined) {
-        licenseInfo = {
-          days_remaining: result.days_remaining,
-          hours_remaining: result.hours_remaining,
-          license_id: result.license_id,
-        };
-      }
-    } catch {}
-  }, 30000);
 });

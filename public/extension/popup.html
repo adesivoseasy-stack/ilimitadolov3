@@ -620,6 +620,47 @@
       font-size: 13px;
       max-width: 200px;
     }
+
+    /* ===== MODE SELECTOR ===== */
+    .dl-mode-selector {
+      display: flex;
+      background: rgba(15, 8, 30, 0.8);
+      border: 1px solid rgba(var(--rgb-r), var(--rgb-g), var(--rgb-b), 0.3);
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: 4px;
+      gap: 4px;
+    }
+
+    .dl-mode-btn {
+      flex: 1;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .dl-mode-btn:hover {
+      color: var(--text);
+      background: rgba(var(--rgb-r), var(--rgb-g), var(--rgb-b), 0.1);
+    }
+
+    .dl-mode-btn.active {
+      background: linear-gradient(135deg, rgb(var(--rgb-r), var(--rgb-g), var(--rgb-b)), rgba(var(--rgb-r), var(--rgb-g), var(--rgb-b), 0.8));
+      color: white;
+      border: none;
+      box-shadow: 0 4px 15px rgba(var(--rgb-r), var(--rgb-g), var(--rgb-b), 0.3);
+    }
   </style>
 </head>
 <body>
@@ -705,7 +746,7 @@
               <polyline points="16 17 21 12 16 7"/>
               <line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
-            <span>Sair da Licença</span>
+            <span id="logoutBtn">Sair da Licença</span>
           </button>
         </div>
       </aside>
@@ -723,6 +764,14 @@
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
             <p>Envie uma mensagem para começar</p>
+          </div>
+        </div>
+
+        <!-- Mode Selector -->
+        <div style="padding: 0 18px; margin-top: 10px;">
+          <div class="dl-mode-selector">
+            <button class="dl-mode-btn active" id="dl-mode-fast" data-mode="fast">⚡ Fast</button>
+            <button class="dl-mode-btn" id="dl-mode-thinking" data-mode="thinking">🧠 Thinking</button>
           </div>
         </div>
 
