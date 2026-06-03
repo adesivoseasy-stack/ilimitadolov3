@@ -51,6 +51,9 @@ const bridge = {
   templates: {
     getAll: () => bridge._call('templates.getAll'),
   },
+  ai: {
+    enhancePrompt: (prompt) => bridge._call('ai.enhancePrompt', { prompt }),
+  },
   runtime: {
     openUrl: (url) => bridge._call('runtime.openUrl', { url }),
   },
@@ -63,8 +66,49 @@ window.addEventListener('message', (e) => {
     addMessage('bot', '💬 ' + payload.content);
     return;
   }
+  if (command === 'lovable.suggestions' && Array.isArray(payload?.items)) {
+    renderQuickSuggestions(payload.items);
+    return;
+  }
   bridge._handleResponse(e);
 });
+
+function renderQuickSuggestions(items) {
+  const wrap = document.getElementById('quickSuggestions');
+  if (!wrap) return;
+  if (!items.length) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+  // Dedup by text and cap at 8
+  const seen = new Set();
+  const list = [];
+  for (const it of items) {
+    const t = (it?.text || '').trim();
+    if (!t || seen.has(t)) continue;
+    seen.add(t); list.push(t);
+    if (list.length >= 8) break;
+  }
+  const prev = wrap.dataset.signature || '';
+  const sig = list.join('|');
+  if (sig === prev) return;
+  wrap.dataset.signature = sig;
+  wrap.innerHTML = '';
+  for (const t of list) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'qs-chip';
+    b.textContent = t;
+    b.title = t;
+    b.addEventListener('click', () => {
+      const m = document.getElementById('message');
+      if (!m) return;
+      m.value = t;
+      m.style.height = 'auto';
+      m.style.height = Math.min(m.scrollHeight, 200) + 'px';
+      m.focus();
+    });
+    wrap.appendChild(b);
+  }
+  wrap.style.display = 'flex';
+}
 
 let history = [];
 let pendingFiles = [];
@@ -84,15 +128,10 @@ function updateStatus(text) {
   if (statusEl) statusEl.textContent = text;
 }
 
-function addMessage(role, content, attachments) {
-  history.push({ role, content, attachments: attachments || null, time: new Date().toLocaleTimeString() });
+function addMessage(role, content) {
+  history.push({ role, content, time: new Date().toLocaleTimeString() });
   if (history.length > 50) history.shift();
-  // Store history without large base64 data to avoid chrome.storage limits
-  const historyForStorage = history.map(m => ({
-    ...m,
-    attachments: m.attachments ? m.attachments.map(a => ({ name: a.name, type: a.type })) : null,
-  }));
-  bridge.storage.set({ history: historyForStorage });
+  bridge.storage.set({ history });
   renderHistory();
 }
 
@@ -108,32 +147,7 @@ function renderHistory() {
     wrapper.className = 'message-wrapper ' + m.role;
     const bubble = document.createElement('div');
     bubble.className = 'bubble ' + m.role;
-
-    // Render attachments (images/files) if present
-    if (m.attachments && m.attachments.length > 0) {
-      m.attachments.forEach(att => {
-        if (att.type && att.type.startsWith('image/')) {
-          const img = document.createElement('img');
-          img.src = att.data;
-          img.alt = att.name || 'image';
-          img.style.cssText = 'max-width:100%;border-radius:8px;margin-bottom:6px;cursor:pointer;';
-          img.addEventListener('click', () => window.open(att.data, '_blank'));
-          bubble.appendChild(img);
-        } else {
-          const fileEl = document.createElement('div');
-          fileEl.style.cssText = 'background:rgba(139,92,246,0.1);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px;display:flex;align-items:center;gap:6px;';
-          fileEl.innerHTML = '📄 <span>' + (att.name || 'arquivo') + '</span>';
-          bubble.appendChild(fileEl);
-        }
-      });
-    }
-
-    if (m.content) {
-      const textNode = document.createElement('span');
-      textNode.textContent = m.content;
-      bubble.appendChild(textNode);
-    }
-
+    bubble.textContent = m.content;
     wrapper.appendChild(bubble);
     historyEl.appendChild(wrapper);
   });
@@ -158,32 +172,14 @@ function renderFilePreview() {
     return;
   }
   filePreview.style.display = 'flex';
-  filePreview.style.flexWrap = 'wrap';
-  filePreview.style.gap = '8px';
-  filePreview.style.padding = '8px';
   filePreview.innerHTML = '';
   pendingFiles.forEach((f, i) => {
     const chip = document.createElement('div');
     chip.className = 'file-chip';
-    chip.style.cssText = 'position:relative;display:inline-flex;flex-direction:column;align-items:center;';
-
-    // Show image thumbnail if it's an image
-    if (f.type && f.type.startsWith('image/')) {
-      const thumb = document.createElement('img');
-      thumb.style.cssText = 'max-width:80px;max-height:80px;border-radius:6px;object-fit:cover;';
-      thumb.alt = f.name;
-      const url = URL.createObjectURL(f);
-      thumb.src = url;
-      thumb.onload = () => URL.revokeObjectURL(url);
-      chip.appendChild(thumb);
-    }
-
     const name = document.createElement('span');
-    name.style.cssText = 'font-size:10px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;';
     name.textContent = f.name.length > 20 ? f.name.slice(0, 17) + '...' : f.name;
     const removeBtn = document.createElement('button');
     removeBtn.textContent = '×';
-    removeBtn.style.cssText = 'position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;border:none;border-radius:50%;width:18px;height:18px;font-size:12px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;';
     removeBtn.onclick = () => { pendingFiles.splice(i, 1); renderFilePreview(); };
     chip.appendChild(name);
     chip.appendChild(removeBtn);
@@ -192,7 +188,7 @@ function renderFilePreview() {
 }
 
 function addFiles(files) {
-  const MAX_FILES = 10;
+  const MAX_FILES = 5;
   const MAX_SIZE = 50 * 1024 * 1024; // 50MB
   for (const file of files) {
     if (pendingFiles.length >= MAX_FILES) break;
@@ -240,30 +236,34 @@ async function handleSend() {
   if (!text && pendingFiles.length === 0) return;
   if (!messageEl || !sendBtn) return;
 
-  // Convert files to base64 before displaying
-  let filesData = [];
-  let attachmentsForDisplay = [];
+  // Build message content description
+  let displayText = text || '';
   if (pendingFiles.length > 0) {
-    filesData = await Promise.all(
-      pendingFiles.map(async (f) => ({
-        name: f.name,
-        type: f.type,
-        size: f.size,
-        data: await fileToBase64(f),
-      }))
-    );
-    attachmentsForDisplay = filesData.map(f => ({ name: f.name, type: f.type, data: f.data }));
-    pendingFiles = [];
-    renderFilePreview();
+    const fileNames = pendingFiles.map(f => f.name).join(', ');
+    displayText += (displayText ? '\n' : '') + '📎 ' + fileNames;
   }
-
-  // Show message with attachments in chat
-  addMessage('user', text || '', attachmentsForDisplay.length > 0 ? attachmentsForDisplay : null);
+  addMessage('user', displayText);
   messageEl.value = '';
   sendBtn.disabled = true;
   updateStatus('📤 Enviando...');
 
   try {
+    // Convert files to base64
+    let filesData = [];
+    if (pendingFiles.length > 0) {
+      updateStatus('📤 Processando arquivos...');
+      filesData = await Promise.all(
+        pendingFiles.map(async (f) => ({
+          name: f.name,
+          type: f.type,
+          size: f.size,
+          data: await fileToBase64(f),
+        }))
+      );
+      pendingFiles = [];
+      renderFilePreview();
+    }
+
     const { projectId } = await bridge.project.getActive();
 
     let result;
@@ -273,11 +273,7 @@ async function handleSend() {
       result = await bridge.lovable.sendMessage(text, projectId);
     }
 
-    if (result?.revert === 'ok') {
-      addMessage('bot', '⏪ Revert automático executado! (ID: ' + (result.aiMessageId || '?').substring(0, 20) + '...)');
-    } else if (result?.revert === 'failed') {
-      addMessage('bot', '⚠️ Mensagem enviada, mas revert falhou: ' + (result.revertError || 'erro desconhecido'));
-    } else if (result?.reply) addMessage('bot', result.reply);
+    if (result?.reply) addMessage('bot', result.reply);
     else if (result?.output) addMessage('bot', result.output);
     else if (result?.message) addMessage('bot', result.message);
     else addMessage('bot', '✅ Comando processado!');
@@ -291,6 +287,17 @@ async function handleSend() {
 }
 
 sendBtn?.addEventListener('click', handleSend);
+messageEl?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    handleSend();
+  }
+});
+messageEl?.addEventListener('input', () => {
+  if (!messageEl) return;
+  messageEl.style.height = 'auto';
+  messageEl.style.height = Math.min(messageEl.scrollHeight, 200) + 'px';
+});
 
 // Remove Watermark quick action
 const removeWatermarkBtn = document.getElementById('removeWatermarkBtn');
@@ -299,28 +306,48 @@ removeWatermarkBtn?.addEventListener('click', () => {
   messageEl.value = `Adicione esse código no final do código do index.css:\n\n#lovable-badge {\n  display: none !important;\n}`;
   handleSend();
 });
-
-// Auto-resize textarea conforme digitação
-function autoResize() {
-  if (!messageEl) return;
-  messageEl.style.height = 'auto';
-  messageEl.style.height = Math.min(messageEl.scrollHeight, 120) + 'px';
-}
-messageEl?.addEventListener('input', autoResize);
-
-messageEl?.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    handleSend();
-    if (messageEl) { messageEl.style.height = 'auto'; }
-  }
-});
 clearBtn?.addEventListener('click', () => {
   history = [];
   bridge.storage.set({ history: [] });
   renderHistory();
 });
 logoutBtn?.addEventListener('click', () => bridge.license.logout());
+
+// === Enhance prompt with AI ===
+const enhanceBtn = document.getElementById('enhanceBtn');
+enhanceBtn?.addEventListener('click', async () => {
+  if (!messageEl) return;
+  const original = messageEl.value.trim();
+  if (!original) {
+    updateStatus('⚠️ Digite algo para melhorar');
+    return;
+  }
+  enhanceBtn.disabled = true;
+  enhanceBtn.classList.add('loading');
+  const label = enhanceBtn.querySelector('span');
+  const prevLabel = label?.textContent;
+  if (label) label.textContent = 'Otimizando...';
+  updateStatus('✨ Melhorando prompt...');
+  try {
+    const result = await bridge.ai.enhancePrompt(original);
+    if (result?.improved) {
+      messageEl.value = result.improved;
+      messageEl.style.height = 'auto';
+      messageEl.style.height = Math.min(messageEl.scrollHeight, 200) + 'px';
+      messageEl.focus();
+      updateStatus('✅ Prompt otimizado');
+    } else {
+      throw new Error(result?.error || 'Resposta vazia');
+    }
+  } catch (err) {
+    addMessage('bot', '❌ ' + (err?.message || 'Erro ao melhorar prompt'));
+    updateStatus('❌ Erro');
+  } finally {
+    enhanceBtn.disabled = false;
+    enhanceBtn.classList.remove('loading');
+    if (label && prevLabel) label.textContent = prevLabel;
+  }
+});
 
 const downloadBtn = document.getElementById('downloadBtn');
 downloadBtn?.addEventListener('click', async () => {

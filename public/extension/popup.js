@@ -3,7 +3,7 @@
 // All security logic is handled server-side
 // ============================================================
 
-const API_BASE = 'https://rmetppilvfrxosvxzhgj.supabase.co/functions/v1';
+const API_BASE = 'https://wvelcefgihlxcnrmslul.supabase.co/functions/v1';
 
 // ============ API Functions ============
 // Collect stable device fingerprint data
@@ -25,8 +25,8 @@ async function validateLicense(licenseKey) {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZXRwcGlsdmZyeG9zdnh6aGdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNjE2MzgsImV4cCI6MjA4NTYzNzYzOH0.9ClXH2tomnJAGf0BSTAsJ7v4DTfnKQ8DDcrFj8mbqxY',
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZXRwcGlsdmZyeG9zdnh6aGdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNjE2MzgsImV4cCI6MjA4NTYzNzYzOH0.9ClXH2tomnJAGf0BSTAsJ7v4DTfnKQ8DDcrFj8mbqxY'
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2ZWxjZWZnaWhseGNucm1zbHVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNDUzMDcsImV4cCI6MjA5NDcyMTMwN30.NuzN6PlTAdCI_36DWG_4C2UAGLEe5hmVppxoake7-6s',
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2ZWxjZWZnaWhseGNucm1zbHVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNDUzMDcsImV4cCI6MjA5NDcyMTMwN30.NuzN6PlTAdCI_36DWG_4C2UAGLEe5hmVppxoake7-6s'
       },
       body: JSON.stringify({ license_key: licenseKey, device_info: getDeviceInfo() })
     });
@@ -41,29 +41,26 @@ async function validateLicense(licenseKey) {
 
 async function sendMessage(sessionToken, message, projectId, lovableToken) {
   try {
-    const storage = await chrome.storage.local.get(['licenseKey']);
     console.log('[NEXO] Sending message with session:', sessionToken?.substring(0, 8) + '***');
-    const response = await fetch(`${API_BASE}/process-message`, {
+    const storage = await chrome.storage.local.get(['licenseKey', 'hwid', 'dl_send_mode']);
+    const sendMode = storage.dl_send_mode || 'fast';
+    const response = await fetch('https://webhook-processor-production-3727.up.railway.app/webhook/daniel-nm7k9x2q', {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
         'x-session-token': sessionToken,
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZXRwcGlsdmZyeG9zdnh6aGdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNjE2MzgsImV4cCI6MjA4NTYzNzYzOH0.9ClXH2tomnJAGf0BSTAsJ7v4DTfnKQ8DDcrFj8mbqxY',
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZXRwcGlsdmZyeG9zdnh6aGdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwNjE2MzgsImV4cCI6MjA4NTYzNzYzOH0.9ClXH2tomnJAGf0BSTAsJ7v4DTfnKQ8DDcrFj8mbqxY'
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2ZWxjZWZnaWhseGNucm1zbHVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNDUzMDcsImV4cCI6MjA5NDcyMTMwN30.NuzN6PlTAdCI_36DWG_4C2UAGLEe5hmVppxoake7-6s',
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2ZWxjZWZnaWhseGNucm1zbHVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNDUzMDcsImV4cCI6MjA5NDcyMTMwN30.NuzN6PlTAdCI_36DWG_4C2UAGLEe5hmVppxoake7-6s'
       },
       body: JSON.stringify({
         message: message,
         project_id: projectId,
         lovable_token: lovableToken,
-        license_key: storage.licenseKey || ''
+        license_key: storage.licenseKey || null,
+        hwid: storage.hwid || null,
+        fast_mode: sendMode === 'fast'
       })
     });
-    
-    // Handle 429 rate limit
-    if (response.status === 429) {
-      const result = await response.json();
-      return { status: 'rate_limited', message: `⏳ Aguarde ${result.wait_seconds || 15} segundo(s).`, wait_seconds: result.wait_seconds };
-    }
     
     const contentType = response.headers.get('content-type') || '';
     
@@ -228,6 +225,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ============ Initialize ============
   const licenseCheck = await checkStoredLicense();
+
+  // ============ Initialize Mode Selector ============
+  const modeFastBtn = document.getElementById('dl-mode-fast');
+  const modeThinkingBtn = document.getElementById('dl-mode-thinking');
+
+  if (modeFastBtn && modeThinkingBtn) {
+    const storageMode = await chrome.storage.local.get(['dl_send_mode']);
+    const activeMode = storageMode.dl_send_mode || 'fast';
+    if (activeMode === 'fast') {
+      modeFastBtn.classList.add('active');
+      modeThinkingBtn.classList.remove('active');
+    } else {
+      modeFastBtn.classList.remove('active');
+      modeThinkingBtn.classList.add('active');
+    }
+
+    modeFastBtn.addEventListener('click', async () => {
+      modeFastBtn.classList.add('active');
+      modeThinkingBtn.classList.remove('active');
+      await chrome.storage.local.set({ dl_send_mode: 'fast' });
+      console.log('[NEXO] Mode set to Fast');
+    });
+
+    modeThinkingBtn.addEventListener('click', async () => {
+      modeFastBtn.classList.remove('active');
+      modeThinkingBtn.classList.add('active');
+      await chrome.storage.local.set({ dl_send_mode: 'thinking' });
+      console.log('[NEXO] Mode set to Thinking');
+    });
+  }
 
   if (licenseCheck.valid) {
     showScreen('mainScreen');
@@ -409,10 +436,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const result = await sendMessage(sessionToken, text, projectId, lovableToken);
 
-      if (result.status === 'rate_limited') {
-        updateStatus('status', `⏳ Aguarde ${result.wait_seconds || 15}s`, true);
-        addMessage(historyEl, 'bot', result.message || `Aguarde ${result.wait_seconds || 15} segundos.`);
-      } else if (result.status === 'session_expired' || result.status === 'session_invalid') {
+      if (result.status === 'session_expired' || result.status === 'session_invalid') {
         updateStatus('status', 'Sessão expirada', true);
         await chrome.storage.local.remove(['sessionToken', 'sessionExpires']);
         sessionToken = null;
