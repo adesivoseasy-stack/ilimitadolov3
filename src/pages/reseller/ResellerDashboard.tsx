@@ -140,8 +140,8 @@ export default function ResellerDashboard() {
   }, []);
 
   useEffect(() => {
-    // Promoção Relâmpago Chave Vitalícia: R$ 89,90 até 31/05/2026 às 20h
-    const LIFETIME_PROMO_END = new Date('2026-05-31T20:00:00-03:00');
+    // Promoção Relâmpago Chave Vitalícia: R$ 99,90 até 04/06/2026 às 20h
+    const LIFETIME_PROMO_END = new Date('2026-06-04T20:00:00-03:00');
     const tick = () => {
       const now = new Date();
       const diffMs = LIFETIME_PROMO_END.getTime() - now.getTime();
@@ -328,10 +328,10 @@ export default function ResellerDashboard() {
   };
 
   const getEffectivePrice = (qty: number): number => {
-    // Promoção relâmpago mensal: 1 chave por R$ 29,90 até 31/05/2026 às 20h
-    const MONTHLY_PROMO_END = new Date('2026-05-31T20:00:00-03:00').getTime();
+    // Promoção relâmpago mensal: 1 chave por R$ 34,90 até 04/06/2026 às 20h
+    const MONTHLY_PROMO_END = new Date('2026-06-04T20:00:00-03:00').getTime();
     if (qty === 1 && Date.now() < MONTHLY_PROMO_END) {
-      return 29.90;
+      return 34.90;
     }
     if (customKeyPrice != null && customKeyPrice > 0) return customKeyPrice;
     if (!pricingPlans || pricingPlans.length === 0) return 30;
