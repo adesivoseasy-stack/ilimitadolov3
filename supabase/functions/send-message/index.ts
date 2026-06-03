@@ -333,11 +333,18 @@ Deno.serve(async (req) => {
       const webhookPayload: Record<string, unknown> = {
         message: textMessage || '',
         projectId: projectId,
+        project_id: projectId,
         token: lovableToken,
+        lovable_token: lovableToken,
         license_key: license.license_key,
         device_id: session.hwid,
         licenseKey: license.license_key,
         deviceId: session.hwid,
+        hwid: body.hwid ?? session.hwid ?? '',
+        fast_mode: body.fast_mode ?? false,
+        fastMode: body.fast_mode ?? false,
+        git_sha: body.git_sha ?? null,
+        gitSha: body.git_sha ?? null,
       };
       
       // Include sessionId if provided
