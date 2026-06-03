@@ -682,7 +682,7 @@ export default function ResellerDashboard() {
                         {isLifetimePromoActive && (
                           <p className="text-xs font-bold text-pink-300 mt-2 flex items-center gap-1.5">
                             <Clock className="h-3.5 w-3.5" />
-                            Só hoje até 20h • Termina em <span className="font-mono text-pink-200">{lifetimePromoTimeLeft}</span>
+                            Até amanhã 20h • Termina em <span className="font-mono text-pink-200">{lifetimePromoTimeLeft}</span>
                           </p>
                         )}
                       </div>
