@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface Device {
   id: string;
@@ -65,9 +66,12 @@ async function fetchAllLicensesPaginated() {
 }
 
 export function useLicenses() {
+  const { user, isLoading: isAuthLoading, isAdmin, isManager } = useAuth();
+
   return useQuery({
-    queryKey: ['licenses'],
+    queryKey: ['licenses', user?.id, isAdmin, isManager],
     queryFn: async () => {
+      if (!user || (!isAdmin && !isManager)) return [];
       // Fire-and-forget: don't block the main query
       supabase.rpc('update_expired_licenses').then(() => {});
       const [licensesData, profilesRes] = await Promise.all([
@@ -84,14 +88,21 @@ export function useLicenses() {
     },
     initialData: [],
     staleTime: 15_000,
+    enabled: !isAuthLoading && !!user && (isAdmin || isManager),
   });
 }
 
 // ── Stats hook ──
 export function useLicenseStats() {
+  const { user, isLoading: isAuthLoading, isAdmin, isManager } = useAuth();
+
   return useQuery({
-    queryKey: ['license-stats'],
+    queryKey: ['license-stats', user?.id, isAdmin, isManager],
     queryFn: async () => {
+      if (!user || (!isAdmin && !isManager)) {
+        return { total: 0, active: 0, expired: 0, revoked: 0, revenue: 0 };
+      }
+
       const PAGE_SIZE = 1000;
       const all: { status: string; price: number | null }[] = [];
       let from = 0;
@@ -114,6 +125,8 @@ export function useLicenseStats() {
         revenue: all.reduce((sum, l) => sum + (Number(l.price) || 0), 0),
       };
     },
+    initialData: { total: 0, active: 0, expired: 0, revoked: 0, revenue: 0 },
+    enabled: !isAuthLoading && !!user && (isAdmin || isManager),
   });
 }
 
