@@ -11,11 +11,11 @@ function normalizeDevices(devices: Device | Device[] | null | undefined): Device
 }
 
 export function useResellerLicenses() {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading, isReseller } = useAuth();
   return useQuery({
     queryKey: ['reseller-licenses', user?.id],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user || !isReseller) return [];
       // Fire-and-forget: don't block the main query
       supabase.rpc('update_expired_licenses').then(() => {});
       // Paginate to bypass default 1000-row cap
@@ -41,18 +41,18 @@ export function useResellerLicenses() {
         devices: normalizeDevices(license.devices),
       })) as LicenseWithDevice[];
     },
-    enabled: !!user,
+    enabled: !isAuthLoading && !!user && isReseller,
     initialData: [],
     staleTime: 15_000,
   });
 }
 
 export function useResellerStats() {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading, isReseller } = useAuth();
   return useQuery({
     queryKey: ['reseller-stats', user?.id],
     queryFn: async () => {
-      if (!user) return { total: 0, active: 0, expired: 0, revoked: 0, revenue: 0 };
+      if (!user || !isReseller) return { total: 0, active: 0, expired: 0, revoked: 0, revenue: 0 };
       const { data, error } = await supabase
         .from('licenses')
         .select('status, price')
@@ -66,7 +66,8 @@ export function useResellerStats() {
         revenue: data?.reduce((sum, l) => sum + (Number(l.price) || 0), 0) || 0,
       };
     },
-    enabled: !!user,
+    initialData: { total: 0, active: 0, expired: 0, revoked: 0, revenue: 0 },
+    enabled: !isAuthLoading && !!user && isReseller,
   });
 }
 
