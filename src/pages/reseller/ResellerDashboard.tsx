@@ -707,10 +707,11 @@ export default function ResellerDashboard() {
                       <Button
                         disabled={loadingQty !== null}
                         onClick={handleBuyLifetime}
-                        className="rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold hover:opacity-90 shadow-lg shadow-purple-500/20 w-full sm:w-auto"
+                        className="group relative overflow-hidden rounded-xl bg-[linear-gradient(110deg,#a855f7,45%,#ec4899,55%,#a855f7)] bg-[length:200%_100%] text-white font-bold shadow-lg shadow-purple-500/30 w-full sm:w-auto transition-all duration-300 hover:scale-[1.04] hover:shadow-pink-500/50 active:scale-95 animate-[gradient-x_3s_ease_infinite]"
                       >
-                        {loadingQty === -2 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
-                        {loadingQty === -2 ? 'Gerando PIX...' : 'Comprar Vitalícia'}
+                        <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:animate-[shimmer_1.2s_ease-in-out]" />
+                        {loadingQty === -2 ? <Loader2 className="relative mr-2 h-4 w-4 animate-spin" /> : <Zap className="relative mr-2 h-4 w-4 animate-pulse" />}
+                        <span className="relative">{loadingQty === -2 ? 'Gerando PIX...' : 'Comprar Vitalícia'}</span>
                       </Button>
                     </div>
                   </div>
