@@ -26,6 +26,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [resellerStatus, setResellerStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const resetAuthState = () => {
+    setSession(null);
+    setUser(null);
+    setIsAdmin(false);
+    setIsReseller(false);
+    setIsManager(false);
+    setResellerStatus(null);
+  };
+
+  const clearInvalidSession = async () => {
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch {
+      // noop
+    } finally {
+      resetAuthState();
+      setIsLoading(false);
+    }
+  };
+
   const checkAdminRole = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -97,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        setIsLoading(true);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -136,19 +157,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
           }, 0);
         } else {
-          setIsAdmin(false);
-          setIsReseller(false);
-          setIsManager(false);
-          setResellerStatus(null);
+          resetAuthState();
           setIsLoading(false);
         }
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error?.code === 'refresh_token_not_found') {
+        clearInvalidSession();
+        return;
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
         Promise.all([
           checkAdminRole(session.user.id),
@@ -167,7 +190,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setIsLoading(false);
       }
-    }).catch(() => {
+    }).catch(async (error: any) => {
+      if (error?.code === 'refresh_token_not_found') {
+        await clearInvalidSession();
+        return;
+      }
       setIsLoading(false);
     });
 
