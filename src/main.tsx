@@ -4,7 +4,7 @@ import "./index.css";
 
 // One-time cache cleanup to fix stale auth tokens preventing login.
 // Bump CACHE_VERSION whenever a new forced cleanup is needed.
-const CACHE_VERSION = "2026-05-18-1";
+const CACHE_VERSION = "2026-06-05-1";
 try {
   const current = localStorage.getItem("app_cache_version");
   if (current !== CACHE_VERSION) {
@@ -13,7 +13,13 @@ try {
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
       if (!k) continue;
-      if (k.startsWith("sb-") || k.includes("supabase.auth")) {
+      if (
+        k.startsWith("sb-") ||
+        k.includes("supabase.auth") ||
+        k.includes("tanstack") ||
+        k.includes("react-query") ||
+        k.includes("query-cache")
+      ) {
         keysToRemove.push(k);
       }
     }
@@ -21,6 +27,13 @@ try {
     try {
       sessionStorage.clear();
     } catch {}
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => {
+          registration.unregister().catch(() => {});
+        });
+      }).catch(() => {});
+    }
     // Clear browser caches (PWA / fetch cache) if available
     if (typeof caches !== "undefined" && caches?.keys) {
       caches.keys().then((names) => names.forEach((n) => caches.delete(n))).catch(() => {});

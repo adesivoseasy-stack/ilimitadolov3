@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface KeyTier {
   quantity: number;
@@ -59,14 +60,18 @@ export function useResellerPricing(planType: PlanType = '197') {
       return tiers.sort((a, b) => a.quantity - b.quantity);
     },
     staleTime: 5 * 60 * 1000,
+    refetchOnMount: 'always',
+    refetchOnReconnect: 'always',
+    refetchOnWindowFocus: true,
   });
 }
 
 export function useResellerPlanType() {
+  const { user, isLoading } = useAuth();
+
   return useQuery({
-    queryKey: ['reseller-plan-type'],
+    queryKey: ['reseller-plan-type', user?.id],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
@@ -81,5 +86,9 @@ export function useResellerPlanType() {
         customKeyPrice: data?.custom_key_price ? Number(data.custom_key_price) : null,
       };
     },
+    refetchOnMount: 'always',
+    refetchOnReconnect: 'always',
+    refetchOnWindowFocus: true,
+    enabled: !isLoading && !!user,
   });
 }

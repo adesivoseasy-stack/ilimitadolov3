@@ -12,6 +12,7 @@ function normalizeDevices(devices: Device | Device[] | null | undefined): Device
 
 export function useResellerLicenses() {
   const { user, isLoading: isAuthLoading, isReseller } = useAuth();
+
   return useQuery({
     queryKey: ['reseller-licenses', user?.id],
     queryFn: async () => {
@@ -42,13 +43,16 @@ export function useResellerLicenses() {
       })) as LicenseWithDevice[];
     },
     enabled: !isAuthLoading && !!user && isReseller,
-    initialData: [],
     staleTime: 15_000,
+    refetchOnMount: 'always',
+    refetchOnReconnect: 'always',
+    refetchOnWindowFocus: true,
   });
 }
 
 export function useResellerStats() {
   const { user, isLoading: isAuthLoading, isReseller } = useAuth();
+
   return useQuery({
     queryKey: ['reseller-stats', user?.id],
     queryFn: async () => {
@@ -66,8 +70,10 @@ export function useResellerStats() {
         revenue: data?.reduce((sum, l) => sum + (Number(l.price) || 0), 0) || 0,
       };
     },
-    initialData: { total: 0, active: 0, expired: 0, revoked: 0, revenue: 0 },
     enabled: !isAuthLoading && !!user && isReseller,
+    refetchOnMount: 'always',
+    refetchOnReconnect: 'always',
+    refetchOnWindowFocus: true,
   });
 }
 
