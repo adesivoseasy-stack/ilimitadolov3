@@ -53,11 +53,11 @@ export default function ResellerDashboard() {
   const { data: stats, isLoading: statsLoading } = useResellerStats();
   const { data: licenses, isLoading: licensesLoading } = useResellerLicenses();
   const { data: credits } = useResellerCredits(user?.id);
-  const { data: planInfo } = useResellerPlanType();
-  const planType = planInfo?.planType || '197';
+  const { data: planInfo, isLoading: planInfoLoading, isFetching: planInfoFetching } = useResellerPlanType();
+  const planType = planInfo?.planType;
   const customKeyPrice = planInfo?.customKeyPrice ?? null;
   const isUnlimited = planType === '997';
-  const { data: pricingPlans } = useResellerPricing(planType);
+  const { data: pricingPlans, isLoading: pricingLoading, isFetching: pricingFetching } = useResellerPricing(planType || '197');
   const createLicense = useResellerCreateLicense();
   const updateCustomerName = useUpdateCustomerName();
   const renewLicense = useRenewLicense();
@@ -322,12 +322,14 @@ export default function ResellerDashboard() {
 
   const [selectedTier, setSelectedTier] = useState<number | null>(null);
   const [customQty, setCustomQty] = useState('');
+  const isPricingReady = !!planType && !planInfoLoading && !planInfoFetching && !pricingLoading && !pricingFetching;
 
   const getPromoTotal = (_qty: number): number => {
     return PROMO_TOTAL;
   };
 
   const getEffectivePrice = (qty: number): number => {
+    if (!isPricingReady) return 0;
     // Promoção relâmpago mensal: 1 chave por R$ 34,90 até 04/06/2026 às 20h
     const MONTHLY_PROMO_END = new Date('2026-06-04T20:00:00-03:00').getTime();
     if (qty === 1 && Date.now() < MONTHLY_PROMO_END) {
@@ -555,11 +557,13 @@ export default function ResellerDashboard() {
                     Comprar <span className="text-gradient">Chaves</span>
                   </h2>
                   <p className="text-sm text-muted-foreground mb-5 font-display">
-                    Plano R$ {planType}{customKeyPrice ? ` — R$ ${customKeyPrice.toFixed(2)}/key` : ' — Acima de 3 chaves, desconto fixo de 5%.'}
+                    {isPricingReady
+                      ? `Plano R$ ${planType}${customKeyPrice ? ` — R$ ${customKeyPrice.toFixed(2)}/key` : ' — Acima de 3 chaves, desconto fixo de 5%.'}`
+                      : 'Carregando preços do seu plano...'}
                   </p>
 
                   <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-                    {(pricingPlans || []).map((tier, index) => {
+                    {(isPricingReady ? (pricingPlans || []) : []).map((tier, index) => {
                       const effectivePrice = customKeyPrice != null && customKeyPrice > 0 ? customKeyPrice : tier.pricePerKey;
                       const total = tier.quantity * effectivePrice;
                       const basePrice = customKeyPrice != null && customKeyPrice > 0 ? customKeyPrice : (pricingPlans?.[0]?.pricePerKey || effectivePrice);
@@ -642,6 +646,11 @@ export default function ResellerDashboard() {
                         </div>
                       );
                     })}
+                    {!isPricingReady && (
+                      <div className="col-span-full rounded-2xl border border-border/50 bg-card/40 p-6 text-sm text-muted-foreground font-display">
+                        Carregando valores atualizados...
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -738,15 +747,15 @@ export default function ResellerDashboard() {
                       {customQty && parseInt(customQty) > 0 && (
                         <div className="text-sm space-y-0.5">
                           <p className="text-muted-foreground">
-                            Preço: <span className="font-semibold text-foreground">R$ {getEffectivePrice(parseInt(customQty)).toFixed(2)}/chave</span>
+                            Preço: <span className="font-semibold text-foreground">{isPricingReady ? `R$ ${getEffectivePrice(parseInt(customQty)).toFixed(2)}/chave` : 'Carregando...'}</span>
                           </p>
                           <p className="text-muted-foreground">
-                            Total: <span className="font-bold text-gradient">R$ {(parseInt(customQty) * getEffectivePrice(parseInt(customQty))).toFixed(2)}</span>
+                            Total: <span className="font-bold text-gradient">{isPricingReady ? `R$ ${(parseInt(customQty) * getEffectivePrice(parseInt(customQty))).toFixed(2)}` : 'Carregando...'}</span>
                           </p>
                         </div>
                       )}
                       <Button
-                        disabled={!customQty || parseInt(customQty) <= 0 || loadingQty !== null}
+                        disabled={!isPricingReady || !customQty || parseInt(customQty) <= 0 || loadingQty !== null}
                         onClick={() => handleBuyKeys(parseInt(customQty))}
                         className="rounded-xl bg-gradient text-primary-foreground hover:opacity-90"
                       >
