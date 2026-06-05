@@ -59,16 +59,10 @@ Deno.serve(async (req) => {
       return json({ error: 'expirada' }, 403);
     }
 
-    // Email binding (optional)
+    // Para este painel, a validação deve considerar apenas a chave.
+    // O email da conta do Lovable não pode invalidar uma licença já ativa
+    // nem re-vincular a licença durante o refresh da página.
     const normEmail = String(email || '').trim().toLowerCase() || null;
-    if (normEmail) {
-      if (license.email && license.email.toLowerCase() !== normEmail) {
-        return json({ error: 'vinculada a outro email' }, 403);
-      }
-      if (!license.email) {
-        await supabase.from('licenses').update({ email: normEmail }).eq('id', license.id);
-      }
-    }
 
     return json({
       config: { ok: true, source: 'ilimitado-lov3', ts: Date.now() },
