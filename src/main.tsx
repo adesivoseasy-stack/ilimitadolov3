@@ -4,7 +4,7 @@ import "./index.css";
 
 // One-time cache cleanup to fix stale auth tokens preventing login.
 // Bump CACHE_VERSION whenever a new forced cleanup is needed.
-const CACHE_VERSION = "2026-06-05-2";
+const CACHE_VERSION = "2026-06-05-3";
 try {
   const current = localStorage.getItem("app_cache_version");
   if (current !== CACHE_VERSION) {
