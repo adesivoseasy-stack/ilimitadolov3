@@ -20,10 +20,11 @@ const NavLink = forwardRef<HTMLAnchorElement, NavLinkCompatProps>(
       );
     };
 
-    const resolveChildren: NavLinkProps["children"] = (state) => {
-      const safe = state ?? { isActive: false, isPending: false, isTransitioning: false };
-      return typeof children === "function" ? (children as any)(safe) : children;
-    };
+    const childrenProp =
+      typeof children === "function"
+        ? ((state: any) =>
+            (children as any)(state ?? { isActive: false, isPending: false, isTransitioning: false }))
+        : children;
 
     return (
       <RouterNavLink
@@ -32,7 +33,7 @@ const NavLink = forwardRef<HTMLAnchorElement, NavLinkCompatProps>(
         className={resolveClassName}
         {...props}
       >
-        {resolveChildren}
+        {childrenProp as any}
       </RouterNavLink>
     );
   },
