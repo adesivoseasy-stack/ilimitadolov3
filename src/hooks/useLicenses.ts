@@ -86,9 +86,11 @@ export function useLicenses() {
         creator_name: license.created_by ? profileMap.get(license.created_by) || null : null,
       })) as LicenseWithDevice[];
     },
-    initialData: [],
     staleTime: 15_000,
     enabled: !isAuthLoading && !!user && (isAdmin || isManager),
+    refetchOnMount: 'always',
+    refetchOnReconnect: 'always',
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -125,8 +127,10 @@ export function useLicenseStats() {
         revenue: all.reduce((sum, l) => sum + (Number(l.price) || 0), 0),
       };
     },
-    initialData: { total: 0, active: 0, expired: 0, revoked: 0, revenue: 0 },
     enabled: !isAuthLoading && !!user && (isAdmin || isManager),
+    refetchOnMount: 'always',
+    refetchOnReconnect: 'always',
+    refetchOnWindowFocus: true,
   });
 }
 
