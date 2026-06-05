@@ -2,20 +2,28 @@ import { NavLink as RouterNavLink, NavLinkProps } from "react-router-dom";
 import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
-interface NavLinkCompatProps extends Omit<NavLinkProps, "className"> {
+interface NavLinkCompatProps extends Omit<NavLinkProps, "className" | "children"> {
   className?: NavLinkProps["className"] | string;
+  children?: NavLinkProps["children"] | React.ReactNode;
   activeClassName?: string;
   pendingClassName?: string;
 }
 
 const NavLink = forwardRef<HTMLAnchorElement, NavLinkCompatProps>(
-  ({ className, activeClassName, pendingClassName, to, ...props }, ref) => {
-    const resolveClassName = (state?: { isActive?: boolean; isPending?: boolean }) =>
-      cn(
-        typeof className === "function" ? className(state as never) : className,
-        state?.isActive && activeClassName,
-        state?.isPending && pendingClassName,
+  ({ className, children, activeClassName, pendingClassName, to, ...props }, ref) => {
+    const resolveClassName: NavLinkProps["className"] = (state) => {
+      const safe = state ?? { isActive: false, isPending: false, isTransitioning: false };
+      return cn(
+        typeof className === "function" ? className(safe) : className,
+        safe.isActive && activeClassName,
+        safe.isPending && pendingClassName,
       );
+    };
+
+    const resolveChildren: NavLinkProps["children"] = (state) => {
+      const safe = state ?? { isActive: false, isPending: false, isTransitioning: false };
+      return typeof children === "function" ? (children as any)(safe) : children;
+    };
 
     return (
       <RouterNavLink
@@ -23,7 +31,9 @@ const NavLink = forwardRef<HTMLAnchorElement, NavLinkCompatProps>(
         to={to}
         className={resolveClassName}
         {...props}
-      />
+      >
+        {resolveChildren}
+      </RouterNavLink>
     );
   },
 );
