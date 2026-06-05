@@ -276,11 +276,17 @@ Deno.serve(async (req) => {
         if (uploadError) {
           console.error('[send-message] Storage upload failed:', uploadError);
         } else {
-          const { data: urlData } = supabase.storage
+          // Bucket is private — generate a long-lived signed URL so the
+          // webhook (n8n) can fetch the attachment without public listing.
+          const { data: signed, error: signedErr } = await supabase.storage
             .from('message-attachments')
-            .getPublicUrl(uploadData.path);
-          fileUrls.push({ url: urlData.publicUrl, name: file.name, type: file.type });
-          console.log(`[send-message] File uploaded: ${urlData.publicUrl}`);
+            .createSignedUrl(uploadData.path, 60 * 60 * 24 * 7); // 7 days
+          if (signedErr || !signed?.signedUrl) {
+            console.error('[send-message] Signed URL creation failed:', signedErr);
+          } else {
+            fileUrls.push({ url: signed.signedUrl, name: file.name, type: file.type });
+            console.log(`[send-message] File uploaded (signed URL issued)`);
+          }
         }
       } catch (uploadErr) {
         console.error('[send-message] File upload error:', (uploadErr as Error).message);
