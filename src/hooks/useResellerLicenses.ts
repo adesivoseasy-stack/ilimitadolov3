@@ -43,7 +43,6 @@ export function useResellerLicenses() {
       })) as LicenseWithDevice[];
     },
     enabled: !isAuthLoading && !!user && isReseller,
-    placeholderData: (previousData) => previousData,
     staleTime: 15_000,
     refetchOnMount: 'always',
     refetchOnReconnect: 'always',
@@ -71,7 +70,6 @@ export function useResellerStats() {
         revenue: data?.reduce((sum, l) => sum + (Number(l.price) || 0), 0) || 0,
       };
     },
-    placeholderData: (previousData) => previousData,
     enabled: !isAuthLoading && !!user && isReseller,
     refetchOnMount: 'always',
     refetchOnReconnect: 'always',

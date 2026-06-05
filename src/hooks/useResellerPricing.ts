@@ -60,7 +60,6 @@ export function useResellerPricing(planType: PlanType = '197') {
       return tiers.sort((a, b) => a.quantity - b.quantity);
     },
     staleTime: 5 * 60 * 1000,
-    placeholderData: (previousData) => previousData,
     refetchOnMount: 'always',
     refetchOnReconnect: 'always',
     refetchOnWindowFocus: true,
@@ -87,7 +86,6 @@ export function useResellerPlanType() {
         customKeyPrice: data?.custom_key_price ? Number(data.custom_key_price) : null,
       };
     },
-    placeholderData: (previousData) => previousData,
     refetchOnMount: 'always',
     refetchOnReconnect: 'always',
     refetchOnWindowFocus: true,
