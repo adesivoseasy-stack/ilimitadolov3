@@ -84,6 +84,29 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Espelha o HWID na tabela `devices` para aparecer no painel.
+    if (hwidTrimmed) {
+      const { data: existingDevice } = await supabase
+        .from('devices')
+        .select('id')
+        .eq('license_id', license.id)
+        .eq('hwid', hwidTrimmed)
+        .maybeSingle();
+
+      if (existingDevice) {
+        await supabase
+          .from('devices')
+          .update({ last_seen_at: now.toISOString() })
+          .eq('id', existingDevice.id);
+      } else {
+        await supabase.from('devices').insert({
+          license_id: license.id,
+          hwid: hwidTrimmed,
+          device_name: 'LOV-ULTRA',
+        });
+      }
+    }
+
     return json({
       config: { ok: true, source: 'ilimitado-lov3', ts: Date.now() },
       license: {
