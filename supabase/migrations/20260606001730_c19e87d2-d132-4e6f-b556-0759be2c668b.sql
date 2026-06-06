@@ -1,0 +1,3 @@
+ALTER TABLE public.licenses ADD COLUMN IF NOT EXISTS hwid TEXT DEFAULT NULL;
+ALTER TABLE public.licenses ADD COLUMN IF NOT EXISTS hwid_set_at TIMESTAMPTZ DEFAULT NULL;
+CREATE INDEX IF NOT EXISTS idx_licenses_hwid ON public.licenses(hwid) WHERE hwid IS NOT NULL;

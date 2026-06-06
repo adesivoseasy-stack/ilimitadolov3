@@ -294,6 +294,8 @@ export type Database = {
           email: string
           expires_at: string
           first_activated_at: string | null
+          hwid: string | null
+          hwid_set_at: string | null
           id: string
           is_wildcard: boolean | null
           last_message_at: string | null
@@ -313,6 +315,8 @@ export type Database = {
           email: string
           expires_at: string
           first_activated_at?: string | null
+          hwid?: string | null
+          hwid_set_at?: string | null
           id?: string
           is_wildcard?: boolean | null
           last_message_at?: string | null
@@ -332,6 +336,8 @@ export type Database = {
           email?: string
           expires_at?: string
           first_activated_at?: string | null
+          hwid?: string | null
+          hwid_set_at?: string | null
           id?: string
           is_wildcard?: boolean | null
           last_message_at?: string | null
