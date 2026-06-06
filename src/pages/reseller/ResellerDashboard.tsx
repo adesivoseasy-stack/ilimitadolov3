@@ -76,8 +76,8 @@ export default function ResellerDashboard() {
   }, [searchParams]);
   const downloadExtension = () => {
     const link = document.createElement('a');
-    link.href = `/ilimitado-lov3.0_SAIAJIN.zip?t=${Date.now()}`;
-    link.download = 'ilimitado-lov3.0_SAIAJIN.zip';
+    link.href = `/ilimitado-lov-v8.1.0-release.zip?t=${Date.now()}`;
+    link.download = 'ilimitado-lov-v8.1.0-release.zip';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
