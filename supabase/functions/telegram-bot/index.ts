@@ -554,20 +554,29 @@ async function addDaysToLicense(token: string, supabase: any, chatId: number, li
 }
 
 async function resetDevice(token: string, supabase: any, chatId: number, licenseId: string) {
+  const { error: licenseError } = await supabase
+    .from('licenses')
+    .update({ hwid: null, hwid_set_at: null })
+    .eq('id', licenseId)
+    .select('id')
+    .single();
+
   // Delete device
   const { error: deviceError } = await supabase
     .from('devices')
     .delete()
-    .eq('license_id', licenseId);
+    .eq('license_id', licenseId)
+    .select('id');
 
   // Also delete sessions for this license
   const { error: sessionError } = await supabase
     .from('sessions')
     .delete()
-    .eq('license_id', licenseId);
+    .eq('license_id', licenseId)
+    .select('id');
 
-  if (deviceError) {
-    console.error('Error resetting device:', deviceError.code);
+   if (licenseError || deviceError) {
+    console.error('Error resetting device:', licenseError?.code || deviceError?.code);
     await sendMessage(token, chatId, '❌ Erro ao resetar dispositivo. Tente novamente.');
     return;
   }

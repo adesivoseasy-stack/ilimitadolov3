@@ -379,17 +379,27 @@ export function useResetDevice() {
 
   return useMutation({
     mutationFn: async (licenseId: string) => {
+      const { error: licenseError } = await supabase
+        .from('licenses')
+        .update({ hwid: null, hwid_set_at: null })
+        .eq('id', licenseId)
+        .select('id')
+        .single();
+      if (licenseError) throw licenseError;
+
       const { error } = await supabase
         .from('devices')
         .delete()
-        .eq('license_id', licenseId);
+        .eq('license_id', licenseId)
+        .select('id');
       if (error) throw error;
 
       // Also clear sessions
       const { error: sessionError } = await supabase
         .from('sessions')
         .delete()
-        .eq('license_id', licenseId);
+        .eq('license_id', licenseId)
+        .select('id');
       if (sessionError) console.warn('Failed to clear sessions:', sessionError);
 
       await supabase.from('license_logs').insert({
