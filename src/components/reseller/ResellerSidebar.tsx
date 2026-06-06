@@ -34,6 +34,7 @@ export function ResellerSidebar() {
     (licenses || []).some((l: any) => l.status === 'active' && l.max_messages == null);
 
   const EXTENSION_URL = '/LOV-ULTRA-DIST.zip';
+  const EXTENSION_VERSION = '20260606-0416';
 
   const downloadExtension = () => {
     if (isDownloading) return;
@@ -48,7 +49,7 @@ export function ResellerSidebar() {
     setIsDownloading(true);
     try {
       const link = document.createElement('a');
-      link.href = `${EXTENSION_URL}?t=${Date.now()}`;
+      link.href = `${EXTENSION_URL}?v=${EXTENSION_VERSION}&t=${Date.now()}`;
       link.download = 'LOV-ULTRA-DIST.zip';
       link.target = '_blank';
       link.rel = 'noopener';
