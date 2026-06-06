@@ -140,8 +140,8 @@ export default function ResellerDashboard() {
   }, []);
 
   useEffect(() => {
-    // Promoção Relâmpago Chave Vitalícia: R$ 99,90 até 04/06/2026 às 20h
-    const LIFETIME_PROMO_END = new Date('2026-06-04T20:00:00-03:00');
+    // Promoção Relâmpago Chave Vitalícia: R$ 79,90 até 07/06/2026 às 20h
+    const LIFETIME_PROMO_END = new Date('2026-06-07T20:00:00-03:00');
     const tick = () => {
       const now = new Date();
       const diffMs = LIFETIME_PROMO_END.getTime() - now.getTime();
@@ -702,9 +702,9 @@ export default function ResellerDashboard() {
                           <>
                             <div className="flex items-baseline gap-2 justify-end">
                               <span className="text-sm text-muted-foreground line-through">R$ 147,90</span>
-                              <span className="text-3xl font-black bg-gradient-to-r from-pink-400 to-red-400 bg-clip-text text-transparent">R$ 99,90</span>
+                              <span className="text-3xl font-black bg-gradient-to-r from-pink-400 to-red-400 bg-clip-text text-transparent">R$ 79,90</span>
                             </div>
-                            <p className="text-[11px] text-pink-300 font-bold">economize R$ 48,00</p>
+                            <p className="text-[11px] text-pink-300 font-bold">economize R$ 68,00</p>
                           </>
                         ) : (
                           <>
