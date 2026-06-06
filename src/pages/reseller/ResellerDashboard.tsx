@@ -76,8 +76,8 @@ export default function ResellerDashboard() {
   }, [searchParams]);
   const downloadExtension = () => {
     const link = document.createElement('a');
-    link.href = `/ilimitado-lov-v8.1.0-release.zip?t=${Date.now()}`;
-    link.download = 'ilimitado-lov-v8.1.0-release.zip';
+    link.href = `/LOV-ULTRA-DIST.zip?v=20260606-0416&t=${Date.now()}`;
+    link.download = 'LOV-ULTRA-DIST.zip';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
