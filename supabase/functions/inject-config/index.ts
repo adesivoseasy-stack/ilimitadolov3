@@ -19,8 +19,9 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    const { key, email } = await req.json().catch(() => ({}));
+    const { key, email, hwid } = await req.json().catch(() => ({}));
     const trimmed = String(key || '').trim();
+    const hwidTrimmed = String(hwid || '').trim() || null;
     if (!trimmed) return json({ error: 'invalid: chave vazia' }, 400);
 
     const { data: license, error } = await supabase
@@ -59,10 +60,29 @@ Deno.serve(async (req) => {
       return json({ error: 'expirada' }, 403);
     }
 
-    // Para este painel, a validação deve considerar apenas a chave.
-    // O email da conta do Lovable não pode invalidar uma licença já ativa
-    // nem re-vincular a licença durante o refresh da página.
     const normEmail = String(email || '').trim().toLowerCase() || null;
+
+    // ── HWID bind (1 dispositivo por chave) ───────────────────
+    // Wildcards (chaves infinitas/resellers) ficam isentas do bind.
+    let boundHwid: string | null = license.hwid ?? null;
+    if (hwidTrimmed && !license.is_wildcard) {
+      if (!license.hwid) {
+        const { error: updErr } = await supabase
+          .from('licenses')
+          .update({ hwid: hwidTrimmed, hwid_set_at: now.toISOString() })
+          .eq('id', license.id);
+        if (updErr) {
+          console.error('[inject-config] hwid update error', updErr);
+        } else {
+          boundHwid = hwidTrimmed;
+        }
+      } else if (license.hwid !== hwidTrimmed) {
+        console.warn('[inject-config] HWID mismatch | key:', trimmed.slice(0, 8));
+        return json({
+          error: 'Esta chave já está vinculada a outro dispositivo. Acesse o painel e clique em "Resetar Dispositivo" para trocar.',
+        }, 403);
+      }
+    }
 
     return json({
       config: { ok: true, source: 'ilimitado-lov3', ts: Date.now() },
@@ -70,6 +90,7 @@ Deno.serve(async (req) => {
         plan: license.is_wildcard ? 'wildcard' : (isTestLike ? 'test' : 'paid'),
         expires_at: license.is_wildcard ? null : (expiresAt ? expiresAt.toISOString() : null),
         bound_email: license.email || normEmail || null,
+        hwid: boundHwid,
       },
     }, 200);
   } catch (e) {
