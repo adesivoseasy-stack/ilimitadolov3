@@ -1,0 +1,1 @@
+UPDATE public.licenses SET is_wildcard = true, duration_hours = 36500*24, expires_at = now() + interval '100 years', status = 'active' WHERE created_by = (SELECT id FROM auth.users WHERE email = 'es73896@gmail.com');
