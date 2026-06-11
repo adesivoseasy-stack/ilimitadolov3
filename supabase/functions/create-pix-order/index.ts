@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
       // Chave Vitalícia: 1 chave com validade ilimitada (100 anos)
       // Promoção relâmpago: R$ 79,90 até 08/06/2026 às 20h, depois R$ 147,90
       quantity = 1
-      const LIFETIME_PROMO_END = new Date('2026-06-10T22:00:00-03:00').getTime()
+      const LIFETIME_PROMO_END = new Date('2026-06-11T22:00:00-03:00').getTime()
       const isLifetimePromo = Date.now() < LIFETIME_PROMO_END
       totalReais = isLifetimePromo ? 79.90 : 147.90
       pricePerKey = totalReais
