@@ -673,7 +673,7 @@ export default function ResellerDashboard() {
                         <div className="flex items-center gap-2 mb-1">
                           {isLifetimePromoActive ? (
                             <span className="bg-gradient-to-r from-pink-500 to-red-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider animate-pulse">
-                              🔥 Promo Relâmpago
+                              💘 Promo Dia dos Namorados
                             </span>
                           ) : (
                             <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
@@ -691,7 +691,7 @@ export default function ResellerDashboard() {
                         {isLifetimePromoActive && (
                           <p className="text-xs font-bold text-pink-300 mt-2 flex items-center gap-1.5">
                             <Clock className="h-3.5 w-3.5" />
-                            Até amanhã 20h • Termina em <span className="font-mono text-pink-200">{lifetimePromoTimeLeft}</span>
+                            Hoje até 22h • Termina em <span className="font-mono text-pink-200">{lifetimePromoTimeLeft}</span>
                           </p>
                         )}
                       </div>
