@@ -140,8 +140,8 @@ export default function ResellerDashboard() {
   }, []);
 
   useEffect(() => {
-    // Promoção Chave Vitalícia: R$ 79,90 até segunda-feira 15/06/2026 23:59
-    const LIFETIME_PROMO_END = new Date('2026-06-15T23:59:59-03:00');
+    // Promoção Chave Vitalícia: R$ 79,90 até hoje (16/06/2026) às 20h
+    const LIFETIME_PROMO_END = new Date('2026-06-16T20:00:00-03:00');
     const tick = () => {
       const now = new Date();
       const diffMs = LIFETIME_PROMO_END.getTime() - now.getTime();
