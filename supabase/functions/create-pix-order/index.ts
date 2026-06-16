@@ -157,7 +157,7 @@ Deno.serve(async (req) => {
       // Override individual: wallacesouzasantos@gmail.com paga R$ 29,90
       const { data: buyerData } = await adminClient.auth.admin.getUserById(userId)
       const buyerEmail = (buyerData?.user?.email || '').toLowerCase()
-      if (buyerEmail === 'wallacesouzasantos@gmail.com') {
+      if (buyerEmail === 'wallacesouzasantos@gmail.com' || buyerEmail === 'ecombrunobp@gmail.com') {
         totalReais = 29.90
       } else {
         const LIFETIME_PROMO_END = new Date('2026-06-16T20:00:00-03:00').getTime()
