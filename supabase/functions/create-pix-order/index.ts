@@ -248,7 +248,7 @@ Deno.serve(async (req) => {
         customer_email: email,
         customer_phone: phoneNumber,
         customer_document: document,
-        product_type: lifetime ? 'lifetime' : 'standard',
+        product_type: combo ? 'combo' : (lifetime ? 'lifetime' : 'standard'),
       })
       .select()
       .single()
