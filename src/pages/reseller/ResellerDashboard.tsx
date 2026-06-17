@@ -28,6 +28,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import resellerBanner from '@/assets/banner.png';
 import keyIcon from '@/assets/key-icon.png';
+import comboBannerAsset from '@/assets/combo-300-creditos-pro-lite.png.asset.json';
 import { format, parseISO, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -101,7 +102,7 @@ export default function ResellerDashboard() {
   const [isPixModalOpen, setIsPixModalOpen] = useState(false);
   const pixStatus = usePixOrderPolling(pixOrder?.order_id || null);
   const [pixCustomerOpen, setPixCustomerOpen] = useState(false);
-  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean } | null>(null);
+  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; combo?: boolean } | null>(null);
 
   const [isPromoOpen, setIsPromoOpen] = useState(false);
   const PROMO_QTY = 10;
@@ -226,10 +227,10 @@ export default function ResellerDashboard() {
 
   const handlePixCustomerConfirm = async (customerData: PixCustomerFormData) => {
     if (!pendingPixAction) return;
-    const { qty, promo, lifetime } = pendingPixAction;
+    const { qty, promo, lifetime, combo } = pendingPixAction;
     setPixCustomerOpen(false);
-    setLoadingQty(lifetime ? -2 : promo ? -1 : qty);
-    const order = await createOrder(qty, customerData, promo, lifetime);
+    setLoadingQty(combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
+    const order = await createOrder(qty, customerData, promo, lifetime, combo);
     setLoadingQty(null);
     if (order) {
       setPixOrder(order);
