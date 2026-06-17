@@ -103,6 +103,9 @@ export default function ResellerDashboard() {
   const pixStatus = usePixOrderPolling(pixOrder?.order_id || null);
   const [pixCustomerOpen, setPixCustomerOpen] = useState(false);
   const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; combo?: boolean } | null>(null);
+  const [comboRequirementsOpen, setComboRequirementsOpen] = useState(false);
+  const [comboAccepted, setComboAccepted] = useState(false);
+  const [lastOrderWasCombo, setLastOrderWasCombo] = useState(false);
 
   const [isPromoOpen, setIsPromoOpen] = useState(false);
   const PROMO_QTY = 10;
@@ -234,6 +237,7 @@ export default function ResellerDashboard() {
     setLoadingQty(null);
     if (order) {
       setPixOrder(order);
+      setLastOrderWasCombo(!!combo);
       if (promo) setIsPromoOpen(false);
       setIsPixModalOpen(true);
     } else {
