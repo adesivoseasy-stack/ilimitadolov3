@@ -17,6 +17,7 @@ const BodySchema = z.object({
   customerDocument: z.string().trim().max(20).optional().default(''),
   promo: z.boolean().optional(),
   lifetime: z.boolean().optional(),
+  combo: z.boolean().optional(),
 })
 
 async function readResponseData(res: Response) {
@@ -125,7 +126,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime } = bodyResult.data
+    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, combo } = bodyResult.data
     const userId = authUser.id
 
     const adminClient = createClient(
@@ -150,7 +151,13 @@ Deno.serve(async (req) => {
     let totalReais: number
     let pricePerKey: number
 
-    if (lifetime) {
+    if (combo) {
+      // Combo: 300 Créditos Lovable + 1 Ano PRO Lite — R$ 89,90
+      quantity = 1
+      totalReais = 89.90
+      pricePerKey = 89.90
+      promo = false
+    } else if (lifetime) {
       // Chave Vitalícia: 1 chave com validade ilimitada (100 anos)
       // Promoção Dia dos Namorados: R$ 79,90 até 12/06/2026 às 22h, depois R$ 147,90
       quantity = 1
