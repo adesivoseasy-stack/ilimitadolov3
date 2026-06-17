@@ -103,6 +103,9 @@ export default function ResellerDashboard() {
   const pixStatus = usePixOrderPolling(pixOrder?.order_id || null);
   const [pixCustomerOpen, setPixCustomerOpen] = useState(false);
   const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; combo?: boolean } | null>(null);
+  const [comboRequirementsOpen, setComboRequirementsOpen] = useState(false);
+  const [comboAccepted, setComboAccepted] = useState(false);
+  const [lastOrderWasCombo, setLastOrderWasCombo] = useState(false);
 
   const [isPromoOpen, setIsPromoOpen] = useState(false);
   const PROMO_QTY = 10;
@@ -234,6 +237,7 @@ export default function ResellerDashboard() {
     setLoadingQty(null);
     if (order) {
       setPixOrder(order);
+      setLastOrderWasCombo(!!combo);
       if (promo) setIsPromoOpen(false);
       setIsPixModalOpen(true);
     } else {
@@ -679,8 +683,8 @@ export default function ResellerDashboard() {
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setPendingPixAction({ qty: 1, combo: true });
-                                setPixCustomerOpen(true);
+                                setComboAccepted(false);
+                                setComboRequirementsOpen(true);
                               }}
                             >
                               {loadingQty === -3 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
@@ -1224,6 +1228,52 @@ export default function ResellerDashboard() {
           defaultEmail={user?.email || ''}
         />
 
+        {/* Combo Requirements Dialog */}
+        <AlertDialog open={comboRequirementsOpen} onOpenChange={setComboRequirementsOpen}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-purple-400" />
+                Requisitos do Combo
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="font-semibold text-foreground">Antes de comprar, confirme que você atende aos requisitos:</p>
+                  <ul className="space-y-2 list-none pl-0">
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> A conta Lovable que receberá os créditos deve ser do plano <span className="font-bold text-foreground">FREE</span> (sem assinatura ativa).</li>
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> Os 300 créditos + 1 Ano PRO Lite serão aplicados nessa conta FREE.</li>
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> Após o pagamento, você receberá o link do grupo e deverá enviar o comprovante ao ADM para liberação.</li>
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> Compra não reembolsável após ativação.</li>
+                  </ul>
+                  <label className="flex items-start gap-2 pt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={comboAccepted}
+                      onChange={(e) => setComboAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-purple-500"
+                    />
+                    <span className="text-foreground">Li, entendi e confirmo que minha conta é <span className="font-bold">FREE</span>.</span>
+                  </label>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setComboAccepted(false)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!comboAccepted}
+                onClick={() => {
+                  setComboRequirementsOpen(false);
+                  setPendingPixAction({ qty: 1, combo: true });
+                  setPixCustomerOpen(true);
+                }}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+              >
+                Continuar para pagamento
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* PIX Payment Modal */}
         <Dialog open={isPixModalOpen} onOpenChange={(open) => {
           if (!open && pixStatus !== 'pending') {
@@ -1251,12 +1301,36 @@ export default function ResellerDashboard() {
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">Pagamento Confirmado!</h3>
-                <p className="text-sm text-muted-foreground text-center">
-                  {pixOrder?.quantity} crédito(s) foram adicionados à sua conta.
-                </p>
-                <Button onClick={() => { setIsPixModalOpen(false); setPixOrder(null); }} className="bg-gradient text-primary-foreground">
-                  Fechar
-                </Button>
+                {lastOrderWasCombo ? (
+                  <>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Combo <span className="font-semibold text-foreground">300 Créditos + 1 Ano PRO Lite</span> recebido. Envie o comprovante ao ADM no WhatsApp para entrar no grupo e ativar.
+                    </p>
+                    <Button
+                      onClick={() => {
+                        const msg = encodeURIComponent(
+                          `Olá! Comprei o Combo 300 Créditos + 1 Ano PRO Lite (R$ 89,90).\n\nPedido: ${pixOrder?.order_id || ''}\nE-mail: ${user?.email || ''}\n\nSegue o comprovante em anexo. Por favor, me adicione ao grupo e ative meu combo.`
+                        );
+                        window.open(`https://wa.me/5516999171891?text=${msg}`, '_blank', 'noopener,noreferrer');
+                      }}
+                      className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold w-full"
+                    >
+                      Enviar comprovante ao ADM e entrar no grupo
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setIsPixModalOpen(false); setPixOrder(null); setLastOrderWasCombo(false); }}>
+                      Fechar
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground text-center">
+                      {pixOrder?.quantity} crédito(s) foram adicionados à sua conta.
+                    </p>
+                    <Button onClick={() => { setIsPixModalOpen(false); setPixOrder(null); }} className="bg-gradient text-primary-foreground">
+                      Fechar
+                    </Button>
+                  </>
+                )}
               </div>
             ) : pixOrder ? (
               <div className="space-y-4">
