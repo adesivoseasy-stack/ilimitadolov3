@@ -646,6 +646,51 @@ export default function ResellerDashboard() {
                         </div>
                       );
                     })}
+                    {isPricingReady && (
+                      <div className="relative">
+                        <div
+                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
+                          style={{
+                            background: 'linear-gradient(135deg, #a855f7, #ec4899, #6366f1, #8b5cf6)',
+                            backgroundSize: '300% 300%',
+                            animation: 'fire-glow 4s ease infinite',
+                          }}
+                        />
+                        <div className="relative p-5 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col">
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+                            <span className="bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg shadow-purple-500/30 flex items-center gap-1 whitespace-nowrap uppercase tracking-wider">
+                              <Zap className="h-3 w-3" />
+                              Combo PRO
+                            </span>
+                          </div>
+                          <div className="relative space-y-3 text-center flex-1 flex flex-col">
+                            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mx-auto">
+                              <Coins className="h-7 w-7 text-purple-400" />
+                            </div>
+                            <div>
+                              <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-300 bg-clip-text text-transparent leading-tight">300 Créditos</h3>
+                              <p className="text-xs text-muted-foreground">+ 1 Ano PRO Lite</p>
+                            </div>
+                            <div className="rounded-xl p-3 bg-gradient-to-r from-purple-500/15 to-pink-500/15 border border-purple-500/20">
+                              <span className="text-xl font-bold text-purple-300">R$ 89,90</span>
+                              <p className="text-[11px] text-muted-foreground">pacote completo</p>
+                            </div>
+                            <p className="text-sm font-semibold text-foreground">Créditos Lovable inclusos</p>
+                            <Button
+                              className="w-full rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold hover:opacity-90 shadow-lg shadow-purple-500/20 mt-auto"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toast({ title: 'Em breve', description: 'O combo 300 Créditos + 1 Ano PRO Lite estará disponível em breve. Entre em contato com o suporte para reservar.' });
+                              }}
+                            >
+                              <Zap className="mr-2 h-4 w-4" />
+                              Comprar Combo
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {!isPricingReady && (
                       <div className="col-span-full rounded-2xl border border-border/50 bg-card/40 p-6 text-sm text-muted-foreground font-display">
                         Carregando valores atualizados...
