@@ -657,36 +657,34 @@ export default function ResellerDashboard() {
                             animation: 'fire-glow 4s ease infinite',
                           }}
                         />
-                        <div className="relative p-5 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col">
+                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
                           <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
                             <span className="bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg shadow-purple-500/30 flex items-center gap-1 whitespace-nowrap uppercase tracking-wider">
                               <Zap className="h-3 w-3" />
                               Combo PRO
                             </span>
                           </div>
-                          <div className="relative space-y-3 text-center flex-1 flex flex-col">
-                            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mx-auto">
-                              <Coins className="h-7 w-7 text-purple-400" />
+                          <div className="relative flex-1 flex flex-col gap-3">
+                            <div className="rounded-xl overflow-hidden bg-black">
+                              <img
+                                src={comboBannerAsset.url}
+                                alt="300 Créditos Lovable + 1 Ano PRO Lite por R$ 89,90"
+                                className="w-full h-auto object-cover aspect-square"
+                                loading="lazy"
+                              />
                             </div>
-                            <div>
-                              <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-300 bg-clip-text text-transparent leading-tight">300 Créditos</h3>
-                              <p className="text-xs text-muted-foreground">+ 1 Ano PRO Lite</p>
-                            </div>
-                            <div className="rounded-xl p-3 bg-gradient-to-r from-purple-500/15 to-pink-500/15 border border-purple-500/20">
-                              <span className="text-xl font-bold text-purple-300">R$ 89,90</span>
-                              <p className="text-[11px] text-muted-foreground">pacote completo</p>
-                            </div>
-                            <p className="text-sm font-semibold text-foreground">Créditos Lovable inclusos</p>
                             <Button
+                              disabled={loadingQty !== null}
                               className="w-full rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold hover:opacity-90 shadow-lg shadow-purple-500/20 mt-auto"
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                toast({ title: 'Em breve', description: 'O combo 300 Créditos + 1 Ano PRO Lite estará disponível em breve. Entre em contato com o suporte para reservar.' });
+                                setPendingPixAction({ qty: 1, combo: true });
+                                setPixCustomerOpen(true);
                               }}
                             >
-                              <Zap className="mr-2 h-4 w-4" />
-                              Comprar Combo
+                              {loadingQty === -3 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
+                              {loadingQty === -3 ? 'Gerando PIX...' : 'Comprar Combo R$ 89,90'}
                             </Button>
                           </div>
                         </div>
