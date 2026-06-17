@@ -683,8 +683,8 @@ export default function ResellerDashboard() {
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setPendingPixAction({ qty: 1, combo: true });
-                                setPixCustomerOpen(true);
+                                setComboAccepted(false);
+                                setComboRequirementsOpen(true);
                               }}
                             >
                               {loadingQty === -3 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
