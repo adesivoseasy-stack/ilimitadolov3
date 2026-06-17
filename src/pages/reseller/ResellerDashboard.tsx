@@ -1301,12 +1301,36 @@ export default function ResellerDashboard() {
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">Pagamento Confirmado!</h3>
-                <p className="text-sm text-muted-foreground text-center">
-                  {pixOrder?.quantity} crédito(s) foram adicionados à sua conta.
-                </p>
-                <Button onClick={() => { setIsPixModalOpen(false); setPixOrder(null); }} className="bg-gradient text-primary-foreground">
-                  Fechar
-                </Button>
+                {lastOrderWasCombo ? (
+                  <>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Combo <span className="font-semibold text-foreground">300 Créditos + 1 Ano PRO Lite</span> recebido. Envie o comprovante ao ADM no WhatsApp para entrar no grupo e ativar.
+                    </p>
+                    <Button
+                      onClick={() => {
+                        const msg = encodeURIComponent(
+                          `Olá! Comprei o Combo 300 Créditos + 1 Ano PRO Lite (R$ 89,90).\n\nPedido: ${pixOrder?.order_id || ''}\nE-mail: ${user?.email || ''}\n\nSegue o comprovante em anexo. Por favor, me adicione ao grupo e ative meu combo.`
+                        );
+                        window.open(`https://wa.me/5516999171891?text=${msg}`, '_blank', 'noopener,noreferrer');
+                      }}
+                      className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold w-full"
+                    >
+                      Enviar comprovante ao ADM e entrar no grupo
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setIsPixModalOpen(false); setPixOrder(null); setLastOrderWasCombo(false); }}>
+                      Fechar
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground text-center">
+                      {pixOrder?.quantity} crédito(s) foram adicionados à sua conta.
+                    </p>
+                    <Button onClick={() => { setIsPixModalOpen(false); setPixOrder(null); }} className="bg-gradient text-primary-foreground">
+                      Fechar
+                    </Button>
+                  </>
+                )}
               </div>
             ) : pixOrder ? (
               <div className="space-y-4">
