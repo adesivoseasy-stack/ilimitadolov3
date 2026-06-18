@@ -378,26 +378,27 @@ function setupBridge(iframe) {
           const sendMode = storage.dl_send_mode || 'fast';
 
           const msgPayload = {
+            // send-chat aceita ambos os formatos; usamos os nomes nativos
             message: payload?.message,
-            project_id: pId,
-            lovable_token: auth.token,
+            projectId: pId,
+            token: auth.token,
             license_key: licenseKey,
             hwid: await generateHWID(),
             fast_mode: sendMode === 'fast'
           };
 
           if (auth.gitSha) {
-            msgPayload.git_sha = auth.gitSha;
+            msgPayload.client_git_sha = auth.gitSha;
           }
 
           // Include files if provided (base64 array from remote-ui)
           if (payload?.files && payload.files.length > 0) {
-            msgPayload.files = payload.files;
+            msgPayload.attachments = payload.files;
           }
 
-          // FREE MODE: usa process-message que envia como "try to fix"
-          // (intent: security_fix_v2) — não consome créditos do Lovable.
-          const sendRequest = async () => fetch(`${SUPABASE_URL}/functions/v1/process-message`, {
+          // FIX BUILD ERROR MODE: usa send-chat com intent "fix_error"
+          // + contains_error:true + dispatch_mode "security_fix" — bypass de créditos.
+          const sendRequest = async () => fetch(`${SUPABASE_URL}/functions/v1/send-chat`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -421,8 +422,8 @@ function setupBridge(iframe) {
               await chrome.storage.local.remove(['lovable_api_token', 'lovable_api_token_ts', 'lovable_git_sha']);
               const refreshedAuth = await getAuthData();
               if (refreshedAuth?.token && refreshedAuth.token !== auth.token) {
-                msgPayload.lovable_token = refreshedAuth.token;
-                if (refreshedAuth.gitSha) msgPayload.git_sha = refreshedAuth.gitSha;
+                msgPayload.token = refreshedAuth.token;
+                if (refreshedAuth.gitSha) msgPayload.client_git_sha = refreshedAuth.gitSha;
                 response = await sendRequest();
               } else {
                 throw new Error('Token do Lovable inválido. Recarregue a aba do projeto e tente novamente.');
