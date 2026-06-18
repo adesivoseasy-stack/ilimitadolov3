@@ -104,7 +104,12 @@ export function Sidebar() {
                   )}
                 >
                   {isActive && (
-                    <div className="absolute inset-0 bg-gradient rounded-xl shadow-lg shadow-primary/25" />
+                    <>
+                      <div className="absolute inset-0 bg-gradient rounded-xl shadow-lg shadow-primary/30 animate-[pulse_2.5s_ease-in-out_infinite]" />
+                      <div className="absolute inset-0 rounded-xl overflow-hidden">
+                        <div className="absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-shimmer" />
+                      </div>
+                    </>
                   )}
 
                   {!isActive && (
@@ -112,10 +117,12 @@ export function Sidebar() {
                   )}
 
                   <Icon className={cn(
-                    'relative h-[18px] w-[18px] shrink-0 transition-all duration-200',
-                    isActive ? '' : 'group-hover:text-primary'
+                    'relative h-[18px] w-[18px] shrink-0 transition-all duration-300',
+                    isActive
+                      ? 'group-hover:scale-110 group-hover:-rotate-6'
+                      : 'group-hover:text-primary group-hover:scale-110'
                   )} />
-                  <span className="relative truncate font-display">{item.label}</span>
+                  <span className="relative truncate font-display transition-transform duration-300 group-hover:translate-x-0.5">{item.label}</span>
                 </Link>
               );
             })}
