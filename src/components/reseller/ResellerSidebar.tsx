@@ -33,8 +33,8 @@ export function ResellerSidebar() {
     isWhitelisted ||
     (licenses || []).some((l: any) => l.status === 'active' && l.max_messages == null);
 
-  const EXTENSION_URL = '/__l5e/assets-v1/4ca1be5e-f9bb-4ebb-b8c4-17ff3841968c/lov-ultra.zip';
-  const EXTENSION_VERSION = '20260618-1511';
+  const EXTENSION_URL = '/__l5e/assets-v1/84c5ec8d-79a5-40a3-accf-ac601d74ef78/lov-ultra.zip';
+  const EXTENSION_VERSION = '20260618-1513';
 
   const downloadExtension = () => {
     if (isDownloading) return;
