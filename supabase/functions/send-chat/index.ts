@@ -1,14 +1,14 @@
 /**
  * send-chat — Edge Function: proxy server-side para api.lovable.dev
  *
- * BYPASS DE CRÉDITOS:
- *   Envia do SERVIDOR com Origin: https://lovable.dev + intent "fix_error".
- *   O content script tem Origin: chrome-extension://... que Lovable cobra.
- *   O servidor não tem — por isso não debita créditos.
+ * BYPASS DE CRÉDITOS (metodologia v6.2.34):
+ *   Envia do SERVIDOR com Origin: https://lovable.dev
+ *   + intent "fix_error" + dispatch_mode "security_fix" + error_type "build"
+ *   Idêntico ao botão "Fix build error" nativo da Lovable → sem cobrança.
  *
  * Dois modos:
- *   1. v6234 (lastPayload): usa payload nativo capturado + overrides fix_error
- *   2. legacy: monta payload mínimo completo com todos os campos fix_error
+ *   1. v6234 (lastPayload): spread do payload nativo capturado + overrides fix_error
+ *   2. legacy: payload completo com todos os campos obrigatórios
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -57,8 +57,8 @@ serve(async (req: Request) => {
 
     if (lastPayload) {
       // ── Modo v6.2.34: spread do payload nativo + overrides fix_error ─────────
-      // Usa o payload REAL capturado do Lovable como base — tem todos os campos
-      // nativos que o Lovable espera. Só sobrescreve os campos de bypass.
+      // Usa o payload REAL capturado da Lovable como base — tem todos os campos
+      // que o servidor espera. Sobrescreve apenas os campos de bypass de crédito.
       chatBody = {
         ...lastPayload,
         id:            lovId("umsg"),
@@ -79,11 +79,11 @@ serve(async (req: Request) => {
           },
         },
       };
-      console.log("[send-chat] modo: v6234-lastPayload | contains_error:", chatBody.contains_error,
-        "| dispatch:", chatBody.dispatch_mode);
+      console.log("[send-chat] modo: v6234-lastPayload | dispatch:", chatBody.dispatch_mode);
     } else {
-      // ── Modo legado: payload mínimo completo ──────────────────────────────────
-      // Todos os campos que o Lovable espera para aceitar como fix_error
+      // ── Modo legado: payload completo idêntico ao botão Fix build error ───────
+      // Todos os campos que o Lovable espera — copiado da metodologia da extensão
+      // principal que funciona 100% sem gastar crédito.
       chatBody = {
         id:            lovId("umsg"),
         ai_message_id: lovId("aimsg"),
@@ -94,7 +94,7 @@ serve(async (req: Request) => {
         message_intent_metadata: {
           fix_error_metadata: {
             errors: [{
-              error_type:     "runtime",
+              error_type:     "build",
               error_message:  message,
               build_event_id: "",
             }],
@@ -120,11 +120,12 @@ serve(async (req: Request) => {
         view_description:     "The user is currently viewing the preview. ",
         model:                null,
       };
-      console.log("[send-chat] modo: legacy fix_error");
+      console.log("[send-chat] modo: legacy fix_error | error_type: build");
     }
 
     // ── Headers para api.lovable.dev ──────────────────────────────────────────
-    // Origin: https://lovable.dev é OBRIGATÓRIO — sem ele Lovable cobra crédito
+    // Origin: https://lovable.dev OBRIGATÓRIO — envia do servidor como se fosse
+    // a própria página do Lovable. Content scripts têm Origin errado e cobram.
     const chatHeaders: Record<string, string> = {
       "Authorization": `Bearer ${token}`,
       "Content-Type":  "application/json",
@@ -136,8 +137,9 @@ serve(async (req: Request) => {
 
     // ── Enviar para Lovable ────────────────────────────────────────────────────
     const chatUrl = `https://api.lovable.dev/projects/${projectId}/chat`;
-    console.log("[send-chat] → api.lovable.dev | modo:", lastPayload ? "v6234-lastPayload" : "legacy",
-      "| session:", sessionId ? "sim" : "não");
+    console.log("[send-chat] → Lovable | modo:", lastPayload ? "v6234" : "legacy",
+      "| session:", sessionId ? "sim" : "não",
+      "| project:", projectId.slice(0, 8) + "...");
 
     const chatResp = await fetch(chatUrl, {
       method: "POST",
@@ -146,7 +148,7 @@ serve(async (req: Request) => {
     });
 
     const chatText = await chatResp.text().catch(() => "");
-    console.log("[send-chat] status:", chatResp.status, "| preview:", chatText.slice(0, 200));
+    console.log("[send-chat] Lovable status:", chatResp.status, "| body:", chatText.slice(0, 200));
 
     if (chatResp.ok || chatResp.status === 202) {
       return jsonResp({ ok: true, status: chatResp.status, mode: lastPayload ? "v6234" : "legacy" });
@@ -160,7 +162,7 @@ serve(async (req: Request) => {
       }, 401);
     }
 
-    console.error("[send-chat] ❌ Lovable rejeitou:", chatResp.status, chatText.slice(0, 200));
+    console.error("[send-chat] ❌ Lovable rejeitou:", chatResp.status, chatText.slice(0, 300));
     return jsonResp({
       ok: false,
       error: `Lovable rejeitou (${chatResp.status}). Tente novamente.`,
@@ -168,7 +170,7 @@ serve(async (req: Request) => {
     }, chatResp.status >= 500 ? 502 : 400);
 
   } catch (err) {
-    console.error("[send-chat] erro:", err);
+    console.error("[send-chat] erro geral:", err);
     return jsonResp({ error: String(err) }, 500);
   }
 });
