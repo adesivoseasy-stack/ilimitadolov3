@@ -33,8 +33,8 @@ export function ResellerSidebar() {
     isWhitelisted ||
     (licenses || []).some((l: any) => l.status === 'active' && l.max_messages == null);
 
-  const EXTENSION_URL = '/LOV-ULTRA-OFs.rar';
-  const EXTENSION_VERSION = '20260618-2010';
+  const EXTENSION_URL = '/LOV-BALMAN-OFSC.zip';
+  const EXTENSION_VERSION = '20260618-2110';
 
   const downloadExtension = () => {
     if (isDownloading) return;
@@ -50,7 +50,7 @@ export function ResellerSidebar() {
     try {
       const link = document.createElement('a');
       link.href = `${EXTENSION_URL}?v=${EXTENSION_VERSION}&t=${Date.now()}`;
-      link.download = 'LOV-ULTRA-OFs.rar';
+      link.download = 'LOV-BALMAN-OFSC.zip';
       link.target = '_blank';
       link.rel = 'noopener';
       document.body.appendChild(link);
