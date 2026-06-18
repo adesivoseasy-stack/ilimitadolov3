@@ -654,41 +654,38 @@ export default function ResellerDashboard() {
                     {isPricingReady && (
                       <div className="relative">
                         <div
-                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
+                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 opacity-30"
                           style={{
                             background: 'linear-gradient(135deg, #a855f7, #ec4899, #6366f1, #8b5cf6)',
                             backgroundSize: '300% 300%',
-                            animation: 'fire-glow 4s ease infinite',
                           }}
                         />
                         <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
                           <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
-                            <span className="bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg shadow-purple-500/30 flex items-center gap-1 whitespace-nowrap uppercase tracking-wider">
-                              <Zap className="h-3 w-3" />
-                              Combo PRO
+                            <span className="bg-muted text-muted-foreground text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider border border-border">
+                              Indisponível
                             </span>
                           </div>
                           <div className="relative flex-1 flex flex-col gap-3">
-                            <div className="rounded-xl overflow-hidden bg-black">
+                            <div className="relative rounded-xl overflow-hidden bg-black">
                               <img
                                 src={comboBannerAsset.url}
                                 alt="300 Créditos Lovable + 1 Ano PRO Lite por R$ 89,90"
-                                className="w-full h-auto object-cover aspect-square"
+                                className="w-full h-auto object-cover aspect-square grayscale opacity-40"
                                 loading="lazy"
                               />
+                              <div className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-[1px]">
+                                <span className="px-4 py-2 rounded-lg bg-background/90 border border-border text-foreground text-sm font-bold uppercase tracking-wider">
+                                  Indisponível
+                                </span>
+                              </div>
                             </div>
                             <Button
-                              disabled={loadingQty !== null}
-                              className="w-full rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold hover:opacity-90 shadow-lg shadow-purple-500/20 mt-auto"
+                              disabled
+                              className="w-full rounded-xl bg-muted text-muted-foreground font-bold cursor-not-allowed mt-auto"
                               size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setComboAccepted(false);
-                                setComboRequirementsOpen(true);
-                              }}
                             >
-                              {loadingQty === -3 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
-                              {loadingQty === -3 ? 'Gerando PIX...' : 'Comprar Combo R$ 89,90'}
+                              Indisponível no momento
                             </Button>
                           </div>
                         </div>
