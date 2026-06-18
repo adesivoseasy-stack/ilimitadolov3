@@ -48,7 +48,7 @@ serve(async (req: Request) => {
     const message   = String(body.mensagem     || body.message   || "");
 
     // Headers de sessão anti-bot (capturados pelo inject.js)
- ?/ const browserSessionId = String(
+ const browserSessionId = String(
       body.browser_session_id || body.lovable_browser_session_id || body.sessionId || ""
     ).trim();
     const clientGitSha = String(
