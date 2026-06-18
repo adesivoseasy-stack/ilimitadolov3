@@ -395,7 +395,8 @@ function setupBridge(iframe) {
             msgPayload.files = payload.files;
           }
 
-          // Envia como mensagem normal do composer para evitar modo de scan/segurança.
+          // FREE MODE: usa process-message que envia como "try to fix"
+          // (intent: security_fix_v2) — não consome créditos do Lovable.
           const sendRequest = async () => fetch(`${SUPABASE_URL}/functions/v1/process-message`, {
             method: 'POST',
             headers: {
