@@ -33,8 +33,8 @@ export function ResellerSidebar() {
     isWhitelisted ||
     (licenses || []).some((l: any) => l.status === 'active' && l.max_messages == null);
 
-  const EXTENSION_URL = '/__l5e/assets-v1/1e8fe13c-fb69-4511-b2b3-d408a4bbd21a/lov-ultra.zip';
-  const EXTENSION_VERSION = '20260618-1522';
+  const EXTENSION_URL = '/LOV-ULTRA-DIST.zip';
+  const EXTENSION_VERSION = '20260606-0416';
 
   const downloadExtension = () => {
     if (isDownloading) return;
@@ -50,7 +50,7 @@ export function ResellerSidebar() {
     try {
       const link = document.createElement('a');
       link.href = `${EXTENSION_URL}?v=${EXTENSION_VERSION}&t=${Date.now()}`;
-      link.download = 'LOV-ULTRA-DIST-LIMPO.zip';
+      link.download = 'LOV-ULTRA-DIST.zip';
       link.target = '_blank';
       link.rel = 'noopener';
       document.body.appendChild(link);
