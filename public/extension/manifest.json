@@ -49,11 +49,20 @@
       "js": ["hide-element.js"],
       "run_at": "document_end",
       "all_frames": true
+    },
+    {
+      "matches": [
+        "https://lovable.dev/*",
+        "https://*.lovable.dev/*"
+      ],
+      "js": ["ilov-token-bridge.js"],
+      "run_at": "document_start",
+      "all_frames": false
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["remote-ui.js", "jszip.min.js"],
+      "resources": ["remote-ui.js", "jszip.min.js", "ilov-token-hook.js"],
       "matches": ["<all_urls>"]
     }
   ],
