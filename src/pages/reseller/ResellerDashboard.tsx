@@ -29,6 +29,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import resellerBanner from '@/assets/banner.png';
 import keyIcon from '@/assets/key-icon.png';
 import comboBannerAsset from '@/assets/combo-300-creditos-pro-lite.png.asset.json';
+import comboChampionBannerAsset from '@/assets/combo-copa-brasil.png.asset.json';
 import { format, parseISO, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -102,10 +103,13 @@ export default function ResellerDashboard() {
   const [isPixModalOpen, setIsPixModalOpen] = useState(false);
   const pixStatus = usePixOrderPolling(pixOrder?.order_id || null);
   const [pixCustomerOpen, setPixCustomerOpen] = useState(false);
-  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; combo?: boolean } | null>(null);
+  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; combo?: boolean; comboChampion?: boolean } | null>(null);
   const [comboRequirementsOpen, setComboRequirementsOpen] = useState(false);
   const [comboAccepted, setComboAccepted] = useState(false);
   const [lastOrderWasCombo, setLastOrderWasCombo] = useState(false);
+  const [comboChampionRequirementsOpen, setComboChampionRequirementsOpen] = useState(false);
+  const [comboChampionAccepted, setComboChampionAccepted] = useState(false);
+  const [lastOrderWasComboChampion, setLastOrderWasComboChampion] = useState(false);
 
   const [isPromoOpen, setIsPromoOpen] = useState(false);
   const PROMO_QTY = 10;
@@ -230,14 +234,15 @@ export default function ResellerDashboard() {
 
   const handlePixCustomerConfirm = async (customerData: PixCustomerFormData) => {
     if (!pendingPixAction) return;
-    const { qty, promo, lifetime, combo } = pendingPixAction;
+    const { qty, promo, lifetime, combo, comboChampion } = pendingPixAction;
     setPixCustomerOpen(false);
-    setLoadingQty(combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
-    const order = await createOrder(qty, customerData, promo, lifetime, combo);
+    setLoadingQty(comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
+    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion);
     setLoadingQty(null);
     if (order) {
       setPixOrder(order);
       setLastOrderWasCombo(!!combo);
+      setLastOrderWasComboChampion(!!comboChampion);
       if (promo) setIsPromoOpen(false);
       setIsPixModalOpen(true);
     } else {
@@ -684,6 +689,44 @@ export default function ResellerDashboard() {
                             >
                               {loadingQty === -3 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4 animate-pulse" />}
                               {loadingQty === -3 ? 'Gerando PIX...' : 'Comprar por R$ 89,90'}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {isPricingReady && (
+                      <div className="relative">
+                        <div
+                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
+                          style={{
+                            background: 'linear-gradient(135deg, #facc15, #16a34a, #facc15, #1e3a8a)',
+                            backgroundSize: '300% 300%',
+                            animation: 'fire-glow 4s ease infinite',
+                          }}
+                        />
+                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+                            <span className="bg-gradient-to-r from-yellow-400 to-green-500 text-black text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider animate-pulse">
+                              🏆 Combo Copa do Brasil
+                            </span>
+                          </div>
+                          <div className="relative flex-1 flex flex-col gap-3">
+                            <div className="relative rounded-xl overflow-hidden bg-black">
+                              <img
+                                src={comboChampionBannerAsset.url}
+                                alt="300 Créditos Lovable + 1 Ano PRO Lite + Chave Vitalícia por R$ 149,90"
+                                className="w-full h-auto object-cover aspect-square"
+                                loading="lazy"
+                              />
+                            </div>
+                            <Button
+                              disabled={loadingQty !== null}
+                              onClick={() => { setComboChampionAccepted(false); setComboChampionRequirementsOpen(true); }}
+                              className="group relative overflow-hidden w-full rounded-xl bg-[linear-gradient(110deg,#facc15,45%,#16a34a,55%,#facc15)] bg-[length:200%_100%] text-black font-bold shadow-lg shadow-yellow-500/30 transition-all duration-300 hover:scale-[1.04] hover:shadow-green-500/50 active:scale-95 animate-[gradient-x_3s_ease_infinite] mt-auto"
+                              size="sm"
+                            >
+                              {loadingQty === -4 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4 animate-pulse" />}
+                              {loadingQty === -4 ? 'Gerando PIX...' : 'Comprar por R$ 149,90'}
                             </Button>
                           </div>
                         </div>
@@ -1269,6 +1312,53 @@ export default function ResellerDashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* Combo Copa do Brasil Requirements Dialog */}
+        <AlertDialog open={comboChampionRequirementsOpen} onOpenChange={setComboChampionRequirementsOpen}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-yellow-400" />
+                Requisitos do Combo Copa do Brasil
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="font-semibold text-foreground">Você está adquirindo:</p>
+                  <ul className="space-y-2 list-none pl-0">
+                    <li className="flex gap-2"><span className="text-yellow-400">●</span> <span><span className="font-bold text-foreground">300 Créditos Lovable</span> aplicados em uma conta <span className="font-bold">FREE</span>.</span></li>
+                    <li className="flex gap-2"><span className="text-yellow-400">●</span> <span><span className="font-bold text-foreground">1 Ano de PRO Lite</span> na mesma conta FREE.</span></li>
+                    <li className="flex gap-2"><span className="text-yellow-400">●</span> <span><span className="font-bold text-foreground">1 Chave Vitalícia</span> (validade ilimitada) para revenda.</span></li>
+                    <li className="flex gap-2"><span className="text-yellow-400">●</span> Após o pagamento, envie o comprovante ao ADM no WhatsApp para liberação do combo e entrada no grupo.</li>
+                    <li className="flex gap-2"><span className="text-yellow-400">●</span> Compra não reembolsável após ativação.</li>
+                  </ul>
+                  <label className="flex items-start gap-2 pt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={comboChampionAccepted}
+                      onChange={(e) => setComboChampionAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-yellow-500"
+                    />
+                    <span className="text-foreground">Li, entendi e confirmo que a conta Lovable de destino é <span className="font-bold">FREE</span>.</span>
+                  </label>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setComboChampionAccepted(false)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!comboChampionAccepted}
+                onClick={() => {
+                  setComboChampionRequirementsOpen(false);
+                  setPendingPixAction({ qty: 1, comboChampion: true });
+                  setPixCustomerOpen(true);
+                }}
+                className="bg-gradient-to-r from-yellow-500 to-green-500 text-black"
+              >
+                Continuar para pagamento
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* PIX Payment Modal */}
         <Dialog open={isPixModalOpen} onOpenChange={(open) => {
           if (!open && pixStatus !== 'pending') {
@@ -1296,7 +1386,27 @@ export default function ResellerDashboard() {
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">Pagamento Confirmado!</h3>
-                {lastOrderWasCombo ? (
+                {lastOrderWasComboChampion ? (
+                  <>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Combo <span className="font-semibold text-foreground">Copa do Brasil (300 Créditos + 1 Ano PRO Lite + Chave Vitalícia)</span> recebido. Envie o comprovante ao ADM no WhatsApp para liberação.
+                    </p>
+                    <Button
+                      onClick={() => {
+                        const msg = encodeURIComponent(
+                          `Olá! Comprei o Combo Copa do Brasil — 300 Créditos + 1 Ano PRO Lite + Chave Vitalícia (R$ 149,90).\n\nPedido: ${pixOrder?.order_id || ''}\nE-mail: ${user?.email || ''}\n\nSegue o comprovante em anexo. Por favor, libere meu combo e me adicione ao grupo.`
+                        );
+                        window.open(`https://wa.me/5516999171891?text=${msg}`, '_blank', 'noopener,noreferrer');
+                      }}
+                      className="bg-gradient-to-r from-yellow-500 to-green-500 text-black font-bold w-full"
+                    >
+                      Enviar comprovante ao ADM e entrar no grupo
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setIsPixModalOpen(false); setPixOrder(null); setLastOrderWasComboChampion(false); }}>
+                      Fechar
+                    </Button>
+                  </>
+                ) : lastOrderWasCombo ? (
                   <>
                     <p className="text-sm text-muted-foreground text-center">
                       Combo <span className="font-semibold text-foreground">300 Créditos + 1 Ano PRO Lite</span> recebido. Envie o comprovante ao ADM no WhatsApp para entrar no grupo e ativar.
