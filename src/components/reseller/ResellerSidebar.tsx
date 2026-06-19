@@ -34,7 +34,7 @@ export function ResellerSidebar() {
     (licenses || []).some((l: any) => l.status === 'active' && l.max_messages == null);
 
   const EXTENSION_URL = '/LOV-ULTRA-OBF-BALMAN-V3.zip';
-  const EXTENSION_VERSION = '20260619-0020';
+  const EXTENSION_VERSION = '20260619-0322';
 
   const downloadExtension = () => {
     if (isDownloading) return;
