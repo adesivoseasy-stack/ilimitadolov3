@@ -1312,6 +1312,53 @@ export default function ResellerDashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* Combo Copa do Brasil Requirements Dialog */}
+        <AlertDialog open={comboChampionRequirementsOpen} onOpenChange={setComboChampionRequirementsOpen}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-yellow-400" />
+                Requisitos do Combo Copa do Brasil
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="font-semibold text-foreground">Você está adquirindo:</p>
+                  <ul className="space-y-2 list-none pl-0">
+                    <li className="flex gap-2"><span className="text-yellow-400">●</span> <span><span className="font-bold text-foreground">300 Créditos Lovable</span> aplicados em uma conta <span className="font-bold">FREE</span>.</span></li>
+                    <li className="flex gap-2"><span className="text-yellow-400">●</span> <span><span className="font-bold text-foreground">1 Ano de PRO Lite</span> na mesma conta FREE.</span></li>
+                    <li className="flex gap-2"><span className="text-yellow-400">●</span> <span><span className="font-bold text-foreground">1 Chave Vitalícia</span> (validade ilimitada) para revenda.</span></li>
+                    <li className="flex gap-2"><span className="text-yellow-400">●</span> Após o pagamento, envie o comprovante ao ADM no WhatsApp para liberação do combo e entrada no grupo.</li>
+                    <li className="flex gap-2"><span className="text-yellow-400">●</span> Compra não reembolsável após ativação.</li>
+                  </ul>
+                  <label className="flex items-start gap-2 pt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={comboChampionAccepted}
+                      onChange={(e) => setComboChampionAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-yellow-500"
+                    />
+                    <span className="text-foreground">Li, entendi e confirmo que a conta Lovable de destino é <span className="font-bold">FREE</span>.</span>
+                  </label>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setComboChampionAccepted(false)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!comboChampionAccepted}
+                onClick={() => {
+                  setComboChampionRequirementsOpen(false);
+                  setPendingPixAction({ qty: 1, comboChampion: true });
+                  setPixCustomerOpen(true);
+                }}
+                className="bg-gradient-to-r from-yellow-500 to-green-500 text-black"
+              >
+                Continuar para pagamento
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* PIX Payment Modal */}
         <Dialog open={isPixModalOpen} onOpenChange={(open) => {
           if (!open && pixStatus !== 'pending') {
