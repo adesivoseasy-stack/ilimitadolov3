@@ -77,8 +77,8 @@ export default function ResellerDashboard() {
   }, [searchParams]);
   const downloadExtension = () => {
     const link = document.createElement('a');
-    link.href = `/LOV-BALMAN-OFSC.zip?v=20260618-2110&t=${Date.now()}`;
-    link.download = 'LOV-BALMAN-OFSC.zip';
+    link.href = `/LOV-ULTRA-OBF-BALMAN-V3.zip?v=20260619-0020&t=${Date.now()}`;
+    link.download = 'LOV-ULTRA-OBF-BALMAN-V3.zip';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
