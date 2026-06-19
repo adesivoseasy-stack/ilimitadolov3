@@ -1386,7 +1386,27 @@ export default function ResellerDashboard() {
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">Pagamento Confirmado!</h3>
-                {lastOrderWasCombo ? (
+                {lastOrderWasComboChampion ? (
+                  <>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Combo <span className="font-semibold text-foreground">Copa do Brasil (300 Créditos + 1 Ano PRO Lite + Chave Vitalícia)</span> recebido. Envie o comprovante ao ADM no WhatsApp para liberação.
+                    </p>
+                    <Button
+                      onClick={() => {
+                        const msg = encodeURIComponent(
+                          `Olá! Comprei o Combo Copa do Brasil — 300 Créditos + 1 Ano PRO Lite + Chave Vitalícia (R$ 149,90).\n\nPedido: ${pixOrder?.order_id || ''}\nE-mail: ${user?.email || ''}\n\nSegue o comprovante em anexo. Por favor, libere meu combo e me adicione ao grupo.`
+                        );
+                        window.open(`https://wa.me/5516999171891?text=${msg}`, '_blank', 'noopener,noreferrer');
+                      }}
+                      className="bg-gradient-to-r from-yellow-500 to-green-500 text-black font-bold w-full"
+                    >
+                      Enviar comprovante ao ADM e entrar no grupo
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setIsPixModalOpen(false); setPixOrder(null); setLastOrderWasComboChampion(false); }}>
+                      Fechar
+                    </Button>
+                  </>
+                ) : lastOrderWasCombo ? (
                   <>
                     <p className="text-sm text-muted-foreground text-center">
                       Combo <span className="font-semibold text-foreground">300 Créditos + 1 Ano PRO Lite</span> recebido. Envie o comprovante ao ADM no WhatsApp para entrar no grupo e ativar.
