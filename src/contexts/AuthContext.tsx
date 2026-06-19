@@ -117,11 +117,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setIsLoading(true);
+        // Apenas atualizar tokens em TOKEN_REFRESHED — não disparar refetch de roles
+        // nem flippar isLoading (isso desmontava as rotas e gerava cascata de refresh).
+        if (event === 'TOKEN_REFRESHED') {
+          setSession(session);
+          setUser(session?.user ?? null);
+          return;
+        }
+
+        // USER_UPDATED: só atualiza o user, sem loading
+        if (event === 'USER_UPDATED') {
+          setSession(session);
+          setUser(session?.user ?? null);
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
-        
-        if (session?.user) {
+
+        if (session?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+          setIsLoading(true);
           setTimeout(() => {
             Promise.all([
               checkAdminRole(session.user.id),
@@ -135,14 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setResellerStatus(status);
               setIsLoading(false);
 
-              // Se logou e não tem nenhum papel nem perfil de revendedor,
-              // cria perfil pending automaticamente (fallback para signups
-              // que exigem confirmação de email — naquele caso o signUp
-              // não tem sessão e a chamada inicial falha com 401).
-              if (
-                (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') &&
-                !admin && !reseller && !manager && !status
-              ) {
+              if (!admin && !reseller && !manager && !status) {
                 supabase.functions
                   .invoke('register-reseller-self', {
                     body: { name: session.user.email?.split('@')[0] || 'Revendedor' },
@@ -156,7 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setIsLoading(false);
             });
           }, 0);
-        } else {
+        } else if (event === 'SIGNED_OUT') {
           resetAuthState();
           setIsLoading(false);
         }
