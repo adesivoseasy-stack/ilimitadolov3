@@ -29,6 +29,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import resellerBanner from '@/assets/banner.png';
 import keyIcon from '@/assets/key-icon.png';
 import comboBannerAsset from '@/assets/combo-300-creditos-pro-lite.png.asset.json';
+import comboChampionBannerAsset from '@/assets/combo-copa-brasil.png.asset.json';
 import { format, parseISO, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -102,10 +103,13 @@ export default function ResellerDashboard() {
   const [isPixModalOpen, setIsPixModalOpen] = useState(false);
   const pixStatus = usePixOrderPolling(pixOrder?.order_id || null);
   const [pixCustomerOpen, setPixCustomerOpen] = useState(false);
-  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; combo?: boolean } | null>(null);
+  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; combo?: boolean; comboChampion?: boolean } | null>(null);
   const [comboRequirementsOpen, setComboRequirementsOpen] = useState(false);
   const [comboAccepted, setComboAccepted] = useState(false);
   const [lastOrderWasCombo, setLastOrderWasCombo] = useState(false);
+  const [comboChampionRequirementsOpen, setComboChampionRequirementsOpen] = useState(false);
+  const [comboChampionAccepted, setComboChampionAccepted] = useState(false);
+  const [lastOrderWasComboChampion, setLastOrderWasComboChampion] = useState(false);
 
   const [isPromoOpen, setIsPromoOpen] = useState(false);
   const PROMO_QTY = 10;
@@ -230,14 +234,15 @@ export default function ResellerDashboard() {
 
   const handlePixCustomerConfirm = async (customerData: PixCustomerFormData) => {
     if (!pendingPixAction) return;
-    const { qty, promo, lifetime, combo } = pendingPixAction;
+    const { qty, promo, lifetime, combo, comboChampion } = pendingPixAction;
     setPixCustomerOpen(false);
-    setLoadingQty(combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
-    const order = await createOrder(qty, customerData, promo, lifetime, combo);
+    setLoadingQty(comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
+    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion);
     setLoadingQty(null);
     if (order) {
       setPixOrder(order);
       setLastOrderWasCombo(!!combo);
+      setLastOrderWasComboChampion(!!comboChampion);
       if (promo) setIsPromoOpen(false);
       setIsPixModalOpen(true);
     } else {
