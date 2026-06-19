@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
       if (buyerEmail === 'wallacesouzasantos@gmail.com' || buyerEmail === 'ecombrunobp@gmail.com') {
         totalReais = 29.90
       } else {
-        const LIFETIME_PROMO_END = new Date('2026-06-18T20:00:00-03:00').getTime()
+        const LIFETIME_PROMO_END = new Date('2026-07-31T23:59:59-03:00').getTime()
         const isLifetimePromo = Date.now() < LIFETIME_PROMO_END
         totalReais = isLifetimePromo ? 79.90 : 147.90
       }
