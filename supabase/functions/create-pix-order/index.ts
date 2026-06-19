@@ -18,6 +18,7 @@ const BodySchema = z.object({
   promo: z.boolean().optional(),
   lifetime: z.boolean().optional(),
   combo: z.boolean().optional(),
+  comboChampion: z.boolean().optional(),
 })
 
 async function readResponseData(res: Response) {
@@ -126,7 +127,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, combo } = bodyResult.data
+    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, combo, comboChampion } = bodyResult.data
     const userId = authUser.id
 
     const adminClient = createClient(
@@ -151,7 +152,13 @@ Deno.serve(async (req) => {
     let totalReais: number
     let pricePerKey: number
 
-    if (combo) {
+    if (comboChampion) {
+      // Combo Copa do Brasil: 300 Créditos Lovable + 1 Ano PRO Lite + Chave Vitalícia — R$ 149,90
+      quantity = 1
+      totalReais = 149.90
+      pricePerKey = 149.90
+      promo = false
+    } else if (combo) {
       // Combo: 300 Créditos Lovable + 1 Ano PRO Lite — R$ 89,90
       quantity = 1
       totalReais = 89.90
@@ -248,7 +255,7 @@ Deno.serve(async (req) => {
         customer_email: email,
         customer_phone: phoneNumber,
         customer_document: document,
-        product_type: combo ? 'combo' : (lifetime ? 'lifetime' : 'standard'),
+        product_type: comboChampion ? 'combo_champion' : (combo ? 'combo' : (lifetime ? 'lifetime' : 'standard')),
       })
       .select()
       .single()
