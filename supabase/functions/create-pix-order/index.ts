@@ -166,7 +166,7 @@ Deno.serve(async (req) => {
       promo = false
     } else if (lifetime) {
       // Chave Vitalícia: 1 chave com validade ilimitada (100 anos)
-      // Promoção Dia dos Namorados: R$ 79,90 até 12/06/2026 às 22h, depois R$ 147,90
+      // Promoção Relâmpago: R$ 79,90 até 22/06/2026 às 20h, depois R$ 147,90
       quantity = 1
       // Override individual: wallacesouzasantos@gmail.com paga R$ 29,90
       const { data: buyerData } = await adminClient.auth.admin.getUserById(userId)
@@ -174,7 +174,7 @@ Deno.serve(async (req) => {
       if (buyerEmail === 'wallacesouzasantos@gmail.com' || buyerEmail === 'ecombrunobp@gmail.com') {
         totalReais = 29.90
       } else {
-        const LIFETIME_PROMO_END = new Date('2026-07-31T23:59:59-03:00').getTime()
+        const LIFETIME_PROMO_END = new Date('2026-06-22T20:00:00-03:00').getTime()
         const isLifetimePromo = Date.now() < LIFETIME_PROMO_END
         totalReais = isLifetimePromo ? 79.90 : 147.90
       }
