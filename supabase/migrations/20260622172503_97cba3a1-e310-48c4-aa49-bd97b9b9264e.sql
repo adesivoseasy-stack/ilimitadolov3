@@ -1,0 +1,1 @@
+UPDATE public.licenses SET created_by = 'a1e4a352-2569-4a26-a7db-08f7d3eca01a' WHERE license_key IN ('JFHFI-9BCGL-UHQBL-QC9XZ','XLUKR-AX62Q-6UQVM-8ABB9');
