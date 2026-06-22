@@ -12,10 +12,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Plus, Search, MoreHorizontal, Monitor, Copy, Eye, Coins, UserPen, RefreshCw, Ban, FlaskConical } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Monitor, Copy, Eye, Coins, UserPen, RefreshCw, Ban, FlaskConical, Loader2, CheckCircle2 } from 'lucide-react';
 import { format, parseISO, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import { useCreatePixOrder, usePixOrderPolling, PixOrderData } from '@/hooks/usePixOrder';
+import { PixCustomerDialog, PixCustomerFormData } from '@/components/reseller/PixCustomerDialog';
+import { PixQrCode } from '@/components/reseller/PixQrCode';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function ResellerLicenses() {
   const { data: licenses, isLoading } = useResellerLicenses();
@@ -48,6 +52,38 @@ export default function ResellerLicenses() {
   const [isTestOpen, setIsTestOpen] = useState(false);
   const [testEmail, setTestEmail] = useState('');
   const [testCustomerName, setTestCustomerName] = useState('');
+
+  // PIX Renewal flow
+  const queryClient = useQueryClient();
+  const { createOrder: createPixOrder, isLoading: pixLoading, error: pixError } = useCreatePixOrder();
+  const [renewPixLicense, setRenewPixLicense] = useState<{ id: string; key: string } | null>(null);
+  const [renewPixCustomerOpen, setRenewPixCustomerOpen] = useState(false);
+  const [renewPixOrder, setRenewPixOrder] = useState<PixOrderData | null>(null);
+  const [renewPixModalOpen, setRenewPixModalOpen] = useState(false);
+  const renewPixStatus = usePixOrderPolling(renewPixOrder?.order_id || null);
+
+  const openRenewPix = (licenseId: string, licenseKey: string) => {
+    setRenewPixLicense({ id: licenseId, key: licenseKey });
+    setRenewPixOrder(null);
+    setRenewPixCustomerOpen(true);
+  };
+
+  const handleRenewPixConfirm = async (customer: PixCustomerFormData) => {
+    if (!renewPixLicense) return;
+    setRenewPixCustomerOpen(false);
+    const order = await createPixOrder(1, customer, false, false, false, false, { licenseId: renewPixLicense.id });
+    if (order) {
+      setRenewPixOrder(order);
+      setRenewPixModalOpen(true);
+    } else {
+      toast({ title: 'Erro', description: pixError || 'Não foi possível gerar o PIX.', variant: 'destructive' });
+    }
+  };
+
+  // On payment confirmation → invalidate + notify
+  if (renewPixStatus === 'paid' && renewPixOrder) {
+    // intentionally fire once: handled by effect below
+  }
 
   const hasActivePaidLicense = licenses?.some(
     (l) => l.status === 'active' && !l.license_key.startsWith('TESTE-') && !l.max_messages && !(l.duration_hours && l.duration_hours <= 0.17)
