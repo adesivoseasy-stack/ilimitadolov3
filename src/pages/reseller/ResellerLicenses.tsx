@@ -378,6 +378,63 @@ export default function ResellerLicenses() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Renew PIX — customer data */}
+        <PixCustomerDialog
+          open={renewPixCustomerOpen}
+          onClose={() => setRenewPixCustomerOpen(false)}
+          onConfirm={handleRenewPixConfirm}
+          loading={pixLoading}
+          title={`Renovar ${renewPixLicense?.key || ''}`}
+          description="R$ 34,90 por +30 dias. Informe seus dados para gerar o QR Code PIX."
+          defaultEmail={user?.email || ''}
+        />
+
+        {/* Renew PIX — QR + polling */}
+        <Dialog open={renewPixModalOpen} onOpenChange={(open) => { if (!open) { setRenewPixModalOpen(false); setRenewPixOrder(null); setRenewPixLicense(null); } }}>
+          <DialogContent className="bg-card/95 backdrop-blur-xl border-border/30 max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-display">Pagamento PIX — Renovação</DialogTitle>
+              <DialogDescription>
+                Chave <code className="font-mono text-xs">{renewPixLicense?.key}</code> — +30 dias após pagamento.
+              </DialogDescription>
+            </DialogHeader>
+            {renewPixStatus === 'paid' ? (
+              <div className="space-y-4 py-4 text-center">
+                <CheckCircle2 className="h-16 w-16 text-success mx-auto" />
+                <p className="text-lg font-bold font-display">Pagamento confirmado!</p>
+                <p className="text-sm text-muted-foreground">A licença foi renovada por mais 30 dias e uma nova chave foi gerada.</p>
+                <Button onClick={() => { setRenewPixModalOpen(false); setRenewPixOrder(null); setRenewPixLicense(null); }} className="bg-gradient text-primary-foreground w-full">Fechar</Button>
+              </div>
+            ) : renewPixOrder ? (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-gradient">R$ {(renewPixOrder.amount_cents / 100).toFixed(2)}</p>
+                </div>
+                {(renewPixOrder.qr_code_image_url || renewPixOrder.qr_code_text) && (
+                  <div className="flex justify-center">
+                    <PixQrCode value={renewPixOrder.qr_code_text} imageUrl={renewPixOrder.qr_code_image_url} alt="QR Code PIX" className="w-48 h-48 rounded-lg border border-border" />
+                  </div>
+                )}
+                {renewPixOrder.qr_code_text && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Código PIX (Copia e Cola)</Label>
+                    <div className="flex gap-2">
+                      <Input readOnly value={renewPixOrder.qr_code_text} className="text-xs font-mono" />
+                      <Button variant="outline" size="icon" onClick={() => { navigator.clipboard.writeText(renewPixOrder.qr_code_text); toast({ title: 'Copiado!', description: 'Código PIX copiado.' }); }}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center justify-center gap-2 py-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <span className="text-sm text-muted-foreground">Aguardando pagamento...</span>
+                </div>
+              </div>
+            ) : null}
+          </DialogContent>
+        </Dialog>
       </div>
     </ResellerLayout>
   );
