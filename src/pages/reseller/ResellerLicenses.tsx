@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ResellerLayout } from '@/components/reseller/ResellerLayout';
 import { useResellerLicenses, useResellerCreateLicense, useUpdateCustomerName } from '@/hooks/useResellerLicenses';
 import { useResellerCredits } from '@/hooks/useManagerData';
@@ -80,10 +80,14 @@ export default function ResellerLicenses() {
     }
   };
 
-  // On payment confirmation → invalidate + notify
-  if (renewPixStatus === 'paid' && renewPixOrder) {
-    // intentionally fire once: handled by effect below
-  }
+  // On payment confirmation → invalidate license queries + notify
+  useEffect(() => {
+    if (renewPixStatus === 'paid' && renewPixOrder) {
+      queryClient.invalidateQueries({ queryKey: ['reseller-licenses'] });
+      queryClient.invalidateQueries({ queryKey: ['licenses'] });
+      toast({ title: 'Renovada!', description: 'Pagamento confirmado. Nova chave gerada com +30 dias.' });
+    }
+  }, [renewPixStatus, renewPixOrder, queryClient, toast]);
 
   const hasActivePaidLicense = licenses?.some(
     (l) => l.status === 'active' && !l.license_key.startsWith('TESTE-') && !l.max_messages && !(l.duration_hours && l.duration_hours <= 0.17)
