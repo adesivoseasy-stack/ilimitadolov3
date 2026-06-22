@@ -265,7 +265,18 @@ export default function ResellerLicenses() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <ExpiryInfo expiresAt={license.expires_at} durationHours={license.duration_hours} firstActivatedAt={license.first_activated_at} />
+                      <div className="flex items-center gap-2">
+                        <ExpiryInfo expiresAt={license.expires_at} durationHours={license.duration_hours} firstActivatedAt={license.first_activated_at} />
+                        {license.status === 'expired' && !license.license_key.startsWith('TESTE-') && (
+                          <Button
+                            size="sm"
+                            onClick={() => openRenewPix(license.id, license.license_key)}
+                            className="h-7 px-3 bg-gradient text-primary-foreground font-display text-[11px] font-bold shadow-md shadow-primary/20 hover:shadow-primary/30"
+                          >
+                            <RefreshCw className="h-3 w-3 mr-1" /> Renovar R$34,90
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -280,8 +291,8 @@ export default function ResellerLicenses() {
                               {license.status === 'expired' && (
                                 <>
                                   <DropdownMenuSeparator className="bg-border/20" />
-                                  <DropdownMenuItem onClick={() => { setRenewDialog({ licenseId: license.id, licenseKey: license.license_key }); setRenewDays('30'); }}>
-                                    <RefreshCw className="mr-2 h-4 w-4" />Renovar +30 dias
+                                  <DropdownMenuItem onClick={() => openRenewPix(license.id, license.license_key)}>
+                                    <RefreshCw className="mr-2 h-4 w-4" />Renovar via PIX (R$ 34,90)
                                   </DropdownMenuItem>
                                 </>
                               )}
