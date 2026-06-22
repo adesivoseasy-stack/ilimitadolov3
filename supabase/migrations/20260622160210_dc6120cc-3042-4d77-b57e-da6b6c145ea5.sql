@@ -1,0 +1,1 @@
+ALTER TABLE public.credit_orders ADD COLUMN IF NOT EXISTS target_license_id uuid REFERENCES public.licenses(id) ON DELETE SET NULL;
