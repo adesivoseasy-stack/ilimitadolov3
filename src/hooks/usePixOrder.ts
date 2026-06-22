@@ -22,12 +22,12 @@ export function useCreatePixOrder() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createOrder = useCallback(async (quantity: number, customer: PixCustomerData, promo?: boolean, lifetime?: boolean, combo?: boolean, comboChampion?: boolean): Promise<PixOrderData | null> => {
+  const createOrder = useCallback(async (quantity: number, customer: PixCustomerData, promo?: boolean, lifetime?: boolean, combo?: boolean, comboChampion?: boolean, renewal?: { licenseId: string }): Promise<PixOrderData | null> => {
     setIsLoading(true);
     setError(null);
     try {
       const { data, error: fnError } = await supabase.functions.invoke('create-pix-order', {
-        body: { quantity, ...customer, ...(promo ? { promo: true } : {}), ...(lifetime ? { lifetime: true } : {}), ...(combo ? { combo: true } : {}), ...(comboChampion ? { comboChampion: true } : {}) },
+        body: { quantity, ...customer, ...(promo ? { promo: true } : {}), ...(lifetime ? { lifetime: true } : {}), ...(combo ? { combo: true } : {}), ...(comboChampion ? { comboChampion: true } : {}), ...(renewal ? { renewal: true, licenseId: renewal.licenseId } : {}) },
       });
       if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
