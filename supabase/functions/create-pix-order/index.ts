@@ -19,6 +19,8 @@ const BodySchema = z.object({
   lifetime: z.boolean().optional(),
   combo: z.boolean().optional(),
   comboChampion: z.boolean().optional(),
+  renewal: z.boolean().optional(),
+  licenseId: z.string().uuid().optional(),
 })
 
 async function readResponseData(res: Response) {
@@ -127,7 +129,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, combo, comboChampion } = bodyResult.data
+    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, combo, comboChampion, renewal, licenseId } = bodyResult.data
     const userId = authUser.id
 
     const adminClient = createClient(
@@ -151,8 +153,33 @@ Deno.serve(async (req) => {
 
     let totalReais: number
     let pricePerKey: number
+    let renewalLicenseId: string | null = null
 
-    if (comboChampion) {
+    if (renewal) {
+      // Renovação manual via PIX: R$ 34,90 para +30 dias na chave indicada.
+      if (!licenseId) {
+        return new Response(JSON.stringify({ error: 'licenseId obrigatório para renovação' }), { status: 400, headers: corsHeaders })
+      }
+      const { data: lic, error: licErr } = await adminClient
+        .from('licenses')
+        .select('id, created_by, status, is_wildcard, license_key')
+        .eq('id', licenseId)
+        .single()
+      if (licErr || !lic) {
+        return new Response(JSON.stringify({ error: 'Licença não encontrada' }), { status: 404, headers: corsHeaders })
+      }
+      if (lic.created_by !== userId) {
+        return new Response(JSON.stringify({ error: 'Você não tem permissão para renovar esta licença' }), { status: 403, headers: corsHeaders })
+      }
+      if (lic.is_wildcard) {
+        return new Response(JSON.stringify({ error: 'Chaves coringa não são renováveis' }), { status: 400, headers: corsHeaders })
+      }
+      quantity = 1
+      totalReais = 34.90
+      pricePerKey = 34.90
+      renewalLicenseId = lic.id
+      promo = false
+    } else if (comboChampion) {
       // Combo Copa do Brasil: 300 Créditos Lovable + 1 Ano PRO Lite + Chave Vitalícia — R$ 149,90
       quantity = 1
       totalReais = 149.90
@@ -255,7 +282,8 @@ Deno.serve(async (req) => {
         customer_email: email,
         customer_phone: phoneNumber,
         customer_document: document,
-        product_type: comboChampion ? 'combo_champion' : (combo ? 'combo' : (lifetime ? 'lifetime' : 'standard')),
+        product_type: renewal ? 'renewal' : (comboChampion ? 'combo_champion' : (combo ? 'combo' : (lifetime ? 'lifetime' : 'standard'))),
+        target_license_id: renewalLicenseId,
       })
       .select()
       .single()

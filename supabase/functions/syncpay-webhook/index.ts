@@ -175,6 +175,64 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ ok: true, message: 'Already processed' }), { headers: corsHeaders })
     }
 
+    // RENEWAL: expire old license + create new key with +30 days (same email/customer_name/created_by).
+    if (order.product_type === 'renewal' && order.target_license_id) {
+      const { data: oldLic, error: oldErr } = await adminClient
+        .from('licenses')
+        .select('*')
+        .eq('id', order.target_license_id)
+        .single()
+      if (oldErr || !oldLic) {
+        console.error('[syncpay-webhook] renewal target not found:', order.target_license_id)
+        return new Response(JSON.stringify({ error: 'Target license not found' }), { status: 404, headers: corsHeaders })
+      }
+
+      await adminClient
+        .from('licenses')
+        .update({ status: 'expired', notes: `${oldLic.notes || ''}\n[Renovada via PIX → nova chave gerada]`.trim() })
+        .eq('id', oldLic.id)
+
+      const { data: newKey, error: keyErr } = await adminClient.rpc('generate_license_key')
+      if (keyErr) {
+        console.error('[syncpay-webhook] renewal key gen error:', keyErr)
+        return new Response(JSON.stringify({ error: 'Key generation failed' }), { status: 500, headers: corsHeaders })
+      }
+
+      const farFuture = new Date()
+      farFuture.setFullYear(farFuture.getFullYear() + 100)
+
+      const { data: newLic, error: createErr } = await adminClient
+        .from('licenses')
+        .insert({
+          license_key: newKey,
+          email: oldLic.email,
+          expires_at: farFuture.toISOString(),
+          price: 34.90,
+          notes: `Renovação PIX da chave ${oldLic.license_key} — Pedido #${order.id.slice(0, 8)}`,
+          duration_hours: 720,
+          first_activated_at: null,
+          is_wildcard: false,
+          created_by: oldLic.created_by,
+          customer_name: oldLic.customer_name,
+          status: 'active',
+        } as any)
+        .select('id')
+        .single()
+
+      if (createErr) {
+        console.error('[syncpay-webhook] renewal create error:', createErr)
+        return new Response(JSON.stringify({ error: 'Renewal failed' }), { status: 500, headers: corsHeaders })
+      }
+
+      await adminClient.from('license_logs').insert([
+        { license_id: oldLic.id, action: 'expired_by_renewal', details: { source: 'pix_renewal', new_license_id: newLic.id, order_id: order.id } },
+        { license_id: newLic.id, action: 'created_by_renewal', details: { source: 'pix_renewal', old_license_id: oldLic.id, old_key: oldLic.license_key, order_id: order.id } },
+      ])
+
+      console.log('[syncpay-webhook] Renewed license', oldLic.id, '→', newLic.id)
+      return new Response(JSON.stringify({ ok: true, renewed: true, new_license_id: newLic.id }), { headers: corsHeaders })
+    }
+
     // Generate license keys and add to reseller's stock
     const generatedKeys: string[] = []
     const isLifetime = order.product_type === 'lifetime'

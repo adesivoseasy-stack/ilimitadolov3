@@ -88,6 +88,7 @@ export type Database = {
           quantity: number
           reseller_id: string
           status: string
+          target_license_id: string | null
           updated_at: string
         }
         Insert: {
@@ -106,6 +107,7 @@ export type Database = {
           quantity: number
           reseller_id: string
           status?: string
+          target_license_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -124,9 +126,18 @@ export type Database = {
           quantity?: number
           reseller_id?: string
           status?: string
+          target_license_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "credit_orders_target_license_id_fkey"
+            columns: ["target_license_id"]
+            isOneToOne: false
+            referencedRelation: "licenses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       credits_customers: {
         Row: {

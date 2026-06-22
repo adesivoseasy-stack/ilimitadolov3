@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ResellerLayout } from '@/components/reseller/ResellerLayout';
 import { useResellerLicenses, useResellerCreateLicense, useUpdateCustomerName } from '@/hooks/useResellerLicenses';
 import { useResellerCredits } from '@/hooks/useManagerData';
@@ -12,10 +12,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Plus, Search, MoreHorizontal, Monitor, Copy, Eye, Coins, UserPen, RefreshCw, Ban, FlaskConical } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Monitor, Copy, Eye, Coins, UserPen, RefreshCw, Ban, FlaskConical, Loader2, CheckCircle2 } from 'lucide-react';
 import { format, parseISO, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import { useCreatePixOrder, usePixOrderPolling, PixOrderData } from '@/hooks/usePixOrder';
+import { PixCustomerDialog, PixCustomerFormData } from '@/components/reseller/PixCustomerDialog';
+import { PixQrCode } from '@/components/reseller/PixQrCode';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function ResellerLicenses() {
   const { data: licenses, isLoading } = useResellerLicenses();
@@ -48,6 +52,42 @@ export default function ResellerLicenses() {
   const [isTestOpen, setIsTestOpen] = useState(false);
   const [testEmail, setTestEmail] = useState('');
   const [testCustomerName, setTestCustomerName] = useState('');
+
+  // PIX Renewal flow
+  const queryClient = useQueryClient();
+  const { createOrder: createPixOrder, isLoading: pixLoading, error: pixError } = useCreatePixOrder();
+  const [renewPixLicense, setRenewPixLicense] = useState<{ id: string; key: string } | null>(null);
+  const [renewPixCustomerOpen, setRenewPixCustomerOpen] = useState(false);
+  const [renewPixOrder, setRenewPixOrder] = useState<PixOrderData | null>(null);
+  const [renewPixModalOpen, setRenewPixModalOpen] = useState(false);
+  const renewPixStatus = usePixOrderPolling(renewPixOrder?.order_id || null);
+
+  const openRenewPix = (licenseId: string, licenseKey: string) => {
+    setRenewPixLicense({ id: licenseId, key: licenseKey });
+    setRenewPixOrder(null);
+    setRenewPixCustomerOpen(true);
+  };
+
+  const handleRenewPixConfirm = async (customer: PixCustomerFormData) => {
+    if (!renewPixLicense) return;
+    setRenewPixCustomerOpen(false);
+    const order = await createPixOrder(1, customer, false, false, false, false, { licenseId: renewPixLicense.id });
+    if (order) {
+      setRenewPixOrder(order);
+      setRenewPixModalOpen(true);
+    } else {
+      toast({ title: 'Erro', description: pixError || 'Não foi possível gerar o PIX.', variant: 'destructive' });
+    }
+  };
+
+  // On payment confirmation → invalidate license queries + notify
+  useEffect(() => {
+    if (renewPixStatus === 'paid' && renewPixOrder) {
+      queryClient.invalidateQueries({ queryKey: ['reseller-licenses'] });
+      queryClient.invalidateQueries({ queryKey: ['licenses'] });
+      toast({ title: 'Renovada!', description: 'Pagamento confirmado. Nova chave gerada com +30 dias.' });
+    }
+  }, [renewPixStatus, renewPixOrder, queryClient, toast]);
 
   const hasActivePaidLicense = licenses?.some(
     (l) => l.status === 'active' && !l.license_key.startsWith('TESTE-') && !l.max_messages && !(l.duration_hours && l.duration_hours <= 0.17)
@@ -225,7 +265,18 @@ export default function ResellerLicenses() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <ExpiryInfo expiresAt={license.expires_at} durationHours={license.duration_hours} firstActivatedAt={license.first_activated_at} />
+                      <div className="flex items-center gap-2">
+                        <ExpiryInfo expiresAt={license.expires_at} durationHours={license.duration_hours} firstActivatedAt={license.first_activated_at} />
+                        {license.status === 'expired' && !license.license_key.startsWith('TESTE-') && (
+                          <Button
+                            size="sm"
+                            onClick={() => openRenewPix(license.id, license.license_key)}
+                            className="h-7 px-3 bg-gradient text-primary-foreground font-display text-[11px] font-bold shadow-md shadow-primary/20 hover:shadow-primary/30"
+                          >
+                            <RefreshCw className="h-3 w-3 mr-1" /> Renovar R$34,90
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -240,8 +291,8 @@ export default function ResellerLicenses() {
                               {license.status === 'expired' && (
                                 <>
                                   <DropdownMenuSeparator className="bg-border/20" />
-                                  <DropdownMenuItem onClick={() => { setRenewDialog({ licenseId: license.id, licenseKey: license.license_key }); setRenewDays('30'); }}>
-                                    <RefreshCw className="mr-2 h-4 w-4" />Renovar +30 dias
+                                  <DropdownMenuItem onClick={() => openRenewPix(license.id, license.license_key)}>
+                                    <RefreshCw className="mr-2 h-4 w-4" />Renovar via PIX (R$ 34,90)
                                   </DropdownMenuItem>
                                 </>
                               )}
@@ -325,6 +376,63 @@ export default function ResellerLicenses() {
               <Button variant="outline" onClick={() => setIsTestOpen(false)} className="border-border/30">Cancelar</Button>
               <Button onClick={handleCreateTest} disabled={createLicense.isPending || !testEmail.trim()} className="bg-gradient font-display">{createLicense.isPending ? 'Criando...' : 'Criar Teste'}</Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Renew PIX — customer data */}
+        <PixCustomerDialog
+          open={renewPixCustomerOpen}
+          onClose={() => setRenewPixCustomerOpen(false)}
+          onConfirm={handleRenewPixConfirm}
+          loading={pixLoading}
+          title={`Renovar ${renewPixLicense?.key || ''}`}
+          description="R$ 34,90 por +30 dias. Informe seus dados para gerar o QR Code PIX."
+          defaultEmail={user?.email || ''}
+        />
+
+        {/* Renew PIX — QR + polling */}
+        <Dialog open={renewPixModalOpen} onOpenChange={(open) => { if (!open) { setRenewPixModalOpen(false); setRenewPixOrder(null); setRenewPixLicense(null); } }}>
+          <DialogContent className="bg-card/95 backdrop-blur-xl border-border/30 max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-display">Pagamento PIX — Renovação</DialogTitle>
+              <DialogDescription>
+                Chave <code className="font-mono text-xs">{renewPixLicense?.key}</code> — +30 dias após pagamento.
+              </DialogDescription>
+            </DialogHeader>
+            {renewPixStatus === 'paid' ? (
+              <div className="space-y-4 py-4 text-center">
+                <CheckCircle2 className="h-16 w-16 text-success mx-auto" />
+                <p className="text-lg font-bold font-display">Pagamento confirmado!</p>
+                <p className="text-sm text-muted-foreground">A licença foi renovada por mais 30 dias e uma nova chave foi gerada.</p>
+                <Button onClick={() => { setRenewPixModalOpen(false); setRenewPixOrder(null); setRenewPixLicense(null); }} className="bg-gradient text-primary-foreground w-full">Fechar</Button>
+              </div>
+            ) : renewPixOrder ? (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-gradient">R$ {(renewPixOrder.amount_cents / 100).toFixed(2)}</p>
+                </div>
+                {(renewPixOrder.qr_code_image_url || renewPixOrder.qr_code_text) && (
+                  <div className="flex justify-center">
+                    <PixQrCode value={renewPixOrder.qr_code_text} imageUrl={renewPixOrder.qr_code_image_url} alt="QR Code PIX" className="w-48 h-48 rounded-lg border border-border" />
+                  </div>
+                )}
+                {renewPixOrder.qr_code_text && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Código PIX (Copia e Cola)</Label>
+                    <div className="flex gap-2">
+                      <Input readOnly value={renewPixOrder.qr_code_text} className="text-xs font-mono" />
+                      <Button variant="outline" size="icon" onClick={() => { navigator.clipboard.writeText(renewPixOrder.qr_code_text); toast({ title: 'Copiado!', description: 'Código PIX copiado.' }); }}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center justify-center gap-2 py-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <span className="text-sm text-muted-foreground">Aguardando pagamento...</span>
+                </div>
+              </div>
+            ) : null}
           </DialogContent>
         </Dialog>
       </div>
