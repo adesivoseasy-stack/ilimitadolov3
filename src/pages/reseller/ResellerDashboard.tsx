@@ -743,23 +743,23 @@ export default function ResellerDashboard() {
                 {/* Lifetime Key */}
                 <div className="relative">
                   <div
-                    className="absolute -inset-[2px] rounded-[1.3rem] z-0 animate-pulse opacity-80"
+                    className="absolute -inset-[2px] rounded-[1.3rem] z-0 animate-pulse opacity-90"
                     style={{
-                      background: 'linear-gradient(135deg, #a855f7, #ec4899, #8b5cf6, #6366f1)',
+                      background: 'linear-gradient(135deg, #f59e0b, #ef4444, #ec4899, #a855f7)',
                       backgroundSize: '300% 300%',
-                      animation: 'fire-glow 4s ease infinite',
+                      animation: 'fire-glow 3s ease infinite',
                     }}
                   />
                   <div className="relative p-6 sm:p-7 rounded-3xl bg-card border border-transparent z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
                     <div className="flex items-start gap-4">
-                      <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center shrink-0">
+                      <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-rose-500/20 flex items-center justify-center shrink-0">
                         <img src={keyIcon} alt="Chave Vitalícia" className="h-[44px] w-[44px] object-contain" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           {isLifetimePromoActive ? (
-                            <span className="bg-gradient-to-r from-pink-500 to-red-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider animate-pulse">
-                              💘 Promo Dia dos Namorados
+                            <span className="bg-gradient-to-r from-amber-500 to-rose-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider animate-pulse">
+                              ⚡ PROMOÇÃO RELÂMPAGO
                             </span>
                           ) : (
                             <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
