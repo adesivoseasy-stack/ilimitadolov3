@@ -79,8 +79,8 @@ export default function ResellerDashboard() {
   }, [searchParams]);
   const downloadExtension = () => {
     const link = document.createElement('a');
-    link.href = `/LOV-ULTRA-OBF-BALMAN-V3.zip?v=20260619-0020&t=${Date.now()}`;
-    link.download = 'LOV-ULTRA-OBF-BALMAN-V3.zip';
+    link.href = `${extensionZipAsset.url}?t=${Date.now()}`;
+    link.download = 'LOV3.1_PURPLE_OBSC.zip';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
