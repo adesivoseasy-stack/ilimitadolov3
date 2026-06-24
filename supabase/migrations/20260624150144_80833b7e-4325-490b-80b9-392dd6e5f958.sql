@@ -1,0 +1,2 @@
+UPDATE public.licenses SET created_by = (SELECT id FROM auth.users WHERE email='fabricionedino2@gmail.com' LIMIT 1) WHERE license_key='Z2A6M-NT56P-X3AZ9-VHUHT';
+INSERT INTO public.license_logs (license_id, action, details) SELECT id, 'reassigned_to_reseller', jsonb_build_object('to_email','fabricionedino2@gmail.com') FROM public.licenses WHERE license_key='Z2A6M-NT56P-X3AZ9-VHUHT';
