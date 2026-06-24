@@ -1,1 +1,4 @@
 project_id = "wvelcefgihlxcnrmslul"
+
+[functions.public-reset-license]
+verify_jwt = false
