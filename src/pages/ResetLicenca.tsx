@@ -64,7 +64,7 @@ export default function ResetLicenca() {
         <div className="relative rounded-2xl border border-border/60 bg-card/70 backdrop-blur-xl shadow-2xl p-8">
           {/* Header */}
           <div className="flex items-center justify-center gap-3 mb-6">
-            <img src={logo} alt="Ilimitado Lov" className="h-10 w-10 rounded-lg" />
+            <img src={logo} alt="Ilimitado Lov" className="h-10 w-auto object-contain" />
             <div className="text-lg font-semibold">
               Ilimitado <span className="text-primary">Lov</span>
             </div>
