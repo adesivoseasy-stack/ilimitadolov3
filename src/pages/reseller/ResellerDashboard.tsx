@@ -33,6 +33,7 @@ import comboChampionBannerAsset from '@/assets/combo-copa-brasil.png.asset.json'
 import { format, parseISO, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import extensionZipAsset from '@/assets/LOV3.1_PURPLE_OBSC.zip.asset.json';
 import JSZip from 'jszip';
 import { LvbCreditsTab } from '@/components/reseller/LvbCreditsTab';
 import { PixQrCode } from '@/components/reseller/PixQrCode';
