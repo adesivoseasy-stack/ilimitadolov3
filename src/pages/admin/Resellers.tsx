@@ -217,6 +217,7 @@ export default function Resellers() {
   const [newName, setNewName] = useState('');
   const [creditDialog, setCreditDialog] = useState<{ resellerId: string; name: string } | null>(null);
   const [creditAmount, setCreditAmount] = useState('');
+  const [creditLifetime, setCreditLifetime] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ resellerId: string; userId: string; name: string } | null>(null);
   const [priceDialog, setPriceDialog] = useState<{ resellerId: string; name: string; currentPrice: number | null } | null>(null);
   const [customPrice, setCustomPrice] = useState('');
@@ -252,8 +253,8 @@ export default function Resellers() {
     if (!creditDialog || !creditAmount) return;
     const amount = parseInt(creditAmount);
     if (isNaN(amount) || amount <= 0) return;
-    await addCredits.mutateAsync({ resellerId: creditDialog.resellerId, amount });
-    setCreditDialog(null); setCreditAmount('');
+    await addCredits.mutateAsync({ resellerId: creditDialog.resellerId, amount, lifetime: creditLifetime });
+    setCreditDialog(null); setCreditAmount(''); setCreditLifetime(false);
   };
 
   const resetForm = () => { setNewEmail(''); setNewPassword(''); setNewName(''); };
@@ -391,7 +392,7 @@ export default function Resellers() {
         {!isLoading && resellers?.length === 0 && <p className="text-sm text-muted-foreground text-center py-12 font-display">Nenhum revendedor cadastrado</p>}
 
         {/* Credit Dialog */}
-        <Dialog open={!!creditDialog} onOpenChange={(open) => { if (!open) { setCreditDialog(null); setCreditAmount(''); } }}>
+        <Dialog open={!!creditDialog} onOpenChange={(open) => { if (!open) { setCreditDialog(null); setCreditAmount(''); setCreditLifetime(false); } }}>
           <DialogContent className="max-w-sm bg-card/95 backdrop-blur-xl border-border/30">
             <DialogHeader><DialogTitle className="font-display">Adicionar Créditos</DialogTitle><DialogDescription>{creditDialog?.name}</DialogDescription></DialogHeader>
             <div className="space-y-4 py-2">
@@ -401,9 +402,16 @@ export default function Resellers() {
                   <Button key={v} variant={creditAmount === String(v) ? 'default' : 'outline'} size="sm" onClick={() => setCreditAmount(String(v))} className={creditAmount !== String(v) ? 'border-border/30 hover:bg-primary/10 font-display' : 'bg-gradient font-display'}>{v}</Button>
                 ))}
               </div>
+              <label className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${creditLifetime ? 'border-amber-500/40 bg-amber-500/[0.06]' : 'border-border/30 hover:border-amber-500/30'}`}>
+                <input type="checkbox" checked={creditLifetime} onChange={(e) => setCreditLifetime(e.target.checked)} className="mt-0.5 h-4 w-4 rounded accent-amber-500" />
+                <div className="flex-1">
+                  <p className="text-sm font-display font-bold text-foreground">⚡ Créditos Vitalícios</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Quando marcado, esses créditos permitem ao revendedor gerar <strong>chaves vitalícias</strong> em vez de chaves de 30 dias.</p>
+                </div>
+              </label>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => { setCreditDialog(null); setCreditAmount(''); }} className="border-border/30">Cancelar</Button>
+              <Button variant="outline" onClick={() => { setCreditDialog(null); setCreditAmount(''); setCreditLifetime(false); }} className="border-border/30">Cancelar</Button>
               <Button onClick={handleAddCredits} disabled={!creditAmount || addCredits.isPending} className="bg-gradient font-display">Adicionar</Button>
             </DialogFooter>
           </DialogContent>
