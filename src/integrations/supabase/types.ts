@@ -425,6 +425,8 @@ export type Database = {
           credits_total: number
           credits_used: number
           id: string
+          lifetime_credits_total: number
+          lifetime_credits_used: number
           reseller_id: string
           updated_at: string
         }
@@ -433,6 +435,8 @@ export type Database = {
           credits_total?: number
           credits_used?: number
           id?: string
+          lifetime_credits_total?: number
+          lifetime_credits_used?: number
           reseller_id: string
           updated_at?: string
         }
@@ -441,6 +445,8 @@ export type Database = {
           credits_total?: number
           credits_used?: number
           id?: string
+          lifetime_credits_total?: number
+          lifetime_credits_used?: number
           reseller_id?: string
           updated_at?: string
         }
@@ -912,6 +918,10 @@ export type Database = {
       }
       update_expired_licenses: { Args: never; Returns: undefined }
       use_reseller_credit: { Args: { _reseller_id: string }; Returns: boolean }
+      use_reseller_lifetime_credit: {
+        Args: { _reseller_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:
