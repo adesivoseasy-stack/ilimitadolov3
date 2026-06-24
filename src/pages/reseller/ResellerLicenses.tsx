@@ -33,6 +33,7 @@ export default function ResellerLicenses() {
   const { toast } = useToast();
 
   const availableCredits = (credits?.credits_total || 0) - (credits?.credits_used || 0);
+  const availableLifetime = ((credits as any)?.lifetime_credits_total || 0) - ((credits as any)?.lifetime_credits_used || 0);
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -44,6 +45,7 @@ export default function ResellerLicenses() {
   const [newPrice, setNewPrice] = useState('');
   const [newNotes, setNewNotes] = useState('');
   const [newCustomerName, setNewCustomerName] = useState('');
+  const [newLifetime, setNewLifetime] = useState(false);
   
   const [editNameLicense, setEditNameLicense] = useState<{ id: string; currentName: string } | null>(null);
   const [editNameValue, setEditNameValue] = useState('');
@@ -109,7 +111,12 @@ export default function ResellerLicenses() {
   const handleCreate = async () => {
     if (!newEmail) return;
     const durationValue = parseFloat(newDuration);
-    if (availableCredits <= 0) {
+    if (newLifetime) {
+      if (availableLifetime <= 0) {
+        toast({ title: 'Sem créditos vitalícios', description: 'Solicite créditos vitalícios ao administrador.', variant: 'destructive' });
+        return;
+      }
+    } else if (availableCredits <= 0) {
       toast({ title: 'Sem créditos', description: 'Você não possui créditos disponíveis para gerar licenças.', variant: 'destructive' });
       return;
     }
@@ -117,10 +124,11 @@ export default function ResellerLicenses() {
       email: newEmail, durationDays: durationValue,
       price: newPrice ? parseFloat(newPrice) : undefined,
       notes: newNotes || undefined, isTestLicense: false,
+      isLifetime: newLifetime,
       customerName: newCustomerName || undefined,
     });
     setIsCreateOpen(false);
-    setNewEmail(''); setNewDuration('30'); setNewPrice(''); setNewNotes(''); setNewCustomerName('');
+    setNewEmail(''); setNewDuration('30'); setNewPrice(''); setNewNotes(''); setNewCustomerName(''); setNewLifetime(false);
   };
 
   const handleCreateTest = async () => {
@@ -159,6 +167,11 @@ export default function ResellerLicenses() {
                 {availableCredits} disponíveis
               </span>
               <span className="text-muted-foreground">/ {credits?.credits_total || 0} total</span>
+              {availableLifetime > 0 && (
+                <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-400 border border-amber-500/30">
+                  ⚡ {availableLifetime} vitalícia{availableLifetime > 1 ? 's' : ''}
+                </span>
+              )}
             </div>
           </div>
           <div className="flex gap-2">
@@ -195,9 +208,20 @@ export default function ResellerLicenses() {
                 <div className="space-y-4 py-4">
                   <div><Label className="font-display text-xs uppercase tracking-wider">Nome do cliente</Label><Input placeholder="Ex: João Silva" value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} className="bg-background/50 border-border/30" /></div>
                   <div><Label className="font-display text-xs uppercase tracking-wider">Email do cliente</Label><Input type="email" placeholder="cliente@exemplo.com" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="bg-background/50 border-border/30" /></div>
-                  <div><Label className="font-display text-xs uppercase tracking-wider">Duração (dias)</Label><Input type="number" placeholder="30" value={newDuration} onChange={(e) => setNewDuration(e.target.value)} className="bg-background/50 border-border/30" /></div>
+                  {!newLifetime && (
+                    <div><Label className="font-display text-xs uppercase tracking-wider">Duração (dias)</Label><Input type="number" placeholder="30" value={newDuration} onChange={(e) => setNewDuration(e.target.value)} className="bg-background/50 border-border/30" /></div>
+                  )}
                   <div><Label className="font-display text-xs uppercase tracking-wider">Preço (R$)</Label><Input type="number" step="0.01" placeholder="0.00" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} className="bg-background/50 border-border/30" /></div>
                   <div><Label className="font-display text-xs uppercase tracking-wider">Observações</Label><Textarea placeholder="Notas..." value={newNotes} onChange={(e) => setNewNotes(e.target.value)} className="bg-background/50 border-border/30" /></div>
+                  {availableLifetime > 0 && (
+                    <label className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${newLifetime ? 'border-amber-500/50 bg-amber-500/[0.08]' : 'border-border/30 hover:border-amber-500/30'}`}>
+                      <input type="checkbox" checked={newLifetime} onChange={(e) => setNewLifetime(e.target.checked)} className="mt-0.5 h-4 w-4 rounded accent-amber-500" />
+                      <div className="flex-1">
+                        <p className="text-sm font-display font-bold text-foreground">⚡ Gerar Chave Vitalícia</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">Usa 1 dos seus <strong className="text-amber-400">{availableLifetime}</strong> créditos vitalícios. A chave nunca expira.</p>
+                      </div>
+                    </label>
+                  )}
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setIsCreateOpen(false)} className="border-border/30">Cancelar</Button>

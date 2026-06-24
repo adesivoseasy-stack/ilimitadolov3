@@ -87,30 +87,41 @@ export function useAddCredits() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ resellerId, amount }: { resellerId: string; amount: number }) => {
+    mutationFn: async ({ resellerId, amount, lifetime }: { resellerId: string; amount: number; lifetime?: boolean }) => {
       // Check if credits row exists
       const { data: existing } = await supabase
         .from('reseller_credits')
-        .select('id, credits_total')
+        .select('id, credits_total, lifetime_credits_total')
         .eq('reseller_id', resellerId)
-        .maybeSingle();
+        .maybeSingle() as any;
 
       if (existing) {
+        const update: any = { updated_at: new Date().toISOString() };
+        if (lifetime) {
+          update.lifetime_credits_total = (existing.lifetime_credits_total || 0) + amount;
+        } else {
+          update.credits_total = existing.credits_total + amount;
+        }
         const { error } = await supabase
           .from('reseller_credits')
-          .update({ credits_total: existing.credits_total + amount, updated_at: new Date().toISOString() })
+          .update(update)
           .eq('reseller_id', resellerId);
         if (error) throw error;
       } else {
+        const insert: any = { reseller_id: resellerId };
+        if (lifetime) insert.lifetime_credits_total = amount;
+        else insert.credits_total = amount;
         const { error } = await supabase
           .from('reseller_credits')
-          .insert({ reseller_id: resellerId, credits_total: amount });
+          .insert(insert);
         if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['manager-resellers'] });
       queryClient.invalidateQueries({ queryKey: ['manager-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['resellers'] });
+      queryClient.invalidateQueries({ queryKey: ['reseller-credits'] });
       toast({ title: 'Créditos adicionados', description: 'Os créditos foram adicionados com sucesso.' });
     },
     onError: () => {
@@ -159,14 +170,14 @@ export function useResellerCredits(resellerId: string | undefined) {
   return useQuery({
     queryKey: ['reseller-credits', resellerId],
     queryFn: async () => {
-      if (!resellerId) return { credits_total: 0, credits_used: 0 };
+      if (!resellerId) return { credits_total: 0, credits_used: 0, lifetime_credits_total: 0, lifetime_credits_used: 0 };
       const { data, error } = await supabase
         .from('reseller_credits')
-        .select('credits_total, credits_used')
+        .select('credits_total, credits_used, lifetime_credits_total, lifetime_credits_used')
         .eq('reseller_id', resellerId)
         .maybeSingle();
       if (error) throw error;
-      return data || { credits_total: 0, credits_used: 0 };
+      return (data as any) || { credits_total: 0, credits_used: 0, lifetime_credits_total: 0, lifetime_credits_used: 0 };
     },
     enabled: !!resellerId,
   });

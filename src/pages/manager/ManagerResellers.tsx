@@ -181,6 +181,7 @@ export default function ManagerResellers() {
   const [creditDialog, setCreditDialog] = useState<{ resellerId: string; name: string; currentTotal: number; currentUsed: number } | null>(null);
   const [creditAmount, setCreditAmount] = useState('');
   const [creditMode, setCreditMode] = useState<'add' | 'set'>('add');
+  const [creditLifetime, setCreditLifetime] = useState(false);
   const [newResellerDialog, setNewResellerDialog] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -230,12 +231,13 @@ export default function ManagerResellers() {
     const amount = parseInt(creditAmount);
     if (isNaN(amount) || amount <= 0) return;
     if (creditMode === 'add') {
-      await addCredits.mutateAsync({ resellerId: creditDialog.resellerId, amount });
+      await addCredits.mutateAsync({ resellerId: creditDialog.resellerId, amount, lifetime: creditLifetime });
     } else {
       await setCredits.mutateAsync({ resellerId: creditDialog.resellerId, total: amount });
     }
     setCreditDialog(null);
     setCreditAmount('');
+    setCreditLifetime(false);
   };
 
   const handleCreateReseller = async () => {
@@ -393,7 +395,7 @@ export default function ManagerResellers() {
         {!allLoading && allResellers?.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">Nenhum revendedor cadastrado</p>}
 
         {/* Credit Dialog */}
-        <Dialog open={!!creditDialog} onOpenChange={(open) => { if (!open) { setCreditDialog(null); setCreditAmount(''); } }}>
+        <Dialog open={!!creditDialog} onOpenChange={(open) => { if (!open) { setCreditDialog(null); setCreditAmount(''); setCreditLifetime(false); } }}>
           <DialogContent className="max-w-sm">
             <DialogHeader>
               <DialogTitle>Gerenciar Créditos</DialogTitle>
@@ -415,9 +417,18 @@ export default function ManagerResellers() {
                   ))}
                 </div>
               )}
+              {creditMode === 'add' && (
+                <label className={`flex items-start gap-3 rounded-md border p-3 cursor-pointer transition-colors ${creditLifetime ? 'border-amber-500/50 bg-amber-500/[0.06]' : 'border-border hover:border-amber-500/30'}`}>
+                  <input type="checkbox" checked={creditLifetime} onChange={(e) => setCreditLifetime(e.target.checked)} className="mt-0.5 h-4 w-4 rounded accent-amber-500" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">⚡ Créditos Vitalícios</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Permite ao revendedor gerar <strong>chaves vitalícias</strong> ao invés de chaves de 30 dias.</p>
+                  </div>
+                </label>
+              )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => { setCreditDialog(null); setCreditAmount(''); }}>Cancelar</Button>
+              <Button variant="outline" onClick={() => { setCreditDialog(null); setCreditAmount(''); setCreditLifetime(false); }}>Cancelar</Button>
               <Button onClick={handleCreditSubmit} disabled={!creditAmount || addCredits.isPending || setCredits.isPending}>
                 {creditMode === 'add' ? 'Adicionar' : 'Definir'}
               </Button>

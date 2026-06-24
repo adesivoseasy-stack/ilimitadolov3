@@ -83,13 +83,14 @@ export function useResellerCreateLicense() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ email, durationDays, price, notes, isTestLicense, isWildcard, customerName }: {
+    mutationFn: async ({ email, durationDays, price, notes, isTestLicense, isWildcard, isLifetime, customerName }: {
       email: string;
       durationDays: number;
       price?: number;
       notes?: string;
       isTestLicense?: boolean;
       isWildcard?: boolean;
+      isLifetime?: boolean;
       customerName?: string;
     }) => {
       // Test licenses are FREE and unlimited - no credit consumption
@@ -104,11 +105,22 @@ export function useResellerCreateLicense() {
         const isUnlimited = profile?.plan_type === '997';
 
         if (!isUnlimited) {
-          // Check and consume credit
-          const { data: hasCredit, error: creditError } = await supabase.rpc('use_reseller_credit', { _reseller_id: user?.id });
-          if (creditError) throw creditError;
-          if (!hasCredit) {
-            throw new Error('Sem créditos disponíveis. Solicite mais créditos ao gerente.');
+          // Lifetime keys consume from the lifetime credit pool; regular keys from the standard pool.
+          if (isLifetime) {
+            const { data: hasCredit, error: creditError } = await supabase.rpc(
+              'use_reseller_lifetime_credit' as any,
+              { _reseller_id: user?.id } as any,
+            );
+            if (creditError) throw creditError;
+            if (!hasCredit) {
+              throw new Error('Sem créditos vitalícios disponíveis. Solicite ao administrador.');
+            }
+          } else {
+            const { data: hasCredit, error: creditError } = await supabase.rpc('use_reseller_credit', { _reseller_id: user?.id });
+            if (creditError) throw creditError;
+            if (!hasCredit) {
+              throw new Error('Sem créditos disponíveis. Solicite mais créditos ao gerente.');
+            }
           }
         }
       }
@@ -117,16 +129,17 @@ export function useResellerCreateLicense() {
       if (keyError) throw keyError;
       const licenseKey = isTestLicense ? `TESTE-${keyData}` : keyData as string;
 
-      // Chaves pagas: mensais (30 dias) por padrão. Vitalícia: 100 anos. Wildcard: 100 anos.
+      // Chaves pagas: mensais (30 dias) por padrão. Vitalícia/Wildcard: 100 anos.
+      const isLifetimeKey = isLifetime || isWildcard;
       const effectiveDurationDays = isTestLicense
         ? durationDays
-        : (isWildcard ? 36500 : 30);
+        : (isLifetimeKey ? 36500 : 30);
       const expiresAt = new Date();
       if (isTestLicense) {
         // Test: placeholder de 24h. Se não ativada nesse prazo, é purgada.
         // Na 1ª ativação cai para 10min.
         expiresAt.setTime(expiresAt.getTime() + 24 * 60 * 60 * 1000);
-      } else if (!isWildcard) {
+      } else if (!isLifetimeKey) {
         // Pagas: placeholder de 100 anos. Expiração real setada na 1ª ativação.
         expiresAt.setFullYear(expiresAt.getFullYear() + 100);
       } else {
@@ -144,11 +157,11 @@ export function useResellerCreateLicense() {
           expires_at: expiresAt.toISOString(),
           price: price || 0,
           notes,
-          duration_hours: isWildcard
+          duration_hours: isLifetimeKey
             ? null
             : (isTestLicense ? testDurationHours : paidDurationHours),
-          first_activated_at: isWildcard ? new Date().toISOString() : null,
-          is_wildcard: isWildcard || false,
+          first_activated_at: isLifetimeKey ? new Date().toISOString() : null,
+          is_wildcard: isLifetimeKey ? true : false,
           created_by: user?.id,
           max_messages: null,
           customer_name: customerName || null,
@@ -161,7 +174,7 @@ export function useResellerCreateLicense() {
       await supabase.from('license_logs').insert({
         license_id: data.id,
         action: 'created',
-        details: { email, duration_days: durationDays, created_by_reseller: user?.id },
+        details: { email, duration_days: durationDays, created_by_reseller: user?.id, lifetime: !!isLifetime },
       });
 
       return data;
