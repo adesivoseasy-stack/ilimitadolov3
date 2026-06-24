@@ -14,6 +14,7 @@ import ResellerLanding from "./pages/ResellerLanding";
 
 // Lazy: everything else (code-split per route)
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const ResetLicenca = lazy(() => import("./pages/ResetLicenca"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Licenses = lazy(() => import("./pages/Licenses"));
 const Customers = lazy(() => import("./pages/Customers"));
@@ -75,6 +76,7 @@ const App = () => (
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/reset-licenca" element={<ResetLicenca />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/licenses" element={<Licenses />} />
               <Route path="/customers" element={<Customers />} />
