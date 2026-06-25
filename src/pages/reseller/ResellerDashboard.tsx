@@ -31,6 +31,7 @@ import keyIcon from '@/assets/key-icon.png';
 import comboBannerAsset from '@/assets/combo-300-creditos-pro-lite.png.asset.json';
 import comboChampionBannerAsset from '@/assets/combo-copa-brasil.png.asset.json';
 import comboAccountBanner from '@/assets/combo-conta-lovable.jpg';
+import manusCreditsBannerAsset from '@/assets/manus-ai-1000-creditos.png.asset.json';
 import { format, parseISO, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -105,7 +106,7 @@ export default function ResellerDashboard() {
   const [isPixModalOpen, setIsPixModalOpen] = useState(false);
   const pixStatus = usePixOrderPolling(pixOrder?.order_id || null);
   const [pixCustomerOpen, setPixCustomerOpen] = useState(false);
-  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; combo?: boolean; comboChampion?: boolean; comboAccount?: boolean } | null>(null);
+  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; combo?: boolean; comboChampion?: boolean; comboAccount?: boolean; manusCredits?: boolean } | null>(null);
   const [comboRequirementsOpen, setComboRequirementsOpen] = useState(false);
   const [comboAccepted, setComboAccepted] = useState(false);
   const [lastOrderWasCombo, setLastOrderWasCombo] = useState(false);
@@ -115,6 +116,9 @@ export default function ResellerDashboard() {
   const [comboAccountRequirementsOpen, setComboAccountRequirementsOpen] = useState(false);
   const [comboAccountAccepted, setComboAccountAccepted] = useState(false);
   const [lastOrderWasComboAccount, setLastOrderWasComboAccount] = useState(false);
+  const [manusCreditsRequirementsOpen, setManusCreditsRequirementsOpen] = useState(false);
+  const [manusCreditsAccepted, setManusCreditsAccepted] = useState(false);
+  const [lastOrderWasManusCredits, setLastOrderWasManusCredits] = useState(false);
 
   const [isPromoOpen, setIsPromoOpen] = useState(false);
   const PROMO_QTY = 10;
@@ -239,16 +243,17 @@ export default function ResellerDashboard() {
 
   const handlePixCustomerConfirm = async (customerData: PixCustomerFormData) => {
     if (!pendingPixAction) return;
-    const { qty, promo, lifetime, combo, comboChampion, comboAccount } = pendingPixAction;
+    const { qty, promo, lifetime, combo, comboChampion, comboAccount, manusCredits } = pendingPixAction;
     setPixCustomerOpen(false);
-    setLoadingQty(comboAccount ? -5 : comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
-    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion, undefined, comboAccount);
+    setLoadingQty(manusCredits ? -6 : comboAccount ? -5 : comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
+    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion, undefined, comboAccount, manusCredits);
     setLoadingQty(null);
     if (order) {
       setPixOrder(order);
       setLastOrderWasCombo(!!combo);
       setLastOrderWasComboChampion(!!comboChampion);
       setLastOrderWasComboAccount(!!comboAccount);
+      setLastOrderWasManusCredits(!!manusCredits);
       if (promo) setIsPromoOpen(false);
       setIsPixModalOpen(true);
     } else {
@@ -788,6 +793,51 @@ export default function ResellerDashboard() {
                     {!isPricingReady && (
                       <div className="col-span-full rounded-2xl border border-border/50 bg-card/40 p-6 text-sm text-muted-foreground font-display">
                         Carregando valores atualizados...
+                      </div>
+                    )}
+                    {isPricingReady && (
+                      <div className="relative">
+                        <div
+                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
+                          style={{
+                            background: 'linear-gradient(135deg, #06b6d4, #14b8a6, #22d3ee, #0ea5e9)',
+                            backgroundSize: '300% 300%',
+                            animation: 'fire-glow 4s ease infinite',
+                          }}
+                        />
+                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+                            <span className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider animate-pulse">
+                              ⚡ Manus AI
+                            </span>
+                          </div>
+                          <div className="relative flex-1 flex flex-col gap-3">
+                            <div className="relative rounded-xl overflow-hidden bg-black">
+                              <img
+                                src={manusCreditsBannerAsset.url}
+                                alt="1000 Créditos Manus AI por R$ 39,90"
+                                className="w-full h-auto object-cover aspect-square"
+                                loading="lazy"
+                              />
+                            </div>
+                            <Button
+                              disabled={loadingQty !== null}
+                              onClick={() => { setManusCreditsAccepted(false); setManusCreditsRequirementsOpen(true); }}
+                              className="cta-premium mt-auto text-white"
+                              style={{
+                                background: 'linear-gradient(110deg, #0891b2 0%, #14b8a6 50%, #06b6d4 100%)',
+                                boxShadow: '0 8px 24px -8px rgba(20, 184, 166, 0.6)',
+                              }}
+                              size="sm"
+                            >
+                              <span className="cta-shine" aria-hidden />
+                              {loadingQty === -6 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
+                              <span className="relative z-10">
+                              {loadingQty === -6 ? 'Gerando PIX...' : 'Comprar por R$ 39,90'}
+                              </span>
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1459,6 +1509,52 @@ export default function ResellerDashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* Manus AI Credits Requirements Dialog */}
+        <AlertDialog open={manusCreditsRequirementsOpen} onOpenChange={setManusCreditsRequirementsOpen}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-cyan-400" />
+                Requisitos — 1000 Créditos Manus AI
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="font-semibold text-foreground">Você está adquirindo:</p>
+                  <ul className="space-y-2 list-none pl-0">
+                    <li className="flex gap-2"><span className="text-cyan-400">●</span> <span><span className="font-bold text-foreground">1000 Créditos Manus AI</span> aplicados na sua conta Manus.</span></li>
+                    <li className="flex gap-2"><span className="text-cyan-400">●</span> Entrega imediata após confirmação manual.</li>
+                    <li className="flex gap-2"><span className="text-cyan-400">●</span> Após o pagamento, envie o comprovante ao ADM no grupo para liberação dos créditos.</li>
+                    <li className="flex gap-2"><span className="text-cyan-400">●</span> Compra não reembolsável após a entrega dos créditos.</li>
+                  </ul>
+                  <label className="flex items-start gap-2 pt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={manusCreditsAccepted}
+                      onChange={(e) => setManusCreditsAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-cyan-500"
+                    />
+                    <span className="text-foreground">Li, entendi e confirmo a compra de <span className="font-bold">1000 Créditos Manus AI</span>.</span>
+                  </label>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setManusCreditsAccepted(false)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!manusCreditsAccepted}
+                onClick={() => {
+                  setManusCreditsRequirementsOpen(false);
+                  setPendingPixAction({ qty: 1, manusCredits: true });
+                  setPixCustomerOpen(true);
+                }}
+                className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white"
+              >
+                Continuar para pagamento
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* PIX Payment Modal */}
         <Dialog open={isPixModalOpen} onOpenChange={(open) => {
           if (!open && pixStatus !== 'pending') {
@@ -1486,7 +1582,16 @@ export default function ResellerDashboard() {
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">Pagamento Confirmado!</h3>
-                {lastOrderWasComboAccount ? (
+                {lastOrderWasManusCredits ? (
+                  <>
+                    <p className="text-sm text-muted-foreground text-center">
+                      <span className="font-semibold text-foreground">1000 Créditos Manus AI</span> recebidos. Entre no grupo, chame o ADM e envie o comprovante para liberação dos créditos na sua conta Manus.
+                    </p>
+                    <Button variant="ghost" size="sm" onClick={() => { setIsPixModalOpen(false); setPixOrder(null); setLastOrderWasManusCredits(false); }}>
+                      Fechar
+                    </Button>
+                  </>
+                ) : lastOrderWasComboAccount ? (
                   <>
                     <p className="text-sm text-muted-foreground text-center">
                       Combo <span className="font-semibold text-foreground">Conta Lovable (Conta + 300 Créditos + 1 Ano PRO)</span> recebido. Entre no grupo, chame o ADM e envie o comprovante para receber o login e a senha da conta.
