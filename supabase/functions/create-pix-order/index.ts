@@ -19,6 +19,7 @@ const BodySchema = z.object({
   lifetime: z.boolean().optional(),
   combo: z.boolean().optional(),
   comboChampion: z.boolean().optional(),
+  comboAccount: z.boolean().optional(),
   renewal: z.boolean().optional(),
   licenseId: z.string().uuid().optional(),
 })
