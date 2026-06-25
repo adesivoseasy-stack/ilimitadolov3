@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, combo, comboChampion, renewal, licenseId } = bodyResult.data
+    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, combo, comboChampion, comboAccount, renewal, licenseId } = bodyResult.data
     const userId = authUser.id
 
     const adminClient = createClient(
@@ -179,6 +179,12 @@ Deno.serve(async (req) => {
       totalReais = 34.90
       pricePerKey = 34.90
       renewalLicenseId = lic.id
+      promo = false
+    } else if (comboAccount) {
+      // Combo Conta Lovable: Conta Lovable + 300 Créditos + 1 Ano PRO — R$ 129,90
+      quantity = 1
+      totalReais = 129.90
+      pricePerKey = 129.90
       promo = false
     } else if (comboChampion) {
       // Combo Copa do Brasil: 300 Créditos Lovable + 1 Ano PRO Lite + Chave Vitalícia — R$ 149,90
@@ -283,7 +289,7 @@ Deno.serve(async (req) => {
         customer_email: email,
         customer_phone: phoneNumber,
         customer_document: document,
-        product_type: renewal ? 'renewal' : (comboChampion ? 'combo_champion' : (combo ? 'combo' : (lifetime ? 'lifetime' : 'standard'))),
+        product_type: renewal ? 'renewal' : (comboAccount ? 'combo_account' : (comboChampion ? 'combo_champion' : (combo ? 'combo' : (lifetime ? 'lifetime' : 'standard')))),
         target_license_id: renewalLicenseId,
       })
       .select()
