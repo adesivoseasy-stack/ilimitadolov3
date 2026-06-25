@@ -690,11 +690,14 @@ export default function ResellerDashboard() {
                             <Button
                               disabled={loadingQty !== null}
                               onClick={() => { setComboAccepted(false); setComboRequirementsOpen(true); }}
-                              className="group relative overflow-hidden w-full rounded-xl bg-[linear-gradient(110deg,#a855f7,45%,#ec4899,55%,#a855f7)] bg-[length:200%_100%] text-white font-bold shadow-lg shadow-purple-500/30 transition-all duration-300 hover:scale-[1.04] hover:shadow-pink-500/50 active:scale-95 animate-[gradient-x_3s_ease_infinite] mt-auto"
+                              className="cta-premium cta-purple mt-auto"
                               size="sm"
                             >
-                              {loadingQty === -3 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4 animate-pulse" />}
+                              <span className="cta-shine" aria-hidden />
+                              {loadingQty === -3 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
+                              <span className="relative z-10">
                               {loadingQty === -3 ? 'Gerando PIX...' : 'Comprar por R$ 89,90'}
+                              </span>
                             </Button>
                           </div>
                         </div>
@@ -728,11 +731,14 @@ export default function ResellerDashboard() {
                             <Button
                               disabled={loadingQty !== null}
                               onClick={() => { setComboChampionAccepted(false); setComboChampionRequirementsOpen(true); }}
-                              className="group relative overflow-hidden w-full rounded-xl bg-[linear-gradient(110deg,#facc15,45%,#16a34a,55%,#facc15)] bg-[length:200%_100%] text-black font-bold shadow-lg shadow-yellow-500/30 transition-all duration-300 hover:scale-[1.04] hover:shadow-green-500/50 active:scale-95 animate-[gradient-x_3s_ease_infinite] mt-auto"
+                              className="cta-premium cta-gold mt-auto"
                               size="sm"
                             >
-                              {loadingQty === -4 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4 animate-pulse" />}
+                              <span className="cta-shine" aria-hidden />
+                              {loadingQty === -4 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
+                              <span className="relative z-10">
                               {loadingQty === -4 ? 'Gerando PIX...' : 'Comprar por R$ 149,90'}
+                              </span>
                             </Button>
                           </div>
                         </div>
@@ -766,11 +772,14 @@ export default function ResellerDashboard() {
                             <Button
                               disabled={loadingQty !== null}
                               onClick={() => { setComboAccountAccepted(false); setComboAccountRequirementsOpen(true); }}
-                              className="group relative overflow-hidden w-full rounded-xl bg-[linear-gradient(110deg,#ec4899,45%,#a855f7,55%,#ec4899)] bg-[length:200%_100%] text-white font-bold shadow-lg shadow-pink-500/30 transition-all duration-300 hover:scale-[1.04] hover:shadow-purple-500/50 active:scale-95 animate-[gradient-x_3s_ease_infinite] mt-auto"
+                              className="cta-premium cta-pink mt-auto"
                               size="sm"
                             >
-                              {loadingQty === -5 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4 animate-pulse" />}
+                              <span className="cta-shine" aria-hidden />
+                              {loadingQty === -5 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
+                              <span className="relative z-10">
                               {loadingQty === -5 ? 'Gerando PIX...' : 'Comprar por R$ 129,90'}
+                              </span>
                             </Button>
                           </div>
                         </div>
