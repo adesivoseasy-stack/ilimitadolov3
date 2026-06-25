@@ -795,6 +795,51 @@ export default function ResellerDashboard() {
                         Carregando valores atualizados...
                       </div>
                     )}
+                    {isPricingReady && (
+                      <div className="relative">
+                        <div
+                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
+                          style={{
+                            background: 'linear-gradient(135deg, #06b6d4, #14b8a6, #22d3ee, #0ea5e9)',
+                            backgroundSize: '300% 300%',
+                            animation: 'fire-glow 4s ease infinite',
+                          }}
+                        />
+                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+                            <span className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider animate-pulse">
+                              ⚡ Manus AI
+                            </span>
+                          </div>
+                          <div className="relative flex-1 flex flex-col gap-3">
+                            <div className="relative rounded-xl overflow-hidden bg-black">
+                              <img
+                                src={manusCreditsBannerAsset.url}
+                                alt="1000 Créditos Manus AI por R$ 39,90"
+                                className="w-full h-auto object-cover aspect-square"
+                                loading="lazy"
+                              />
+                            </div>
+                            <Button
+                              disabled={loadingQty !== null}
+                              onClick={() => { setManusCreditsAccepted(false); setManusCreditsRequirementsOpen(true); }}
+                              className="cta-premium mt-auto text-white"
+                              style={{
+                                background: 'linear-gradient(110deg, #0891b2 0%, #14b8a6 50%, #06b6d4 100%)',
+                                boxShadow: '0 8px 24px -8px rgba(20, 184, 166, 0.6)',
+                              }}
+                              size="sm"
+                            >
+                              <span className="cta-shine" aria-hidden />
+                              {loadingQty === -6 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
+                              <span className="relative z-10">
+                              {loadingQty === -6 ? 'Gerando PIX...' : 'Comprar por R$ 39,90'}
+                              </span>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
