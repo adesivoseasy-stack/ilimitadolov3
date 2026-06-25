@@ -30,6 +30,7 @@ import resellerBanner from '@/assets/banner.png';
 import keyIcon from '@/assets/key-icon.png';
 import comboBannerAsset from '@/assets/combo-300-creditos-pro-lite.png.asset.json';
 import comboChampionBannerAsset from '@/assets/combo-copa-brasil.png.asset.json';
+import comboAccountBanner from '@/assets/combo-conta-lovable.jpg';
 import { format, parseISO, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -104,13 +105,16 @@ export default function ResellerDashboard() {
   const [isPixModalOpen, setIsPixModalOpen] = useState(false);
   const pixStatus = usePixOrderPolling(pixOrder?.order_id || null);
   const [pixCustomerOpen, setPixCustomerOpen] = useState(false);
-  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; combo?: boolean; comboChampion?: boolean } | null>(null);
+  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; combo?: boolean; comboChampion?: boolean; comboAccount?: boolean } | null>(null);
   const [comboRequirementsOpen, setComboRequirementsOpen] = useState(false);
   const [comboAccepted, setComboAccepted] = useState(false);
   const [lastOrderWasCombo, setLastOrderWasCombo] = useState(false);
   const [comboChampionRequirementsOpen, setComboChampionRequirementsOpen] = useState(false);
   const [comboChampionAccepted, setComboChampionAccepted] = useState(false);
   const [lastOrderWasComboChampion, setLastOrderWasComboChampion] = useState(false);
+  const [comboAccountRequirementsOpen, setComboAccountRequirementsOpen] = useState(false);
+  const [comboAccountAccepted, setComboAccountAccepted] = useState(false);
+  const [lastOrderWasComboAccount, setLastOrderWasComboAccount] = useState(false);
 
   const [isPromoOpen, setIsPromoOpen] = useState(false);
   const PROMO_QTY = 10;
@@ -235,15 +239,16 @@ export default function ResellerDashboard() {
 
   const handlePixCustomerConfirm = async (customerData: PixCustomerFormData) => {
     if (!pendingPixAction) return;
-    const { qty, promo, lifetime, combo, comboChampion } = pendingPixAction;
+    const { qty, promo, lifetime, combo, comboChampion, comboAccount } = pendingPixAction;
     setPixCustomerOpen(false);
-    setLoadingQty(comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
-    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion);
+    setLoadingQty(comboAccount ? -5 : comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
+    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion, undefined, comboAccount);
     setLoadingQty(null);
     if (order) {
       setPixOrder(order);
       setLastOrderWasCombo(!!combo);
       setLastOrderWasComboChampion(!!comboChampion);
+      setLastOrderWasComboAccount(!!comboAccount);
       if (promo) setIsPromoOpen(false);
       setIsPixModalOpen(true);
     } else {
@@ -728,6 +733,44 @@ export default function ResellerDashboard() {
                             >
                               {loadingQty === -4 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4 animate-pulse" />}
                               {loadingQty === -4 ? 'Gerando PIX...' : 'Comprar por R$ 149,90'}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {isPricingReady && (
+                      <div className="relative">
+                        <div
+                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
+                          style={{
+                            background: 'linear-gradient(135deg, #ec4899, #a855f7, #ec4899, #8b5cf6)',
+                            backgroundSize: '300% 300%',
+                            animation: 'fire-glow 4s ease infinite',
+                          }}
+                        />
+                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+                            <span className="bg-gradient-to-r from-pink-500 to-purple-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider animate-pulse">
+                              💖 Conta Lovable
+                            </span>
+                          </div>
+                          <div className="relative flex-1 flex flex-col gap-3">
+                            <div className="relative rounded-xl overflow-hidden bg-black">
+                              <img
+                                src={comboAccountBanner}
+                                alt="Conta Lovable + 300 Créditos + 1 Ano PRO por R$ 129,90"
+                                className="w-full h-auto object-cover aspect-square"
+                                loading="lazy"
+                              />
+                            </div>
+                            <Button
+                              disabled={loadingQty !== null}
+                              onClick={() => { setComboAccountAccepted(false); setComboAccountRequirementsOpen(true); }}
+                              className="group relative overflow-hidden w-full rounded-xl bg-[linear-gradient(110deg,#ec4899,45%,#a855f7,55%,#ec4899)] bg-[length:200%_100%] text-white font-bold shadow-lg shadow-pink-500/30 transition-all duration-300 hover:scale-[1.04] hover:shadow-purple-500/50 active:scale-95 animate-[gradient-x_3s_ease_infinite] mt-auto"
+                              size="sm"
+                            >
+                              {loadingQty === -5 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4 animate-pulse" />}
+                              {loadingQty === -5 ? 'Gerando PIX...' : 'Comprar por R$ 129,90'}
                             </Button>
                           </div>
                         </div>
@@ -1360,6 +1403,53 @@ export default function ResellerDashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* Combo Conta Lovable Requirements Dialog */}
+        <AlertDialog open={comboAccountRequirementsOpen} onOpenChange={setComboAccountRequirementsOpen}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-pink-400" />
+                Requisitos do Combo Conta Lovable
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="font-semibold text-foreground">Você está adquirindo:</p>
+                  <ul className="space-y-2 list-none pl-0">
+                    <li className="flex gap-2"><span className="text-pink-400">●</span> <span><span className="font-bold text-foreground">Conta Lovable</span> nova com login e senha enviados por e-mail.</span></li>
+                    <li className="flex gap-2"><span className="text-pink-400">●</span> <span><span className="font-bold text-foreground">300 Créditos Lovable</span> aplicados instantaneamente.</span></li>
+                    <li className="flex gap-2"><span className="text-pink-400">●</span> <span><span className="font-bold text-foreground">1 Ano de PRO</span> com recursos ilimitados.</span></li>
+                    <li className="flex gap-2"><span className="text-pink-400">●</span> Após o pagamento, envie o comprovante ao ADM no grupo para liberação da conta.</li>
+                    <li className="flex gap-2"><span className="text-pink-400">●</span> Compra não reembolsável após a entrega das credenciais.</li>
+                  </ul>
+                  <label className="flex items-start gap-2 pt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={comboAccountAccepted}
+                      onChange={(e) => setComboAccountAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-pink-500"
+                    />
+                    <span className="text-foreground">Li, entendi e confirmo a compra do combo <span className="font-bold">Conta Lovable</span>.</span>
+                  </label>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setComboAccountAccepted(false)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!comboAccountAccepted}
+                onClick={() => {
+                  setComboAccountRequirementsOpen(false);
+                  setPendingPixAction({ qty: 1, comboAccount: true });
+                  setPixCustomerOpen(true);
+                }}
+                className="bg-gradient-to-r from-pink-500 to-purple-500 text-white"
+              >
+                Continuar para pagamento
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* PIX Payment Modal */}
         <Dialog open={isPixModalOpen} onOpenChange={(open) => {
           if (!open && pixStatus !== 'pending') {
@@ -1387,7 +1477,16 @@ export default function ResellerDashboard() {
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">Pagamento Confirmado!</h3>
-                {lastOrderWasComboChampion ? (
+                {lastOrderWasComboAccount ? (
+                  <>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Combo <span className="font-semibold text-foreground">Conta Lovable (Conta + 300 Créditos + 1 Ano PRO)</span> recebido. Entre no grupo, chame o ADM e envie o comprovante para receber o login e a senha da conta.
+                    </p>
+                    <Button variant="ghost" size="sm" onClick={() => { setIsPixModalOpen(false); setPixOrder(null); setLastOrderWasComboAccount(false); }}>
+                      Fechar
+                    </Button>
+                  </>
+                ) : lastOrderWasComboChampion ? (
                   <>
                     <p className="text-sm text-muted-foreground text-center">
                       Combo <span className="font-semibold text-foreground">Copa do Brasil (300 Créditos + 1 Ano PRO Lite + Chave Vitalícia)</span> recebido. Entre no grupo, chame o ADM e envie o comprovante para liberação do combo.
