@@ -1403,6 +1403,53 @@ export default function ResellerDashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* Combo Conta Lovable Requirements Dialog */}
+        <AlertDialog open={comboAccountRequirementsOpen} onOpenChange={setComboAccountRequirementsOpen}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-pink-400" />
+                Requisitos do Combo Conta Lovable
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="font-semibold text-foreground">Você está adquirindo:</p>
+                  <ul className="space-y-2 list-none pl-0">
+                    <li className="flex gap-2"><span className="text-pink-400">●</span> <span><span className="font-bold text-foreground">Conta Lovable</span> nova com login e senha enviados por e-mail.</span></li>
+                    <li className="flex gap-2"><span className="text-pink-400">●</span> <span><span className="font-bold text-foreground">300 Créditos Lovable</span> aplicados instantaneamente.</span></li>
+                    <li className="flex gap-2"><span className="text-pink-400">●</span> <span><span className="font-bold text-foreground">1 Ano de PRO</span> com recursos ilimitados.</span></li>
+                    <li className="flex gap-2"><span className="text-pink-400">●</span> Após o pagamento, envie o comprovante ao ADM no grupo para liberação da conta.</li>
+                    <li className="flex gap-2"><span className="text-pink-400">●</span> Compra não reembolsável após a entrega das credenciais.</li>
+                  </ul>
+                  <label className="flex items-start gap-2 pt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={comboAccountAccepted}
+                      onChange={(e) => setComboAccountAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-pink-500"
+                    />
+                    <span className="text-foreground">Li, entendi e confirmo a compra do combo <span className="font-bold">Conta Lovable</span>.</span>
+                  </label>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setComboAccountAccepted(false)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!comboAccountAccepted}
+                onClick={() => {
+                  setComboAccountRequirementsOpen(false);
+                  setPendingPixAction({ qty: 1, comboAccount: true });
+                  setPixCustomerOpen(true);
+                }}
+                className="bg-gradient-to-r from-pink-500 to-purple-500 text-white"
+              >
+                Continuar para pagamento
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* PIX Payment Modal */}
         <Dialog open={isPixModalOpen} onOpenChange={(open) => {
           if (!open && pixStatus !== 'pending') {
