@@ -8,6 +8,7 @@ import {
   Download, Loader2, GraduationCap, Store, Coins, Wrench, AlertTriangle, Lock,
 } from 'lucide-react';
 import logoImg from '@/assets/logo.png';
+import extensionZipAsset from '@/assets/LOV3.1_PURPLE_OBSC.zip.asset.json';
 import { useState } from 'react';
 import { useResellerLicenses } from '@/hooks/useResellerLicenses';
 import { useToast } from '@/hooks/use-toast';
@@ -33,8 +34,7 @@ export function ResellerSidebar() {
     isWhitelisted ||
     (licenses || []).some((l: any) => l.status === 'active' && l.max_messages == null);
 
-  const EXTENSION_URL = '/LOV-ULTRA-OBF-BALMAN-V3.zip';
-  const EXTENSION_VERSION = '20260619-0445';
+  const EXTENSION_FILENAME = 'LOV3.1_PURPLE_OBSC.zip';
 
   const downloadExtension = () => {
     if (isDownloading) return;
@@ -49,8 +49,8 @@ export function ResellerSidebar() {
     setIsDownloading(true);
     try {
       const link = document.createElement('a');
-      link.href = `${EXTENSION_URL}?v=${EXTENSION_VERSION}&t=${Date.now()}`;
-      link.download = 'LOV-ULTRA-OBF-BALMAN-V3.zip';
+      link.href = `${extensionZipAsset.url}?t=${Date.now()}`;
+      link.download = EXTENSION_FILENAME;
       link.target = '_blank';
       link.rel = 'noopener';
       document.body.appendChild(link);
