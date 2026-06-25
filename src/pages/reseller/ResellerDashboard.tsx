@@ -1426,6 +1426,14 @@ export default function ResellerDashboard() {
               <AlertDialogDescription asChild>
                 <div className="space-y-3 text-sm text-muted-foreground">
                   <p className="font-semibold text-foreground">Você está adquirindo:</p>
+                  <div className="rounded-lg border border-yellow-500/40 bg-yellow-500/10 p-3 text-yellow-200">
+                    <p className="text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                      <AlertTriangle className="h-4 w-4" /> Atenção
+                    </p>
+                    <p className="text-sm mt-1">
+                      Funciona <span className="font-bold">apenas em contas Manus AI criadas há no máximo 3 meses</span>. Contas mais antigas não recebem os créditos.
+                    </p>
+                  </div>
                   <ul className="space-y-2 list-none pl-0">
                     <li className="flex gap-2"><span className="text-yellow-400">●</span> <span><span className="font-bold text-foreground">300 Créditos Lovable</span> aplicados em uma conta <span className="font-bold">FREE</span>.</span></li>
                     <li className="flex gap-2"><span className="text-yellow-400">●</span> <span><span className="font-bold text-foreground">1 Ano de PRO Lite</span> na mesma conta FREE.</span></li>
