@@ -738,6 +738,44 @@ export default function ResellerDashboard() {
                         </div>
                       </div>
                     )}
+                    {isPricingReady && (
+                      <div className="relative">
+                        <div
+                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
+                          style={{
+                            background: 'linear-gradient(135deg, #ec4899, #a855f7, #ec4899, #8b5cf6)',
+                            backgroundSize: '300% 300%',
+                            animation: 'fire-glow 4s ease infinite',
+                          }}
+                        />
+                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+                            <span className="bg-gradient-to-r from-pink-500 to-purple-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider animate-pulse">
+                              💖 Conta Lovable
+                            </span>
+                          </div>
+                          <div className="relative flex-1 flex flex-col gap-3">
+                            <div className="relative rounded-xl overflow-hidden bg-black">
+                              <img
+                                src={comboAccountBanner}
+                                alt="Conta Lovable + 300 Créditos + 1 Ano PRO por R$ 129,90"
+                                className="w-full h-auto object-cover aspect-square"
+                                loading="lazy"
+                              />
+                            </div>
+                            <Button
+                              disabled={loadingQty !== null}
+                              onClick={() => { setComboAccountAccepted(false); setComboAccountRequirementsOpen(true); }}
+                              className="group relative overflow-hidden w-full rounded-xl bg-[linear-gradient(110deg,#ec4899,45%,#a855f7,55%,#ec4899)] bg-[length:200%_100%] text-white font-bold shadow-lg shadow-pink-500/30 transition-all duration-300 hover:scale-[1.04] hover:shadow-purple-500/50 active:scale-95 animate-[gradient-x_3s_ease_infinite] mt-auto"
+                              size="sm"
+                            >
+                              {loadingQty === -5 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4 animate-pulse" />}
+                              {loadingQty === -5 ? 'Gerando PIX...' : 'Comprar por R$ 129,90'}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {!isPricingReady && (
                       <div className="col-span-full rounded-2xl border border-border/50 bg-card/40 p-6 text-sm text-muted-foreground font-display">
                         Carregando valores atualizados...
