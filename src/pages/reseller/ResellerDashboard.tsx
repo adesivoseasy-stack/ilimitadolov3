@@ -1477,7 +1477,16 @@ export default function ResellerDashboard() {
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">Pagamento Confirmado!</h3>
-                {lastOrderWasComboChampion ? (
+                {lastOrderWasComboAccount ? (
+                  <>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Combo <span className="font-semibold text-foreground">Conta Lovable (Conta + 300 Créditos + 1 Ano PRO)</span> recebido. Entre no grupo, chame o ADM e envie o comprovante para receber o login e a senha da conta.
+                    </p>
+                    <Button variant="ghost" size="sm" onClick={() => { setIsPixModalOpen(false); setPixOrder(null); setLastOrderWasComboAccount(false); }}>
+                      Fechar
+                    </Button>
+                  </>
+                ) : lastOrderWasComboChampion ? (
                   <>
                     <p className="text-sm text-muted-foreground text-center">
                       Combo <span className="font-semibold text-foreground">Copa do Brasil (300 Créditos + 1 Ano PRO Lite + Chave Vitalícia)</span> recebido. Entre no grupo, chame o ADM e envie o comprovante para liberação do combo.
