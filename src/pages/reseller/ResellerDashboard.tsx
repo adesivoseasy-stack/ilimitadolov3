@@ -1509,6 +1509,52 @@ export default function ResellerDashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* Manus AI Credits Requirements Dialog */}
+        <AlertDialog open={manusCreditsRequirementsOpen} onOpenChange={setManusCreditsRequirementsOpen}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-cyan-400" />
+                Requisitos — 1000 Créditos Manus AI
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="font-semibold text-foreground">Você está adquirindo:</p>
+                  <ul className="space-y-2 list-none pl-0">
+                    <li className="flex gap-2"><span className="text-cyan-400">●</span> <span><span className="font-bold text-foreground">1000 Créditos Manus AI</span> aplicados na sua conta Manus.</span></li>
+                    <li className="flex gap-2"><span className="text-cyan-400">●</span> Entrega imediata após confirmação manual.</li>
+                    <li className="flex gap-2"><span className="text-cyan-400">●</span> Após o pagamento, envie o comprovante ao ADM no grupo para liberação dos créditos.</li>
+                    <li className="flex gap-2"><span className="text-cyan-400">●</span> Compra não reembolsável após a entrega dos créditos.</li>
+                  </ul>
+                  <label className="flex items-start gap-2 pt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={manusCreditsAccepted}
+                      onChange={(e) => setManusCreditsAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-cyan-500"
+                    />
+                    <span className="text-foreground">Li, entendi e confirmo a compra de <span className="font-bold">1000 Créditos Manus AI</span>.</span>
+                  </label>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setManusCreditsAccepted(false)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!manusCreditsAccepted}
+                onClick={() => {
+                  setManusCreditsRequirementsOpen(false);
+                  setPendingPixAction({ qty: 1, manusCredits: true });
+                  setPixCustomerOpen(true);
+                }}
+                className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white"
+              >
+                Continuar para pagamento
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* PIX Payment Modal */}
         <Dialog open={isPixModalOpen} onOpenChange={(open) => {
           if (!open && pixStatus !== 'pending') {
