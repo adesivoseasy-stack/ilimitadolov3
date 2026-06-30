@@ -62,10 +62,21 @@ Deno.serve(async (req) => {
 
     const normEmail = String(email || '').trim().toLowerCase() || null;
 
-    // ── HWID bind (1 dispositivo por chave) ───────────────────
-    // Wildcards (chaves infinitas/resellers) ficam isentas do bind.
+    // ── HWID bind ───────────────────
+    // A extensão pode validar pela própria UUID e também pelo HWID derivado
+    // no servidor. Se o HWID já existe em `devices`, ele é considerado o
+    // mesmo dispositivo e não deve desconectar a licença.
     let boundHwid: string | null = license.hwid ?? null;
     if (hwidTrimmed && !license.is_wildcard) {
+      const { data: knownDevices } = await supabase
+        .from('devices')
+        .select('id, hwid')
+        .eq('license_id', license.id)
+        .eq('hwid', hwidTrimmed)
+        .limit(1);
+
+      const isKnownDevice = Array.isArray(knownDevices) && knownDevices.length > 0;
+
       if (!license.hwid) {
         const { error: updErr } = await supabase
           .from('licenses')
@@ -76,22 +87,26 @@ Deno.serve(async (req) => {
         } else {
           boundHwid = hwidTrimmed;
         }
-      } else if (license.hwid !== hwidTrimmed) {
+      } else if (license.hwid !== hwidTrimmed && !isKnownDevice) {
         console.warn('[inject-config] HWID mismatch | key:', trimmed.slice(0, 8));
         return json({
           error: 'Esta chave já está vinculada a outro dispositivo. Acesse o painel e clique em "Resetar Dispositivo" para trocar.',
         }, 403);
+      } else if (isKnownDevice) {
+        boundHwid = hwidTrimmed;
       }
     }
 
     // Espelha o HWID na tabela `devices` para aparecer no painel.
     if (hwidTrimmed) {
-      const { data: existingDevice } = await supabase
+      const { data: existingDevices } = await supabase
         .from('devices')
         .select('id')
         .eq('license_id', license.id)
         .eq('hwid', hwidTrimmed)
-        .maybeSingle();
+        .limit(1);
+
+      const existingDevice = Array.isArray(existingDevices) ? existingDevices[0] : null;
 
       if (existingDevice) {
         await supabase
