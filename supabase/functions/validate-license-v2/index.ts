@@ -329,7 +329,32 @@ Deno.serve(async (req) => {
     }
 
     // Regular license: Check device binding
-    const { data: existingDevice, error: deviceError } = await supabase
+    // First prefer an exact HWID match. Some extension builds used a local HWID
+    // while others let the backend derive SRV2-* from device_info. If both rows
+    // already exist for the same physical install, choosing the latest row first
+    // can incorrectly report device_mismatch and look like an automatic revoke.
+    const { data: matchingDevice, error: matchingDeviceError } = await supabase
+      .from('devices')
+      .select('*')
+      .eq('license_id', license.id)
+      .eq('hwid', hwid)
+      .order('last_seen_at', { ascending: false, nullsFirst: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (matchingDeviceError) {
+      console.error('[validate-license-v2] Matching device lookup error:', matchingDeviceError);
+      const response: ValidateResponse = {
+        status: 'error',
+        message: 'Database error',
+      };
+      return new Response(JSON.stringify(response), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { data: existingDevice, error: deviceError } = matchingDevice ? { data: matchingDevice, error: null } : await supabase
       .from('devices')
       .select('*')
       .eq('license_id', license.id)
