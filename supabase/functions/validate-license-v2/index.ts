@@ -333,6 +333,8 @@ Deno.serve(async (req) => {
       .from('devices')
       .select('*')
       .eq('license_id', license.id)
+      .order('last_seen_at', { ascending: false, nullsFirst: false })
+      .limit(1)
       .maybeSingle();
 
     if (deviceError) {
