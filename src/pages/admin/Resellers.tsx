@@ -32,6 +32,8 @@ interface ResellerProfile {
   licenseCount?: number;
   credits_total?: number;
   credits_used?: number;
+  lifetime_credits_total?: number;
+  lifetime_credits_used?: number;
   deadline_at?: string | null;
   paidKeys?: number;
 }
@@ -483,6 +485,7 @@ function ResellerCard({ reseller, onApprove, onReject, isPending, onAddCredits, 
 
   const planLabel = { '197': 'R$ 197', '297': 'R$ 297', '997': 'R$ 997' }[reseller.plan_type] || 'R$ 197';
   const available = (reseller.credits_total ?? 0) - (reseller.credits_used ?? 0);
+  const lifetimeAvailable = (reseller.lifetime_credits_total ?? 0) - (reseller.lifetime_credits_used ?? 0);
 
   return (
     <div className="glass-card rounded-2xl p-5 hover:border-primary/15 transition-all duration-300">
@@ -510,6 +513,11 @@ function ResellerCard({ reseller, onApprove, onReject, isPending, onAddCredits, 
             <span className="flex items-center gap-1.5 rounded-lg border border-border/20 bg-background/20 px-2.5 py-1">
               <Coins className="h-3.5 w-3.5 text-muted-foreground" /><span className="font-bold text-foreground">{available}</span><span className="text-muted-foreground">/ {reseller.credits_total ?? 0} créditos</span>
             </span>
+            {(reseller.lifetime_credits_total ?? 0) > 0 && (
+              <span className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1">
+                <Coins className="h-3.5 w-3.5 text-amber-500" /><span className="font-bold text-amber-500">{lifetimeAvailable}</span><span className="text-amber-500/80">/ {reseller.lifetime_credits_total ?? 0} vitalícios</span>
+              </span>
+            )}
             {reseller.deadline_at && (
               <span className="flex items-center gap-1.5 rounded-lg border border-destructive/20 bg-destructive/10 px-2.5 py-1">
                 <Clock className="h-3.5 w-3.5 text-destructive" /><span className="font-bold text-destructive">{format(parseISO(reseller.deadline_at), "dd/MM HH:mm", { locale: ptBR })}</span>
