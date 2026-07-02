@@ -377,6 +377,11 @@ export default function ResellerDashboard() {
     setPixCustomerOpen(true);
   };
 
+  const handleBuyLifetimeBulk = () => {
+    setPendingPixAction({ qty: 10, lifetimeBulk: true });
+    setPixCustomerOpen(true);
+  };
+
   const tabs = [
     { id: 'loja' as TabId, label: 'Loja', icon: ShoppingCart, disabled: false },
     { id: 'clientes' as TabId, label: 'Meus Clientes', icon: Users, disabled: false },
