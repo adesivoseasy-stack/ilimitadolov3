@@ -17,6 +17,7 @@ const BodySchema = z.object({
   customerDocument: z.string().trim().max(20).optional().default(''),
   promo: z.boolean().optional(),
   lifetime: z.boolean().optional(),
+  lifetimeBulk: z.boolean().optional(),
   combo: z.boolean().optional(),
   comboChampion: z.boolean().optional(),
   comboAccount: z.boolean().optional(),
@@ -131,7 +132,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, combo, comboChampion, comboAccount, manusCredits, renewal, licenseId } = bodyResult.data
+    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, renewal, licenseId } = bodyResult.data
     const userId = authUser.id
 
     const adminClient = createClient(
@@ -205,9 +206,20 @@ Deno.serve(async (req) => {
       totalReais = 89.90
       pricePerKey = 89.90
       promo = false
+    } else if (lifetimeBulk) {
+      // Promoção Vitalícia em Lote: 10 chaves vitalícias por R$ 299,00
+      // Válido até 03/07/2026 às 20h
+      const LIFETIME_BULK_END = new Date('2026-07-03T20:00:00-03:00').getTime()
+      if (Date.now() >= LIFETIME_BULK_END) {
+        return new Response(JSON.stringify({ error: 'Promoção de vitalícias em lote encerrada' }), { status: 400, headers: corsHeaders })
+      }
+      quantity = 10
+      totalReais = 299.00
+      pricePerKey = 29.90
+      promo = false
     } else if (lifetime) {
       // Chave Vitalícia: 1 chave com validade ilimitada (100 anos)
-      // Promoção Relâmpago: R$ 79,90 até 22/06/2026 às 20h, depois R$ 147,90
+      // Promoção Relâmpago: R$ 79,90 até 03/07/2026 às 20h, depois R$ 147,90
       quantity = 1
       // Override individual: wallacesouzasantos@gmail.com paga R$ 29,90
       const { data: buyerData } = await adminClient.auth.admin.getUserById(userId)
@@ -215,7 +227,7 @@ Deno.serve(async (req) => {
       if (buyerEmail === 'wallacesouzasantos@gmail.com' || buyerEmail === 'ecombrunobp@gmail.com') {
         totalReais = 29.90
       } else {
-        const LIFETIME_PROMO_END = new Date('2026-07-01T20:00:00-03:00').getTime()
+        const LIFETIME_PROMO_END = new Date('2026-07-03T20:00:00-03:00').getTime()
         const isLifetimePromo = Date.now() < LIFETIME_PROMO_END
         totalReais = isLifetimePromo ? 79.90 : 147.90
       }
