@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
 
     const { data: license, error } = await supabase
       .from('licenses')
-      .select('id, status, is_wildcard, expires_at')
+      .select('id, status, is_wildcard, expires_at, hwid')
       .eq('license_key', key)
       .maybeSingle();
 
@@ -56,7 +56,10 @@ Deno.serve(async (req) => {
     await supabase.from('license_logs').insert({
       license_id: license.id,
       action: 'public_hwid_reset',
-      details: { ip: req.headers.get('x-forwarded-for') || 'unknown' },
+      details: {
+        ip: req.headers.get('x-forwarded-for') || 'unknown',
+        previous_hwid: license.hwid || null,
+      },
     });
 
     return json({ success: true, message: 'Dispositivo resetado com sucesso! Ative a extensão no novo computador.' });
