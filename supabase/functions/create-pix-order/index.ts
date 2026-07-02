@@ -308,7 +308,7 @@ Deno.serve(async (req) => {
         customer_email: email,
         customer_phone: phoneNumber,
         customer_document: document,
-        product_type: renewal ? 'renewal' : (manusCredits ? 'manus_credits' : (comboAccount ? 'combo_account' : (comboChampion ? 'combo_champion' : (combo ? 'combo' : (lifetime ? 'lifetime' : 'standard'))))),
+        product_type: renewal ? 'renewal' : (manusCredits ? 'manus_credits' : (comboAccount ? 'combo_account' : (comboChampion ? 'combo_champion' : (combo ? 'combo' : ((lifetime || lifetimeBulk) ? 'lifetime' : 'standard'))))),
         target_license_id: renewalLicenseId,
       })
       .select()
