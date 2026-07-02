@@ -885,6 +885,7 @@ export type Database = {
     }
     Functions: {
       admin_list_licenses: { Args: never; Returns: Json }
+      admin_list_resellers: { Args: never; Returns: Json }
       clean_expired_sessions: { Args: never; Returns: undefined }
       clean_old_bot_states: { Args: never; Returns: undefined }
       execute_sql: { Args: { query: string }; Returns: Json }
