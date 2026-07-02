@@ -37,65 +37,39 @@ interface ResellerProfile {
 }
 
 function useResellers() {
-  return useQuery({
-    queryKey: ['resellers'],
+  const queryClient = useQueryClient();
+
+  const listQuery = useQuery({
+    queryKey: ['resellers', 'list'],
     queryFn: async () => {
-      const [profilesRes, licensesRes, creditsRes, ordersRes] = await Promise.all([
-        supabase.from('reseller_profiles').select('*').order('created_at', { ascending: false }),
-        supabase.from('licenses').select('created_by, max_messages'),
-        supabase.from('reseller_credits').select('reseller_id, credits_total, credits_used'),
-        supabase.from('credit_orders').select('reseller_id, quantity, status').eq('status', 'paid'),
-      ]);
-      if (profilesRes.error) throw profilesRes.error;
-      const resellers = profilesRes.data as ResellerProfile[];
+      // 1 chamada RPC: já traz profiles + licenseCount + credits + paidKeys agregados
+      const { data, error } = await supabase.rpc('admin_list_resellers' as any);
+      if (error) throw error;
+      const list = (Array.isArray(data) ? data : []) as ResellerProfile[];
 
-      const licenseCounts: Record<string, number> = {};
-      if (!licensesRes.error && licensesRes.data) {
-        for (const l of licensesRes.data) {
-          if (l.created_by && l.max_messages == null) {
-            licenseCounts[l.created_by] = (licenseCounts[l.created_by] || 0) + 1;
-          }
-        }
-      }
-      const creditsMap: Record<string, { total: number; used: number }> = {};
-      if (!creditsRes.error && creditsRes.data) {
-        for (const c of creditsRes.data) {
-          creditsMap[c.reseller_id] = { total: c.credits_total, used: c.credits_used };
-        }
-      }
-
-      const paidKeysMap: Record<string, number> = {};
-      if (!ordersRes.error && ordersRes.data) {
-        for (const o of ordersRes.data) {
-          paidKeysMap[o.reseller_id] = (paidKeysMap[o.reseller_id] || 0) + o.quantity;
-        }
-      }
-
-      for (const r of resellers) {
-        r.licenseCount = licenseCounts[r.user_id] || 0;
-        r.credits_total = creditsMap[r.user_id]?.total ?? 0;
-        r.credits_used = creditsMap[r.user_id]?.used ?? 0;
-        r.paidKeys = paidKeysMap[r.user_id] || 0;
-      }
-
-      const userIds = resellers.map(r => r.user_id);
+      // Dispara busca de emails em paralelo (não bloqueia a renderização da lista).
+      const userIds = list.map(r => r.user_id).filter(Boolean);
       if (userIds.length > 0) {
-        try {
-          const { data: emailData } = await supabase.functions.invoke('get-user-emails', {
-            body: { userIds },
-          });
-          if (emailData?.emails) {
-            for (const r of resellers) {
-              r.email = emailData.emails[r.user_id] || '';
-            }
-          }
-        } catch {}
+        supabase.functions
+          .invoke('get-user-emails', { body: { userIds } })
+          .then(({ data: emailData }) => {
+            const emails = (emailData as any)?.emails as Record<string, string> | undefined;
+            if (!emails) return;
+            queryClient.setQueryData<ResellerProfile[]>(['resellers', 'list'], (prev) => {
+              if (!prev) return prev;
+              return prev.map(r => ({ ...r, email: emails[r.user_id] || r.email || '' }));
+            });
+          })
+          .catch(() => {});
       }
 
-      return resellers;
+      return list;
     },
-    staleTime: 30_000,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
+
+  return listQuery;
 }
 
 function useManagers() {
