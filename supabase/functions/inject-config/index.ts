@@ -78,6 +78,28 @@ Deno.serve(async (req) => {
       const isKnownDevice = Array.isArray(knownDevices) && knownDevices.length > 0;
 
       if (!license.hwid) {
+        // Post-reset guard: se este HWID acabou de ser resetado (< 10 min),
+        // é o PC antigo tentando re-vincular sozinho. Bloqueia para o
+        // usuário conseguir ativar no PC novo.
+        const tenMinAgo = new Date(now.getTime() - 10 * 60 * 1000).toISOString();
+        const { data: recentReset } = await supabase
+          .from('license_logs')
+          .select('details, created_at')
+          .eq('license_id', license.id)
+          .eq('action', 'public_hwid_reset')
+          .gte('created_at', tenMinAgo)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const prevHwid = (recentReset?.details as any)?.previous_hwid;
+        if (prevHwid && prevHwid === hwidTrimmed) {
+          console.warn('[inject-config] Rebind blocked (recent reset) | key:', trimmed.slice(0, 8));
+          return json({
+            error: 'Esta chave foi resetada recentemente. Ative a extensão no NOVO computador. Se você já está no novo, feche a extensão no PC antigo e tente novamente em alguns minutos.',
+          }, 403);
+        }
+
         const { error: updErr } = await supabase
           .from('licenses')
           .update({ hwid: hwidTrimmed, hwid_set_at: now.toISOString() })
