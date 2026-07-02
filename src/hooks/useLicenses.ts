@@ -43,12 +43,20 @@ function normalizeDevices(devices: Device | Device[] | null | undefined): Device
   return [devices];
 }
 
-// ── Main hook: fetch all licenses with devices (paginated to bypass 1000-row default cap) ──
+// ── Main hook: fetch all licenses with devices.
+// Admin/manager: RPC `admin_list_licenses` (uma query só, sem overhead de RLS por linha).
+// Fallback: paginação com nested select.
 async function fetchAllLicensesPaginated() {
+  const { data: rpcData, error: rpcError } = await supabase.rpc('admin_list_licenses' as any);
+  if (!rpcError && Array.isArray(rpcData)) {
+    return rpcData as any[];
+  }
+  if (rpcError) {
+    console.warn('[useLicenses] RPC falhou, usando fallback:', rpcError.message);
+  }
   const PAGE_SIZE = 1000;
   const all: any[] = [];
   let from = 0;
-  // Safety cap at 50k rows
   for (let i = 0; i < 50; i++) {
     const { data, error } = await supabase
       .from('licenses')
