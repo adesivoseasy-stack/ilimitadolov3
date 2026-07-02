@@ -106,7 +106,7 @@ export default function ResellerDashboard() {
   const [isPixModalOpen, setIsPixModalOpen] = useState(false);
   const pixStatus = usePixOrderPolling(pixOrder?.order_id || null);
   const [pixCustomerOpen, setPixCustomerOpen] = useState(false);
-  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; combo?: boolean; comboChampion?: boolean; comboAccount?: boolean; manusCredits?: boolean } | null>(null);
+  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; lifetimeBulk?: boolean; combo?: boolean; comboChampion?: boolean; comboAccount?: boolean; manusCredits?: boolean } | null>(null);
   const [comboRequirementsOpen, setComboRequirementsOpen] = useState(false);
   const [comboAccepted, setComboAccepted] = useState(false);
   const [lastOrderWasCombo, setLastOrderWasCombo] = useState(false);
@@ -157,8 +157,8 @@ export default function ResellerDashboard() {
   }, []);
 
   useEffect(() => {
-    // Promoção Chave Vitalícia: R$ 79,90 até amanhã (22/06/2026) às 20h
-    const LIFETIME_PROMO_END = new Date('2026-07-01T20:00:00-03:00');
+    // Promoção Chave Vitalícia: R$ 79,90 até 03/07/2026 às 20h
+    const LIFETIME_PROMO_END = new Date('2026-07-03T20:00:00-03:00');
     const tick = () => {
       const now = new Date();
       const diffMs = LIFETIME_PROMO_END.getTime() - now.getTime();
@@ -243,10 +243,10 @@ export default function ResellerDashboard() {
 
   const handlePixCustomerConfirm = async (customerData: PixCustomerFormData) => {
     if (!pendingPixAction) return;
-    const { qty, promo, lifetime, combo, comboChampion, comboAccount, manusCredits } = pendingPixAction;
+    const { qty, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits } = pendingPixAction;
     setPixCustomerOpen(false);
-    setLoadingQty(manusCredits ? -6 : comboAccount ? -5 : comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
-    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion, undefined, comboAccount, manusCredits);
+    setLoadingQty(lifetimeBulk ? -7 : manusCredits ? -6 : comboAccount ? -5 : comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
+    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion, undefined, comboAccount, manusCredits, lifetimeBulk);
     setLoadingQty(null);
     if (order) {
       setPixOrder(order);
@@ -374,6 +374,11 @@ export default function ResellerDashboard() {
 
   const handleBuyLifetime = () => {
     setPendingPixAction({ qty: 1, lifetime: true });
+    setPixCustomerOpen(true);
+  };
+
+  const handleBuyLifetimeBulk = () => {
+    setPendingPixAction({ qty: 10, lifetimeBulk: true });
     setPixCustomerOpen(true);
   };
 
@@ -914,6 +919,66 @@ export default function ResellerDashboard() {
                     </div>
                   </div>
                 </div>
+
+                {/* Lifetime Bulk 10 keys */}
+                {isLifetimePromoActive && (
+                <div className="relative">
+                  <div
+                    className="absolute -inset-[2px] rounded-[1.3rem] z-0 animate-pulse opacity-90"
+                    style={{
+                      background: 'linear-gradient(135deg, #a855f7, #ec4899, #f59e0b, #a855f7)',
+                      backgroundSize: '300% 300%',
+                      animation: 'fire-glow 3s ease infinite',
+                    }}
+                  />
+                  <div className="relative p-6 sm:p-7 rounded-3xl bg-card border border-transparent z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+                    <div className="flex items-start gap-4">
+                      <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-amber-500/20 flex items-center justify-center shrink-0">
+                        <img src={keyIcon} alt="10 Chaves Vitalícias" className="h-[44px] w-[44px] object-contain" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="bg-gradient-to-r from-purple-500 to-amber-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider animate-pulse">
+                            ⚡ PROMOÇÃO RELÂMPAGO
+                          </span>
+                          <span className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                            MAIS ECONÔMICA
+                          </span>
+                          <span className="text-[10px] font-bold text-purple-300 uppercase tracking-wider">Validade ∞</span>
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-black text-foreground font-display">
+                          10 Chaves <span className="bg-gradient-to-r from-purple-400 to-amber-400 bg-clip-text text-transparent">Vitalícias</span>
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1 max-w-md">
+                          Pacote com 10 chaves de validade ilimitada por apenas R$ 29,90 cada. Estoque premium para vender em escala.
+                        </p>
+                        <p className="text-xs font-bold text-amber-300 mt-2 flex items-center gap-1.5">
+                          <Clock className="h-3.5 w-3.5" />
+                          Até amanhã às 20h • Termina em <span className="font-mono text-amber-200">{lifetimePromoTimeLeft}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-stretch sm:items-end gap-2 w-full sm:w-auto">
+                      <div className="text-right">
+                        <div className="flex items-baseline gap-2 justify-end">
+                          <span className="text-sm text-muted-foreground line-through">R$ 1.479,00</span>
+                          <span className="text-3xl font-black bg-gradient-to-r from-purple-400 to-amber-400 bg-clip-text text-transparent">R$ 299,00</span>
+                        </div>
+                        <p className="text-[11px] text-amber-300 font-bold">R$ 29,90 por chave • economize R$ 1.180</p>
+                      </div>
+                      <Button
+                        disabled={loadingQty !== null}
+                        onClick={handleBuyLifetimeBulk}
+                        className="group relative overflow-hidden rounded-xl bg-[linear-gradient(110deg,#a855f7,45%,#f59e0b,55%,#a855f7)] bg-[length:200%_100%] text-white font-bold shadow-lg shadow-purple-500/30 w-full sm:w-auto transition-all duration-300 hover:scale-[1.04] hover:shadow-amber-500/50 active:scale-95 animate-[gradient-x_3s_ease_infinite]"
+                      >
+                        <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:animate-[shimmer_1.2s_ease-in-out]" />
+                        {loadingQty === -7 ? <Loader2 className="relative mr-2 h-4 w-4 animate-spin" /> : <Zap className="relative mr-2 h-4 w-4 animate-pulse" />}
+                        <span className="relative">{loadingQty === -7 ? 'Gerando PIX...' : 'Comprar 10 Vitalícias'}</span>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                )}
 
                 {/* Custom quantity */}
                 <div className="p-6 rounded-2xl glass-card">
