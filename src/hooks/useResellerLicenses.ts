@@ -127,7 +127,9 @@ export function useResellerCreateLicense() {
 
       const { data: keyData, error: keyError } = await supabase.rpc('generate_license_key');
       if (keyError) throw keyError;
-      const licenseKey = isTestLicense ? `TESTE-${keyData}` : keyData as string;
+      const rawKey = keyData as string;
+      const shortTestKey = rawKey.split('-').slice(0, 3).join('-');
+      const licenseKey = isTestLicense ? `TESTE-${shortTestKey}` : rawKey;
 
       // Chaves pagas: mensais (30 dias) por padrão. Vitalícia/Wildcard: 100 anos.
       const isLifetimeKey = isLifetime || isWildcard;

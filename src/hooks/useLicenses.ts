@@ -191,6 +191,9 @@ export function useCreateLicense() {
     }) => {
       const { data: keyData, error: keyError } = await supabase.rpc('generate_license_key');
       if (keyError) throw keyError;
+      const rawKey = keyData as string;
+      const shortTestKey = rawKey.split('-').slice(0, 3).join('-');
+      const licenseKey = isTestLicense ? `TESTE-${shortTestKey}` : rawKey;
 
       // Get current user for created_by
       const { data: { user } } = await supabase.auth.getUser();
@@ -222,7 +225,7 @@ export function useCreateLicense() {
       const { data, error } = await supabase
         .from('licenses')
         .insert({
-          license_key: keyData,
+          license_key: licenseKey,
           email,
           expires_at: expiresAt.toISOString(),
           price: price || 0,
