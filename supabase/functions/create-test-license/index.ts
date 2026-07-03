@@ -197,9 +197,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Prefix test keys with TESTE-
+    // Prefix test keys with TESTE- (formato curto: 23 chars, compatível com extensões antigas)
     const rawKey = keyData as string;
-    const licenseKey = `TESTE-${rawKey}`;
+    const shortKey = rawKey.split('-').slice(0, 3).join('-'); // XXXXX-XXXXX-XXXXX
+    const licenseKey = `TESTE-${shortKey}`; // TESTE-XXXXX-XXXXX-XXXXX = 23 chars
     const durationMinutes = 10;
     const durationHours = durationMinutes / 60; // ~0.1667
     
