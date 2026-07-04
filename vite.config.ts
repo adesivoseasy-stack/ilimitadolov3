@@ -34,6 +34,9 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("recharts") || id.includes("d3-")) return "charts-vendor";
           if (id.includes("framer-motion")) return "motion-vendor";
           if (id.includes("@radix-ui")) return "radix-vendor";
+          if (id.includes("date-fns")) return "date-vendor";
+          if (id.includes("lucide-react")) return "icons-vendor";
+          if (id.includes("jszip")) return "jszip-vendor";
         },
       },
     },

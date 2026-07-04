@@ -46,56 +46,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const checkAdminRole = async (userId: string) => {
+  // Fetch all roles in a single round-trip instead of 3 separate queries.
+  const checkAllRoles = async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId)
-        .eq('role', 'admin')
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error checking admin role:', error);
-        return false;
-      }
-
-      return !!data;
-    } catch (err) {
-      console.error('Error in checkAdminRole:', err);
-      return false;
-    }
-  };
-
-  const checkResellerRole = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .eq('role', 'reseller')
-        .maybeSingle();
-
-      if (error) return false;
-      return !!data;
+        .eq('user_id', userId);
+      if (error || !data) return { admin: false, reseller: false, manager: false };
+      const roles = new Set(data.map((r: any) => r.role));
+      return {
+        admin: roles.has('admin'),
+        reseller: roles.has('reseller'),
+        manager: roles.has('manager'),
+      };
     } catch {
-      return false;
-    }
-  };
-
-  const checkManagerRole = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .eq('role', 'manager')
-        .maybeSingle();
-
-      if (error) return false;
-      return !!data;
-    } catch {
-      return false;
+      return { admin: false, reseller: false, manager: false };
     }
   };
 
@@ -139,18 +105,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsLoading(true);
           setTimeout(() => {
             Promise.all([
-              checkAdminRole(session.user.id),
-              checkResellerRole(session.user.id),
-              checkManagerRole(session.user.id),
+              checkAllRoles(session.user.id),
               checkResellerStatus(session.user.id),
-            ]).then(([admin, reseller, manager, status]) => {
-              setIsAdmin(admin);
-              setIsReseller(reseller);
-              setIsManager(manager);
+            ]).then(([roles, status]) => {
+              setIsAdmin(roles.admin);
+              setIsReseller(roles.reseller);
+              setIsManager(roles.manager);
               setResellerStatus(status);
               setIsLoading(false);
 
-              if (!admin && !reseller && !manager && !status) {
+              if (!roles.admin && !roles.reseller && !roles.manager && !status) {
                 supabase.functions
                   .invoke('register-reseller-self', {
                     body: { name: session.user.email?.split('@')[0] || 'Revendedor' },
@@ -171,31 +135,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
+    // INITIAL_SESSION fires from onAuthStateChange above and hydrates roles.
+    // We still call getSession to detect a broken refresh token and clear it.
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error?.code === 'refresh_token_not_found') {
         clearInvalidSession();
         return;
       }
-
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
-        Promise.all([
-          checkAdminRole(session.user.id),
-          checkResellerRole(session.user.id),
-          checkManagerRole(session.user.id),
-          checkResellerStatus(session.user.id),
-        ]).then(([admin, reseller, manager, status]) => {
-          setIsAdmin(admin);
-          setIsReseller(reseller);
-          setIsManager(manager);
-          setResellerStatus(status);
-          setIsLoading(false);
-        }).catch(() => {
-          setIsLoading(false);
-        });
-      } else {
+      if (!session) {
         setIsLoading(false);
       }
     }).catch(async (error: any) => {
