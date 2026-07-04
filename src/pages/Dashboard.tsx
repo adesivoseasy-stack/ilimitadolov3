@@ -2,7 +2,7 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useLicenseStats, useLicenses, useWildcardUsage, useWildcardStats } from '@/hooks/useLicenses';
 import { Card, CardContent } from '@/components/ui/card';
 import { Key, CheckCircle, XCircle, Ban, DollarSign, Globe, Users, TrendingUp, Activity, ArrowUpRight } from 'lucide-react';
-import adminBanner from '@/assets/banner.png';
+import adminBannerAsset from '@/assets/banner.gif.asset.json';
 import { format, differenceInDays, parseISO, formatDistanceToNow, subDays, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { GitHubCalendar } from '@/components/ui/git-hub-calendar';
@@ -86,7 +86,7 @@ export default function Dashboard() {
 
           {/* Banner */}
           <div className="w-full rounded-2xl overflow-hidden border border-border/20 glow-card purple-glow">
-            <img src={adminBanner} alt="Ilimitado Lov Banner" className="w-full h-auto object-contain" />
+            <img src={adminBannerAsset.url} alt="Ilimitado Lov Banner" className="w-full h-auto object-contain" />
           </div>
         </div>
 
