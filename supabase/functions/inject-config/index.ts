@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
     const { key, email, hwid } = await req.json().catch(() => ({}));
     const trimmed = String(key || '').trim();
     const hwidTrimmed = String(hwid || '').trim() || null;
-    if (!trimmed) return json({ error: 'invalid: chave vazia' }, 400);
+    if (!trimmed) return json({ error: 'invalid: chave vazia', reason: 'invalid_key' }, 400);
 
     const { data: license, error } = await supabase
       .from('licenses')
@@ -32,10 +32,10 @@ Deno.serve(async (req) => {
 
     if (error) {
       console.error('[inject-config] db error', error);
-      return json({ error: 'invalid' }, 500);
+      return json({ error: 'invalid', reason: 'transient' }, 500);
     }
-    if (!license) return json({ error: 'invalid: chave não encontrada' }, 403);
-    if (license.status === 'revoked') return json({ error: 'invalid: chave revogada' }, 403);
+    if (!license) return json({ error: 'invalid: chave não encontrada', reason: 'invalid_key' }, 403);
+    if (license.status === 'revoked') return json({ error: 'invalid: chave revogada', reason: 'revoked' }, 403);
 
     // First activation for time-bounded licenses
     const now = new Date();
@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
       if (license.status !== 'expired') {
         await supabase.from('licenses').update({ status: 'expired' }).eq('id', license.id);
       }
-      return json({ error: 'expirada' }, 403);
+      return json({ error: 'expirada', reason: 'expired' }, 403);
     }
 
     const normEmail = String(email || '').trim().toLowerCase() || null;
@@ -97,6 +97,7 @@ Deno.serve(async (req) => {
           console.warn('[inject-config] Rebind blocked (recent reset) | key:', trimmed.slice(0, 8));
           return json({
             error: 'Esta chave foi resetada recentemente. Ative a extensão no NOVO computador. Se você já está no novo, feche a extensão no PC antigo e tente novamente em alguns minutos.',
+            reason: 'post_reset_guard',
           }, 403);
         }
 
@@ -113,6 +114,7 @@ Deno.serve(async (req) => {
         console.warn('[inject-config] HWID mismatch | key:', trimmed.slice(0, 8));
         return json({
           error: 'Esta chave já está vinculada a outro dispositivo. Acesse o painel e clique em "Resetar Dispositivo" para trocar.',
+          reason: 'device_mismatch',
         }, 403);
       } else if (isKnownDevice) {
         boundHwid = hwidTrimmed;
@@ -155,6 +157,6 @@ Deno.serve(async (req) => {
     }, 200);
   } catch (e) {
     console.error('[inject-config] unexpected', e);
-    return json({ error: 'invalid: erro interno' }, 500);
+    return json({ error: 'invalid: erro interno', reason: 'transient' }, 500);
   }
 });
