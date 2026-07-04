@@ -420,7 +420,7 @@ export default function ResellerDashboard() {
             </div>
 
             <div className="w-full rounded-2xl overflow-hidden glow-card purple-glow animate-fade-up-delay-1">
-              <img src={resellerBanner} alt="Ilimitado Lov Banner" className="w-full h-auto object-contain" />
+              <img src={resellerBannerAsset.url} alt="Ilimitado Lov Banner" className="w-full h-auto object-contain" />
             </div>
 
             <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4 animate-fade-up-delay-2">
