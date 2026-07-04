@@ -219,7 +219,7 @@ Deno.serve(async (req) => {
       promo = false
     } else if (lifetime) {
       // Chave Vitalícia: 1 chave com validade ilimitada (100 anos)
-      // Promoção Relâmpago: R$ 79,90 até 03/07/2026 às 20h, depois R$ 147,90
+      // Promoção Relâmpago: R$ 79,90 até 05/07/2026 às 20h, depois R$ 147,90
       quantity = 1
       // Override individual: wallacesouzasantos@gmail.com paga R$ 29,90
       const { data: buyerData } = await adminClient.auth.admin.getUserById(userId)
@@ -227,7 +227,7 @@ Deno.serve(async (req) => {
       if (buyerEmail === 'wallacesouzasantos@gmail.com' || buyerEmail === 'ecombrunobp@gmail.com') {
         totalReais = 29.90
       } else {
-        const LIFETIME_PROMO_END = new Date('2026-07-03T20:00:00-03:00').getTime()
+        const LIFETIME_PROMO_END = new Date('2026-07-05T20:00:00-03:00').getTime()
         const isLifetimePromo = Date.now() < LIFETIME_PROMO_END
         totalReais = isLifetimePromo ? 79.90 : 147.90
       }
