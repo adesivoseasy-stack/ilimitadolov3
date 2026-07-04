@@ -86,7 +86,7 @@ export default function Dashboard() {
 
           {/* Banner */}
           <div className="w-full rounded-2xl overflow-hidden border border-border/20 glow-card purple-glow">
-            <img src={adminBanner} alt="Ilimitado Lov Banner" className="w-full h-auto object-contain" />
+            <img src={adminBannerAsset.url} alt="Ilimitado Lov Banner" className="w-full h-auto object-contain" />
           </div>
         </div>
 
