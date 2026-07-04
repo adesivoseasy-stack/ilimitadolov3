@@ -26,7 +26,7 @@ import {
   Zap, Clock, Flame, Lock, AlertTriangle, UserPen
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import resellerBanner from '@/assets/banner.png';
+import resellerBannerAsset from '@/assets/banner.gif.asset.json';
 import keyIcon from '@/assets/key-icon.png';
 import comboBannerAsset from '@/assets/combo-300-creditos-pro-lite.png.asset.json';
 import comboChampionBannerAsset from '@/assets/combo-copa-brasil.png.asset.json';
