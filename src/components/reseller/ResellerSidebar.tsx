@@ -8,7 +8,7 @@ import {
   Download, Loader2, GraduationCap, Store, Coins, Wrench, AlertTriangle, Lock,
 } from 'lucide-react';
 import logoImg from '@/assets/logo.png';
-import extensionZipAsset from '@/assets/LOV3.1_PURPLE_OBSC.zip.asset.json';
+import extensionZipAsset from '@/assets/LOV3-NEON-NOIR.rar.asset.json';
 import { useState } from 'react';
 import { useResellerLicenses } from '@/hooks/useResellerLicenses';
 import { useToast } from '@/hooks/use-toast';
@@ -34,7 +34,7 @@ export function ResellerSidebar() {
     isWhitelisted ||
     (licenses || []).some((l: any) => l.status === 'active' && l.max_messages == null);
 
-  const EXTENSION_FILENAME = 'LOV3.1_PURPLE_OBSC.zip';
+  const EXTENSION_FILENAME = 'LOV3-NEON-NOIR.rar';
 
   const downloadExtension = () => {
     if (isDownloading) return;
