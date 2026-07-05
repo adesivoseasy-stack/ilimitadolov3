@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft, KeyRound, RefreshCw, Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
+import { KeyRound, RefreshCw, Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,14 +52,6 @@ export default function ResetLicenca() {
       </div>
 
       <div className="relative w-full max-w-md">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar para o início
-        </Link>
-
         <div className="relative rounded-2xl border border-border/60 bg-card/70 backdrop-blur-xl shadow-2xl p-8">
           {/* Header */}
           <div className="flex items-center justify-center gap-3 mb-6">
