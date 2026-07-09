@@ -86,9 +86,34 @@ export default function Licenses() {
     setExpiryDialog(null); setNewExpiryDate('');
   };
 
-  const copyKey = (key: string) => {
-    navigator.clipboard.writeText(key);
-    toast({ title: 'Copiado', description: 'Chave copiada para a área de transferência.' });
+  const copyKey = async (key: string) => {
+    let ok = false;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(key);
+        ok = true;
+      }
+    } catch {}
+    if (!ok) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = key;
+        ta.style.position = 'fixed';
+        ta.style.top = '0';
+        ta.style.left = '0';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch {}
+    }
+    if (ok) {
+      toast({ title: 'Copiado', description: 'Chave copiada para a área de transferência.' });
+    } else {
+      toast({ title: 'Copie manualmente', description: key });
+    }
   };
 
   const isPending = revokeMutation.isPending || deleteMutation.isPending || resetDeviceMutation.isPending;
