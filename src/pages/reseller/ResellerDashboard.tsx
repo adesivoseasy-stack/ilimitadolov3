@@ -32,6 +32,7 @@ import comboBannerAsset from '@/assets/combo-300-creditos-pro-lite.png.asset.jso
 import comboChampionBannerAsset from '@/assets/combo-copa-brasil.png.asset.json';
 import comboAccountBanner from '@/assets/combo-conta-lovable.jpg';
 import manusCreditsBannerAsset from '@/assets/manus-ai-1000-creditos.png.asset.json';
+import geminiProBanner from '@/assets/gemini-pro-18-meses.jpg';
 import { format, parseISO, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -106,7 +107,7 @@ export default function ResellerDashboard() {
   const [isPixModalOpen, setIsPixModalOpen] = useState(false);
   const pixStatus = usePixOrderPolling(pixOrder?.order_id || null);
   const [pixCustomerOpen, setPixCustomerOpen] = useState(false);
-  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; lifetimeBulk?: boolean; combo?: boolean; comboChampion?: boolean; comboAccount?: boolean; manusCredits?: boolean } | null>(null);
+  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; lifetimeBulk?: boolean; combo?: boolean; comboChampion?: boolean; comboAccount?: boolean; manusCredits?: boolean; geminiPro?: boolean } | null>(null);
   const [comboRequirementsOpen, setComboRequirementsOpen] = useState(false);
   const [comboAccepted, setComboAccepted] = useState(false);
   const [lastOrderWasCombo, setLastOrderWasCombo] = useState(false);
@@ -119,6 +120,9 @@ export default function ResellerDashboard() {
   const [manusCreditsRequirementsOpen, setManusCreditsRequirementsOpen] = useState(false);
   const [manusCreditsAccepted, setManusCreditsAccepted] = useState(false);
   const [lastOrderWasManusCredits, setLastOrderWasManusCredits] = useState(false);
+  const [geminiProRequirementsOpen, setGeminiProRequirementsOpen] = useState(false);
+  const [geminiProAccepted, setGeminiProAccepted] = useState(false);
+  const [lastOrderWasGeminiPro, setLastOrderWasGeminiPro] = useState(false);
 
   const [isPromoOpen, setIsPromoOpen] = useState(false);
   const PROMO_QTY = 10;
@@ -243,10 +247,10 @@ export default function ResellerDashboard() {
 
   const handlePixCustomerConfirm = async (customerData: PixCustomerFormData) => {
     if (!pendingPixAction) return;
-    const { qty, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits } = pendingPixAction;
+    const { qty, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro } = pendingPixAction;
     setPixCustomerOpen(false);
-    setLoadingQty(lifetimeBulk ? -7 : manusCredits ? -6 : comboAccount ? -5 : comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
-    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion, undefined, comboAccount, manusCredits, lifetimeBulk);
+    setLoadingQty(geminiPro ? -8 : lifetimeBulk ? -7 : manusCredits ? -6 : comboAccount ? -5 : comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
+    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion, undefined, comboAccount, manusCredits, lifetimeBulk, geminiPro);
     setLoadingQty(null);
     if (order) {
       setPixOrder(order);
@@ -254,6 +258,7 @@ export default function ResellerDashboard() {
       setLastOrderWasComboChampion(!!comboChampion);
       setLastOrderWasComboAccount(!!comboAccount);
       setLastOrderWasManusCredits(!!manusCredits);
+      setLastOrderWasGeminiPro(!!geminiPro);
       if (promo) setIsPromoOpen(false);
       setIsPixModalOpen(true);
     } else {
@@ -839,6 +844,51 @@ export default function ResellerDashboard() {
                               {loadingQty === -6 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
                               <span className="relative z-10">
                               {loadingQty === -6 ? 'Gerando PIX...' : 'Comprar por R$ 39,90'}
+                              </span>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {isPricingReady && (
+                      <div className="relative">
+                        <div
+                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
+                          style={{
+                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899, #3b82f6)',
+                            backgroundSize: '300% 300%',
+                            animation: 'fire-glow 4s ease infinite',
+                          }}
+                        />
+                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+                            <span className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider animate-pulse">
+                              ✨ Gemini Pro 18 Meses
+                            </span>
+                          </div>
+                          <div className="relative flex-1 flex flex-col gap-3">
+                            <div className="relative rounded-xl overflow-hidden bg-black">
+                              <img
+                                src={geminiProBanner}
+                                alt="Gemini Pro - 18 Meses de Assinatura por R$ 99,89"
+                                className="w-full h-auto object-cover aspect-square"
+                                loading="lazy"
+                              />
+                            </div>
+                            <Button
+                              disabled={loadingQty !== null}
+                              onClick={() => { setGeminiProAccepted(false); setGeminiProRequirementsOpen(true); }}
+                              className="cta-premium mt-auto text-white"
+                              style={{
+                                background: 'linear-gradient(110deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)',
+                                boxShadow: '0 8px 24px -8px rgba(139, 92, 246, 0.6)',
+                              }}
+                              size="sm"
+                            >
+                              <span className="cta-shine" aria-hidden />
+                              {loadingQty === -8 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
+                              <span className="relative z-10">
+                              {loadingQty === -8 ? 'Gerando PIX...' : 'Comprar por R$ 99,89'}
                               </span>
                             </Button>
                           </div>
@@ -1628,6 +1678,52 @@ export default function ResellerDashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* Gemini Pro Requirements Dialog */}
+        <AlertDialog open={geminiProRequirementsOpen} onOpenChange={setGeminiProRequirementsOpen}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-indigo-400" />
+                Requisitos — Gemini Pro 18 Meses
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="font-semibold text-foreground">Você está adquirindo:</p>
+                  <ul className="space-y-2 list-none pl-0">
+                    <li className="flex gap-2"><span className="text-indigo-400">●</span> <span><span className="font-bold text-foreground">Gemini Pro — 18 meses de assinatura</span> ativados direto na sua conta Google.</span></li>
+                    <li className="flex gap-2"><span className="text-indigo-400">●</span> Inclui 5 TB no Google One, Gemini 3.1 Pro + Nano Banana Pro, Veo 3, Flow, Whisk, NotebookLM, Deep Research, Code Assist e CLI.</li>
+                    <li className="flex gap-2"><span className="text-indigo-400">●</span> Ativação manual pelo ADM após o pagamento — envie o comprovante no grupo com o email da sua conta Google.</li>
+                    <li className="flex gap-2"><span className="text-indigo-400">●</span> Compra não reembolsável após a ativação.</li>
+                  </ul>
+                  <label className="flex items-start gap-2 pt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={geminiProAccepted}
+                      onChange={(e) => setGeminiProAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-indigo-500"
+                    />
+                    <span className="text-foreground">Li, entendi e confirmo a compra do <span className="font-bold">Gemini Pro 18 Meses</span>.</span>
+                  </label>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setGeminiProAccepted(false)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!geminiProAccepted}
+                onClick={() => {
+                  setGeminiProRequirementsOpen(false);
+                  setPendingPixAction({ qty: 1, geminiPro: true });
+                  setPixCustomerOpen(true);
+                }}
+                className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white"
+              >
+                Continuar para pagamento
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* PIX Payment Modal */}
         <Dialog open={isPixModalOpen} onOpenChange={(open) => {
           if (!open && pixStatus !== 'pending') {
@@ -1655,7 +1751,16 @@ export default function ResellerDashboard() {
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">Pagamento Confirmado!</h3>
-                {lastOrderWasManusCredits ? (
+                {lastOrderWasGeminiPro ? (
+                  <>
+                    <p className="text-sm text-muted-foreground text-center">
+                      <span className="font-semibold text-foreground">Gemini Pro 18 Meses</span> reservado. Entre no grupo, chame o ADM e envie o comprovante com o email da sua conta Google para ativação.
+                    </p>
+                    <Button variant="ghost" size="sm" onClick={() => { setIsPixModalOpen(false); setPixOrder(null); setLastOrderWasGeminiPro(false); }}>
+                      Fechar
+                    </Button>
+                  </>
+                ) : lastOrderWasManusCredits ? (
                   <>
                     <p className="text-sm text-muted-foreground text-center">
                       <span className="font-semibold text-foreground">1000 Créditos Manus AI</span> recebidos. Entre no grupo, chame o ADM e envie o comprovante para liberação dos créditos na sua conta Manus.
