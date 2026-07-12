@@ -1678,6 +1678,52 @@ export default function ResellerDashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* Gemini Pro Requirements Dialog */}
+        <AlertDialog open={geminiProRequirementsOpen} onOpenChange={setGeminiProRequirementsOpen}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-indigo-400" />
+                Requisitos — Gemini Pro 18 Meses
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="font-semibold text-foreground">Você está adquirindo:</p>
+                  <ul className="space-y-2 list-none pl-0">
+                    <li className="flex gap-2"><span className="text-indigo-400">●</span> <span><span className="font-bold text-foreground">Gemini Pro — 18 meses de assinatura</span> ativados direto na sua conta Google.</span></li>
+                    <li className="flex gap-2"><span className="text-indigo-400">●</span> Inclui 5 TB no Google One, Gemini 3.1 Pro + Nano Banana Pro, Veo 3, Flow, Whisk, NotebookLM, Deep Research, Code Assist e CLI.</span></li>
+                    <li className="flex gap-2"><span className="text-indigo-400">●</span> Ativação manual pelo ADM após o pagamento — envie o comprovante no grupo com o email da sua conta Google.</li>
+                    <li className="flex gap-2"><span className="text-indigo-400">●</span> Compra não reembolsável após a ativação.</li>
+                  </ul>
+                  <label className="flex items-start gap-2 pt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={geminiProAccepted}
+                      onChange={(e) => setGeminiProAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-indigo-500"
+                    />
+                    <span className="text-foreground">Li, entendi e confirmo a compra do <span className="font-bold">Gemini Pro 18 Meses</span>.</span>
+                  </label>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setGeminiProAccepted(false)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!geminiProAccepted}
+                onClick={() => {
+                  setGeminiProRequirementsOpen(false);
+                  setPendingPixAction({ qty: 1, geminiPro: true });
+                  setPixCustomerOpen(true);
+                }}
+                className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white"
+              >
+                Continuar para pagamento
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* PIX Payment Modal */}
         <Dialog open={isPixModalOpen} onOpenChange={(open) => {
           if (!open && pixStatus !== 'pending') {
