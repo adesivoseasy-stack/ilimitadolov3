@@ -190,10 +190,10 @@ Deno.serve(async (req) => {
       pricePerKey = 39.90
       promo = false
     } else if (geminiPro) {
-      // Gemini Pro - 18 Meses de Assinatura — R$ 99,89 (entrega manual via ADM)
+      // Gemini Pro - 18 Meses de Assinatura — R$ 97,00 (entrega manual via ADM)
       quantity = 1
-      totalReais = 99.89
-      pricePerKey = 99.89
+      totalReais = 97.00
+      pricePerKey = 97.00
       promo = false
     } else if (comboAccount) {
       // Combo Conta Lovable: Conta Lovable + 300 Créditos + 1 Ano PRO — R$ 129,90

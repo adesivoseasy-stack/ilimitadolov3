@@ -870,7 +870,7 @@ export default function ResellerDashboard() {
                             <div className="relative rounded-xl overflow-hidden bg-black">
                               <img
                                 src={geminiProBanner}
-                                alt="Gemini Pro - 18 Meses de Assinatura por R$ 99,89"
+                                alt="Gemini Pro - 18 Meses de Assinatura por R$ 97,00"
                                 className="w-full h-auto object-cover aspect-square"
                                 loading="lazy"
                               />
@@ -888,7 +888,7 @@ export default function ResellerDashboard() {
                               <span className="cta-shine" aria-hidden />
                               {loadingQty === -8 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
                               <span className="relative z-10">
-                              {loadingQty === -8 ? 'Gerando PIX...' : 'Comprar por R$ 99,89'}
+                              {loadingQty === -8 ? 'Gerando PIX...' : 'Comprar por R$ 97,00'}
                               </span>
                             </Button>
                           </div>
