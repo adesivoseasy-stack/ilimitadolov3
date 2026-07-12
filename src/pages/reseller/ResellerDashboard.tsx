@@ -1691,7 +1691,7 @@ export default function ResellerDashboard() {
                   <p className="font-semibold text-foreground">Você está adquirindo:</p>
                   <ul className="space-y-2 list-none pl-0">
                     <li className="flex gap-2"><span className="text-indigo-400">●</span> <span><span className="font-bold text-foreground">Gemini Pro — 18 meses de assinatura</span> ativados direto na sua conta Google.</span></li>
-                    <li className="flex gap-2"><span className="text-indigo-400">●</span> Inclui 5 TB no Google One, Gemini 3.1 Pro + Nano Banana Pro, Veo 3, Flow, Whisk, NotebookLM, Deep Research, Code Assist e CLI.</li>
+                    <li className="flex gap-2"><span className="text-indigo-400">●</span> Inclui 5 TB no Google One, Gemini 3.1 Pro + Nano Banana Pro, Veo 3, Flow, Whisk, NotebookLM, Deep Research, Code Assist, Antigravity e CLI.</li>
                     <li className="flex gap-2"><span className="text-indigo-400">●</span> Ativação manual pelo ADM após o pagamento — envie o comprovante no grupo com o email da sua conta Google.</li>
                     <li className="flex gap-2"><span className="text-indigo-400">●</span> Compra não reembolsável após a ativação.</li>
                   </ul>
