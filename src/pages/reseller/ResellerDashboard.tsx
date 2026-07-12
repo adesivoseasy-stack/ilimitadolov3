@@ -32,6 +32,7 @@ import comboBannerAsset from '@/assets/combo-300-creditos-pro-lite.png.asset.jso
 import comboChampionBannerAsset from '@/assets/combo-copa-brasil.png.asset.json';
 import comboAccountBanner from '@/assets/combo-conta-lovable.jpg';
 import manusCreditsBannerAsset from '@/assets/manus-ai-1000-creditos.png.asset.json';
+import geminiProBanner from '@/assets/gemini-pro-18-meses.jpg';
 import { format, parseISO, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -106,7 +107,7 @@ export default function ResellerDashboard() {
   const [isPixModalOpen, setIsPixModalOpen] = useState(false);
   const pixStatus = usePixOrderPolling(pixOrder?.order_id || null);
   const [pixCustomerOpen, setPixCustomerOpen] = useState(false);
-  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; lifetimeBulk?: boolean; combo?: boolean; comboChampion?: boolean; comboAccount?: boolean; manusCredits?: boolean } | null>(null);
+  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; lifetimeBulk?: boolean; combo?: boolean; comboChampion?: boolean; comboAccount?: boolean; manusCredits?: boolean; geminiPro?: boolean } | null>(null);
   const [comboRequirementsOpen, setComboRequirementsOpen] = useState(false);
   const [comboAccepted, setComboAccepted] = useState(false);
   const [lastOrderWasCombo, setLastOrderWasCombo] = useState(false);
@@ -119,6 +120,9 @@ export default function ResellerDashboard() {
   const [manusCreditsRequirementsOpen, setManusCreditsRequirementsOpen] = useState(false);
   const [manusCreditsAccepted, setManusCreditsAccepted] = useState(false);
   const [lastOrderWasManusCredits, setLastOrderWasManusCredits] = useState(false);
+  const [geminiProRequirementsOpen, setGeminiProRequirementsOpen] = useState(false);
+  const [geminiProAccepted, setGeminiProAccepted] = useState(false);
+  const [lastOrderWasGeminiPro, setLastOrderWasGeminiPro] = useState(false);
 
   const [isPromoOpen, setIsPromoOpen] = useState(false);
   const PROMO_QTY = 10;
@@ -243,10 +247,10 @@ export default function ResellerDashboard() {
 
   const handlePixCustomerConfirm = async (customerData: PixCustomerFormData) => {
     if (!pendingPixAction) return;
-    const { qty, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits } = pendingPixAction;
+    const { qty, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro } = pendingPixAction;
     setPixCustomerOpen(false);
-    setLoadingQty(lifetimeBulk ? -7 : manusCredits ? -6 : comboAccount ? -5 : comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
-    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion, undefined, comboAccount, manusCredits, lifetimeBulk);
+    setLoadingQty(geminiPro ? -8 : lifetimeBulk ? -7 : manusCredits ? -6 : comboAccount ? -5 : comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
+    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion, undefined, comboAccount, manusCredits, lifetimeBulk, geminiPro);
     setLoadingQty(null);
     if (order) {
       setPixOrder(order);
@@ -254,6 +258,7 @@ export default function ResellerDashboard() {
       setLastOrderWasComboChampion(!!comboChampion);
       setLastOrderWasComboAccount(!!comboAccount);
       setLastOrderWasManusCredits(!!manusCredits);
+      setLastOrderWasGeminiPro(!!geminiPro);
       if (promo) setIsPromoOpen(false);
       setIsPixModalOpen(true);
     } else {
