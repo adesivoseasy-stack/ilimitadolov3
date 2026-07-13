@@ -8,10 +8,8 @@ import { HelmetProvider } from "react-helmet-async";
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
-// Eager: auth (likely first paint for unauth users)
-import Auth from "./pages/Auth";
-
-// Lazy: everything else (code-split per route)
+// Lazy: everything (code-split per route)
+const Auth = lazy(() => import("./pages/Auth"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const ResellerLanding = lazy(() => import("./pages/ResellerLanding"));
 const ResetLicenca = lazy(() => import("./pages/ResetLicenca"));
