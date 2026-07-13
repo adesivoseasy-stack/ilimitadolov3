@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft, User, Mail, Lock, Building, Phone, Shield, TrendingUp, Users, Award } from 'lucide-react';
 import { z } from 'zod';
-import logoImg from '@/assets/logo.png';
+import logoImg from '@/assets/logo.webp';
 import { motion } from 'framer-motion';
 import { translateAuthError } from '@/lib/authErrors';
 

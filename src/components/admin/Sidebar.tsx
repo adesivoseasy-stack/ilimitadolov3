@@ -21,7 +21,7 @@ import {
   ShieldAlert,
   FolderGit2,
 } from 'lucide-react';
-import logoImg from '@/assets/logo.png';
+import logoImg from '@/assets/logo.webp';
 import { useState } from 'react';
 
 const navItems = [

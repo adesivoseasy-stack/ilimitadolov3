@@ -7,7 +7,7 @@ import {
   LogOut, Menu, X, LayoutDashboard, KeyRound, Users,
   Download, Loader2, GraduationCap, Store, Coins, Wrench, AlertTriangle, Lock,
 } from 'lucide-react';
-import logoImg from '@/assets/logo.png';
+import logoImg from '@/assets/logo.webp';
 import extensionZipAsset from '@/assets/LOV3-NEON-NOIR-OFs.rar.asset.json';
 import { useState } from 'react';
 import { useResellerLicenses } from '@/hooks/useResellerLicenses';

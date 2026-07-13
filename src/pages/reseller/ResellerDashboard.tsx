@@ -26,13 +26,13 @@ import {
   Zap, Clock, Flame, Lock, AlertTriangle, UserPen
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import resellerBanner from '@/assets/banner.png';
-import keyIcon from '@/assets/key-icon.png';
+import resellerBanner from '@/assets/banner.webp';
+import keyIcon from '@/assets/key-icon.webp';
 import comboBannerAsset from '@/assets/combo-300-creditos-pro-lite.png.asset.json';
 import comboChampionBannerAsset from '@/assets/combo-copa-brasil.png.asset.json';
-import comboAccountBanner from '@/assets/combo-conta-lovable.jpg';
+import comboAccountBanner from '@/assets/combo-conta-lovable.webp';
 import manusCreditsBannerAsset from '@/assets/manus-ai-1000-creditos.png.asset.json';
-import geminiProBanner from '@/assets/gemini-pro-18-meses.jpg';
+import geminiProBanner from '@/assets/gemini-pro-18-meses.webp';
 import { format, parseISO, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';

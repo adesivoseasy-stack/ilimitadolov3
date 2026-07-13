@@ -21,7 +21,7 @@ import {
   Rocket,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import logoImg from '@/assets/logo.png';
+import logoImg from '@/assets/logo.webp';
 import fb01 from '@/assets/feedbacks/fb01.png';
 import fb02 from '@/assets/feedbacks/fb02.png';
 import fb03 from '@/assets/feedbacks/fb03.png';

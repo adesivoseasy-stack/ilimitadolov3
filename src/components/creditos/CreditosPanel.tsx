@@ -17,7 +17,7 @@ import { PixCustomerDialog, PixCustomerFormData } from '@/components/reseller/Pi
 import { RequirementsDialog } from '@/components/creditos/RequirementsDialog';
 import { PixQrCode } from '@/components/reseller/PixQrCode';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import logoImg from '@/assets/logo.png';
+import logoImg from '@/assets/logo.webp';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
