@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft, KeyRound, Lock, Mail, Shield, Zap, Globe, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { z } from 'zod';
-import logoImg from '@/assets/logo.png';
+import logoImg from '@/assets/logo.webp';
 import { motion, AnimatePresence } from 'framer-motion';
 import { translateAuthError } from '@/lib/authErrors';
 

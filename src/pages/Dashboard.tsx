@@ -2,7 +2,7 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useLicenseStats, useLicenses, useWildcardUsage, useWildcardStats } from '@/hooks/useLicenses';
 import { Card, CardContent } from '@/components/ui/card';
 import { Key, CheckCircle, XCircle, Ban, DollarSign, Globe, Users, TrendingUp, Activity, ArrowUpRight } from 'lucide-react';
-import adminBanner from '@/assets/banner.png';
+import adminBanner from '@/assets/banner.webp';
 import { format, differenceInDays, parseISO, formatDistanceToNow, subDays, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { GitHubCalendar } from '@/components/ui/git-hub-calendar';

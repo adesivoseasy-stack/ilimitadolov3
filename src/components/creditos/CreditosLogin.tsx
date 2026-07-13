@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Mail, Lock, User, Phone, Coins, ShieldCheck, Zap, TrendingUp } from 'lucide-react';
 import { z } from 'zod';
-import logoImg from '@/assets/logo.png';
+import logoImg from '@/assets/logo.webp';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Nome muito curto').max(100),

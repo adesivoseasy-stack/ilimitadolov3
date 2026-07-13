@@ -16,7 +16,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import logoImg from '@/assets/logo.png';
+import logoImg from '@/assets/logo.webp';
 import { useState } from 'react';
 
 const navItems: { href: string; label: string; icon: any; disabled?: boolean }[] = [
