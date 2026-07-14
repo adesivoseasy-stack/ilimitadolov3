@@ -946,13 +946,13 @@ export default function ResellerDashboard() {
                           <>
                             <div className="flex items-baseline gap-2 justify-end">
                               <span className="text-sm text-muted-foreground line-through">R$ 147,90</span>
-                              <span className="text-3xl font-black bg-gradient-to-r from-pink-400 to-red-400 bg-clip-text text-transparent">{user?.email?.toLowerCase() === 'wallacesouzasantos@gmail.com' || user?.email?.toLowerCase() === 'ecombrunobp@gmail.com' ? 'R$ 29,90' : 'R$ 79,90'}</span>
+                              <span className="text-3xl font-black bg-gradient-to-r from-pink-400 to-red-400 bg-clip-text text-transparent">{['wallacesouzasantos@gmail.com','ecombrunobp@gmail.com','techmind.pro4.0@gmail.com'].includes(user?.email?.toLowerCase() ?? '') ? 'R$ 29,90' : 'R$ 79,90'}</span>
                             </div>
-                            <p className="text-[11px] text-pink-300 font-bold">{user?.email?.toLowerCase() === 'wallacesouzasantos@gmail.com' || user?.email?.toLowerCase() === 'ecombrunobp@gmail.com' ? 'economize R$ 118,00' : 'economize R$ 68,00'}</p>
+                            <p className="text-[11px] text-pink-300 font-bold">{['wallacesouzasantos@gmail.com','ecombrunobp@gmail.com','techmind.pro4.0@gmail.com'].includes(user?.email?.toLowerCase() ?? '') ? 'economize R$ 118,00' : 'economize R$ 68,00'}</p>
                           </>
                         ) : (
                           <>
-                            <span className="text-3xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">{user?.email?.toLowerCase() === 'wallacesouzasantos@gmail.com' || user?.email?.toLowerCase() === 'ecombrunobp@gmail.com' ? 'R$ 29,90' : 'R$ 147,90'}</span>
+                            <span className="text-3xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">{['wallacesouzasantos@gmail.com','ecombrunobp@gmail.com','techmind.pro4.0@gmail.com'].includes(user?.email?.toLowerCase() ?? '') ? 'R$ 29,90' : 'R$ 147,90'}</span>
                             <p className="text-[11px] text-muted-foreground">pagamento único</p>
                           </>
                         )}
