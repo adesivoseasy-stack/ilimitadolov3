@@ -932,7 +932,7 @@ export default function ResellerDashboard() {
                         <p className="text-sm text-muted-foreground mt-1 max-w-md">
                           1 chave com validade ilimitada para o cliente final. Venda como produto premium.
                         </p>
-                        {isLifetimePromoActive && (
+                        {isLifetimePromoActive && !['wallacesouzasantos@gmail.com','ecombrunobp@gmail.com','techmind.pro4.0@gmail.com'].includes(user?.email?.toLowerCase() ?? '') && (
                           <p className="text-xs font-bold text-pink-300 mt-2 flex items-center gap-1.5">
                             <Clock className="h-3.5 w-3.5" />
                             Até amanhã às 20h • Termina em <span className="font-mono text-pink-200">{lifetimePromoTimeLeft}</span>
