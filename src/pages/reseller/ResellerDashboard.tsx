@@ -26,7 +26,7 @@ import {
   Zap, Clock, Flame, Lock, AlertTriangle, UserPen
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import resellerBanner from '@/assets/banner.webp';
+import resellerBanner from '@/assets/lov-banner.gif.asset.json';
 import keyIcon from '@/assets/key-icon.webp';
 import comboBannerAsset from '@/assets/combo-300-creditos-pro-lite.png.asset.json';
 import comboChampionBannerAsset from '@/assets/combo-copa-brasil.png.asset.json';
@@ -425,7 +425,7 @@ export default function ResellerDashboard() {
             </div>
 
             <div className="w-full rounded-2xl overflow-hidden glow-card purple-glow animate-fade-up-delay-1">
-              <img src={resellerBanner} alt="Ilimitado Lov Banner" className="w-full h-auto object-contain" />
+              <img src={resellerBanner.url} alt="LOV 3.0 Banner" className="w-full h-auto object-contain" />
             </div>
 
             <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4 animate-fade-up-delay-2">
