@@ -2,7 +2,9 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useLicenseStats, useLicenses, useWildcardUsage, useWildcardStats } from '@/hooks/useLicenses';
 import { Card, CardContent } from '@/components/ui/card';
 import { Key, CheckCircle, XCircle, Ban, DollarSign, Globe, Users, TrendingUp, Activity, ArrowUpRight } from 'lucide-react';
-import adminBanner from '@/assets/lov-banner.gif.asset.json';
+import bannerMp4 from '@/assets/lov-banner.mp4.asset.json';
+import bannerWebm from '@/assets/lov-banner.webm.asset.json';
+import bannerPoster from '@/assets/lov-banner-poster.jpg.asset.json';
 import { format, differenceInDays, parseISO, formatDistanceToNow, subDays, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { GitHubCalendar } from '@/components/ui/git-hub-calendar';
@@ -86,7 +88,19 @@ export default function Dashboard() {
 
           {/* Banner */}
           <div className="w-full rounded-2xl overflow-hidden border border-border/20 glow-card purple-glow">
-            <img src={adminBanner.url} alt="LOV 3.0 Banner" className="w-full h-auto object-contain" />
+            <video
+              className="w-full h-auto object-contain block"
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="metadata"
+              poster={bannerPoster.url}
+              aria-label="LOV 3.0 Banner"
+            >
+              <source src={bannerWebm.url} type="video/webm" />
+              <source src={bannerMp4.url} type="video/mp4" />
+            </video>
           </div>
         </div>
 

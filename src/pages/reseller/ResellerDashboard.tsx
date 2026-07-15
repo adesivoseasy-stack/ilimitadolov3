@@ -26,7 +26,9 @@ import {
   Zap, Clock, Flame, Lock, AlertTriangle, UserPen
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import resellerBanner from '@/assets/lov-banner.gif.asset.json';
+import bannerMp4 from '@/assets/lov-banner.mp4.asset.json';
+import bannerWebm from '@/assets/lov-banner.webm.asset.json';
+import bannerPoster from '@/assets/lov-banner-poster.jpg.asset.json';
 import keyIcon from '@/assets/key-icon.webp';
 import comboBannerAsset from '@/assets/combo-300-creditos-pro-lite.png.asset.json';
 import comboChampionBannerAsset from '@/assets/combo-copa-brasil.png.asset.json';
@@ -425,7 +427,19 @@ export default function ResellerDashboard() {
             </div>
 
             <div className="w-full rounded-2xl overflow-hidden glow-card purple-glow animate-fade-up-delay-1">
-              <img src={resellerBanner.url} alt="LOV 3.0 Banner" className="w-full h-auto object-contain" />
+              <video
+                className="w-full h-auto object-contain block"
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="metadata"
+                poster={bannerPoster.url}
+                aria-label="LOV 3.0 Banner"
+              >
+                <source src={bannerWebm.url} type="video/webm" />
+                <source src={bannerMp4.url} type="video/mp4" />
+              </video>
             </div>
 
             <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4 animate-fade-up-delay-2">
