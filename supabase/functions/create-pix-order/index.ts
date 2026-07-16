@@ -23,6 +23,7 @@ const BodySchema = z.object({
   comboAccount: z.boolean().optional(),
   manusCredits: z.boolean().optional(),
   geminiPro: z.boolean().optional(),
+  seedanceAccount: z.boolean().optional(),
   renewal: z.boolean().optional(),
   licenseId: z.string().uuid().optional(),
 })
@@ -133,7 +134,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro, renewal, licenseId } = bodyResult.data
+    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro, seedanceAccount, renewal, licenseId } = bodyResult.data
     const userId = authUser.id
 
     const adminClient = createClient(
@@ -194,6 +195,12 @@ Deno.serve(async (req) => {
       quantity = 1
       totalReais = 97.00
       pricePerKey = 97.00
+      promo = false
+    } else if (seedanceAccount) {
+      // Conta Seedance com 8.500K créditos — R$ 19,90 (entrega manual via ADM)
+      quantity = 1
+      totalReais = 19.90
+      pricePerKey = 19.90
       promo = false
     } else if (comboAccount) {
       // Combo Conta Lovable: Conta Lovable + 300 Créditos + 1 Ano PRO — R$ 129,90
@@ -315,7 +322,7 @@ Deno.serve(async (req) => {
         customer_email: email,
         customer_phone: phoneNumber,
         customer_document: document,
-        product_type: renewal ? 'renewal' : (geminiPro ? 'gemini_pro' : (manusCredits ? 'manus_credits' : (comboAccount ? 'combo_account' : (comboChampion ? 'combo_champion' : (combo ? 'combo' : ((lifetime || lifetimeBulk) ? 'lifetime' : 'standard')))))),
+        product_type: renewal ? 'renewal' : (seedanceAccount ? 'seedance_account' : (geminiPro ? 'gemini_pro' : (manusCredits ? 'manus_credits' : (comboAccount ? 'combo_account' : (comboChampion ? 'combo_champion' : (combo ? 'combo' : ((lifetime || lifetimeBulk) ? 'lifetime' : 'standard'))))))),
         target_license_id: renewalLicenseId,
       })
       .select()
