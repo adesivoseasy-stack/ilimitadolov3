@@ -431,9 +431,9 @@ export default function ResellerDashboard() {
               <p className="text-xs sm:text-sm text-muted-foreground mt-2">Gerencie seu negócio de revenda</p>
             </div>
 
-            <div className="w-full rounded-2xl overflow-hidden glow-card purple-glow animate-fade-up-delay-1">
+            <div className="w-full max-w-3xl mx-auto rounded-2xl overflow-hidden glow-card purple-glow animate-fade-up-delay-1">
               <video
-                className="w-full h-auto object-contain block"
+                className="w-full h-auto max-h-[280px] sm:max-h-[340px] object-cover block"
                 autoPlay
                 loop
                 muted
