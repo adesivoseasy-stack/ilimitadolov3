@@ -35,6 +35,7 @@ import comboChampionBannerAsset from '@/assets/combo-copa-brasil.png.asset.json'
 import comboAccountBanner from '@/assets/combo-conta-lovable.webp';
 import manusCreditsBannerAsset from '@/assets/manus-ai-1000-creditos.png.asset.json';
 import geminiProBanner from '@/assets/gemini-pro-18-meses.webp';
+import seedanceBannerAsset from '@/assets/seedance-8500k-creditos.png.asset.json';
 import { format, parseISO, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -109,7 +110,7 @@ export default function ResellerDashboard() {
   const [isPixModalOpen, setIsPixModalOpen] = useState(false);
   const pixStatus = usePixOrderPolling(pixOrder?.order_id || null);
   const [pixCustomerOpen, setPixCustomerOpen] = useState(false);
-  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; lifetimeBulk?: boolean; combo?: boolean; comboChampion?: boolean; comboAccount?: boolean; manusCredits?: boolean; geminiPro?: boolean } | null>(null);
+  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; lifetimeBulk?: boolean; combo?: boolean; comboChampion?: boolean; comboAccount?: boolean; manusCredits?: boolean; geminiPro?: boolean; seedanceAccount?: boolean } | null>(null);
   const [comboRequirementsOpen, setComboRequirementsOpen] = useState(false);
   const [comboAccepted, setComboAccepted] = useState(false);
   const [lastOrderWasCombo, setLastOrderWasCombo] = useState(false);
@@ -125,6 +126,9 @@ export default function ResellerDashboard() {
   const [geminiProRequirementsOpen, setGeminiProRequirementsOpen] = useState(false);
   const [geminiProAccepted, setGeminiProAccepted] = useState(false);
   const [lastOrderWasGeminiPro, setLastOrderWasGeminiPro] = useState(false);
+  const [seedanceRequirementsOpen, setSeedanceRequirementsOpen] = useState(false);
+  const [seedanceAccepted, setSeedanceAccepted] = useState(false);
+  const [lastOrderWasSeedance, setLastOrderWasSeedance] = useState(false);
 
   const [isPromoOpen, setIsPromoOpen] = useState(false);
   const PROMO_QTY = 10;
@@ -249,10 +253,10 @@ export default function ResellerDashboard() {
 
   const handlePixCustomerConfirm = async (customerData: PixCustomerFormData) => {
     if (!pendingPixAction) return;
-    const { qty, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro } = pendingPixAction;
+    const { qty, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro, seedanceAccount } = pendingPixAction;
     setPixCustomerOpen(false);
-    setLoadingQty(geminiPro ? -8 : lifetimeBulk ? -7 : manusCredits ? -6 : comboAccount ? -5 : comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
-    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion, undefined, comboAccount, manusCredits, lifetimeBulk, geminiPro);
+    setLoadingQty(seedanceAccount ? -9 : geminiPro ? -8 : lifetimeBulk ? -7 : manusCredits ? -6 : comboAccount ? -5 : comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
+    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion, undefined, comboAccount, manusCredits, lifetimeBulk, geminiPro, seedanceAccount);
     setLoadingQty(null);
     if (order) {
       setPixOrder(order);
@@ -261,6 +265,7 @@ export default function ResellerDashboard() {
       setLastOrderWasComboAccount(!!comboAccount);
       setLastOrderWasManusCredits(!!manusCredits);
       setLastOrderWasGeminiPro(!!geminiPro);
+      setLastOrderWasSeedance(!!seedanceAccount);
       if (promo) setIsPromoOpen(false);
       setIsPixModalOpen(true);
     } else {
@@ -903,6 +908,51 @@ export default function ResellerDashboard() {
                               {loadingQty === -8 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
                               <span className="relative z-10">
                               {loadingQty === -8 ? 'Gerando PIX...' : 'Comprar por R$ 97,00'}
+                              </span>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {isPricingReady && (
+                      <div className="relative">
+                        <div
+                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
+                          style={{
+                            background: 'linear-gradient(135deg, #a855f7, #7c3aed, #6366f1, #ec4899)',
+                            backgroundSize: '300% 300%',
+                            animation: 'fire-glow 4s ease infinite',
+                          }}
+                        />
+                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+                            <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider animate-pulse">
+                              🚀 Seedance 8.500K
+                            </span>
+                          </div>
+                          <div className="relative flex-1 flex flex-col gap-3">
+                            <div className="relative rounded-xl overflow-hidden bg-black">
+                              <img
+                                src={seedanceBannerAsset.url}
+                                alt="Conta Seedance com 8.500K créditos por R$ 19,90"
+                                className="w-full h-auto object-cover aspect-square"
+                                loading="lazy"
+                              />
+                            </div>
+                            <Button
+                              disabled={loadingQty !== null}
+                              onClick={() => { setSeedanceAccepted(false); setSeedanceRequirementsOpen(true); }}
+                              className="cta-premium mt-auto text-white"
+                              style={{
+                                background: 'linear-gradient(110deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%)',
+                                boxShadow: '0 8px 24px -8px rgba(168, 85, 247, 0.6)',
+                              }}
+                              size="sm"
+                            >
+                              <span className="cta-shine" aria-hidden />
+                              {loadingQty === -9 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
+                              <span className="relative z-10">
+                              {loadingQty === -9 ? 'Gerando PIX...' : 'Comprar por R$ 19,90'}
                               </span>
                             </Button>
                           </div>
@@ -1738,6 +1788,53 @@ export default function ResellerDashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* Seedance Account Requirements Dialog */}
+        <AlertDialog open={seedanceRequirementsOpen} onOpenChange={setSeedanceRequirementsOpen}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-purple-400" />
+                Requisitos — Conta Seedance 8.500K
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="font-semibold text-foreground">Você está adquirindo:</p>
+                  <ul className="space-y-2 list-none pl-0">
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> <span><span className="font-bold text-foreground">1 Conta Seedance</span> com <span className="font-bold text-foreground">8.500K créditos</span> garantidos.</span></li>
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> Geração ultrarrápida de vídeos profissionais em qualidade cinematográfica.</li>
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> Acesso completo à conta premium (login + senha entregues pelo ADM).</li>
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> Entrega manual pelo ADM após o pagamento — envie o comprovante no grupo do WhatsApp.</li>
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> Compra não reembolsável após a entrega.</li>
+                  </ul>
+                  <label className="flex items-start gap-2 pt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={seedanceAccepted}
+                      onChange={(e) => setSeedanceAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-purple-500"
+                    />
+                    <span className="text-foreground">Li, entendi e confirmo a compra da <span className="font-bold">Conta Seedance 8.500K</span>.</span>
+                  </label>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setSeedanceAccepted(false)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!seedanceAccepted}
+                onClick={() => {
+                  setSeedanceRequirementsOpen(false);
+                  setPendingPixAction({ qty: 1, seedanceAccount: true });
+                  setPixCustomerOpen(true);
+                }}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+              >
+                Continuar para pagamento
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* PIX Payment Modal */}
         <Dialog open={isPixModalOpen} onOpenChange={(open) => {
           if (!open && pixStatus !== 'pending') {
@@ -1765,7 +1862,16 @@ export default function ResellerDashboard() {
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">Pagamento Confirmado!</h3>
-                {lastOrderWasGeminiPro ? (
+                {lastOrderWasSeedance ? (
+                  <>
+                    <p className="text-sm text-muted-foreground text-center">
+                      <span className="font-semibold text-foreground">Conta Seedance 8.500K</span> reservada. Entre no grupo, chame o ADM e envie o comprovante para receber o login e a senha da conta.
+                    </p>
+                    <Button variant="ghost" size="sm" onClick={() => { setIsPixModalOpen(false); setPixOrder(null); setLastOrderWasSeedance(false); }}>
+                      Fechar
+                    </Button>
+                  </>
+                ) : lastOrderWasGeminiPro ? (
                   <>
                     <p className="text-sm text-muted-foreground text-center">
                       <span className="font-semibold text-foreground">Gemini Pro 18 Meses</span> reservado. Entre no grupo, chame o ADM e envie o comprovante com o email da sua conta Google para ativação.
