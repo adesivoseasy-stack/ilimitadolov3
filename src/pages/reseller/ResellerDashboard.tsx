@@ -1788,6 +1788,53 @@ export default function ResellerDashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* Seedance Account Requirements Dialog */}
+        <AlertDialog open={seedanceRequirementsOpen} onOpenChange={setSeedanceRequirementsOpen}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-purple-400" />
+                Requisitos — Conta Seedance 8.500K
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="font-semibold text-foreground">Você está adquirindo:</p>
+                  <ul className="space-y-2 list-none pl-0">
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> <span><span className="font-bold text-foreground">1 Conta Seedance</span> com <span className="font-bold text-foreground">8.500K créditos</span> garantidos.</span></li>
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> Geração ultrarrápida de vídeos profissionais em qualidade cinematográfica.</li>
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> Acesso completo à conta premium (login + senha entregues pelo ADM).</li>
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> Entrega manual pelo ADM após o pagamento — envie o comprovante no grupo do WhatsApp.</li>
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> Compra não reembolsável após a entrega.</li>
+                  </ul>
+                  <label className="flex items-start gap-2 pt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={seedanceAccepted}
+                      onChange={(e) => setSeedanceAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-purple-500"
+                    />
+                    <span className="text-foreground">Li, entendi e confirmo a compra da <span className="font-bold">Conta Seedance 8.500K</span>.</span>
+                  </label>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setSeedanceAccepted(false)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!seedanceAccepted}
+                onClick={() => {
+                  setSeedanceRequirementsOpen(false);
+                  setPendingPixAction({ qty: 1, seedanceAccount: true });
+                  setPixCustomerOpen(true);
+                }}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+              >
+                Continuar para pagamento
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* PIX Payment Modal */}
         <Dialog open={isPixModalOpen} onOpenChange={(open) => {
           if (!open && pixStatus !== 'pending') {
