@@ -87,9 +87,9 @@ export default function Dashboard() {
           </div>
 
           {/* Banner */}
-          <div className="w-full rounded-2xl overflow-hidden border border-border/20 glow-card purple-glow">
+          <div className="w-full max-w-3xl mx-auto rounded-2xl overflow-hidden border border-border/20 glow-card purple-glow">
             <video
-              className="w-full h-auto object-contain block"
+              className="w-full h-auto max-h-[280px] sm:max-h-[340px] object-cover block"
               autoPlay
               loop
               muted
