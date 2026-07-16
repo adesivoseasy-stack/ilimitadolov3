@@ -914,6 +914,51 @@ export default function ResellerDashboard() {
                         </div>
                       </div>
                     )}
+                    {isPricingReady && (
+                      <div className="relative">
+                        <div
+                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
+                          style={{
+                            background: 'linear-gradient(135deg, #a855f7, #7c3aed, #6366f1, #ec4899)',
+                            backgroundSize: '300% 300%',
+                            animation: 'fire-glow 4s ease infinite',
+                          }}
+                        />
+                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+                            <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider animate-pulse">
+                              🚀 Seedance 8.500K
+                            </span>
+                          </div>
+                          <div className="relative flex-1 flex flex-col gap-3">
+                            <div className="relative rounded-xl overflow-hidden bg-black">
+                              <img
+                                src={seedanceBannerAsset.url}
+                                alt="Conta Seedance com 8.500K créditos por R$ 19,90"
+                                className="w-full h-auto object-cover aspect-square"
+                                loading="lazy"
+                              />
+                            </div>
+                            <Button
+                              disabled={loadingQty !== null}
+                              onClick={() => { setSeedanceAccepted(false); setSeedanceRequirementsOpen(true); }}
+                              className="cta-premium mt-auto text-white"
+                              style={{
+                                background: 'linear-gradient(110deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%)',
+                                boxShadow: '0 8px 24px -8px rgba(168, 85, 247, 0.6)',
+                              }}
+                              size="sm"
+                            >
+                              <span className="cta-shine" aria-hidden />
+                              {loadingQty === -9 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
+                              <span className="relative z-10">
+                              {loadingQty === -9 ? 'Gerando PIX...' : 'Comprar por R$ 19,90'}
+                              </span>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
