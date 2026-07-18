@@ -20,6 +20,8 @@ import { useCreatePixOrder, usePixOrderPolling, PixOrderData } from '@/hooks/use
 import { PixCustomerDialog, PixCustomerFormData } from '@/components/reseller/PixCustomerDialog';
 import { PixQrCode } from '@/components/reseller/PixQrCode';
 import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Sparkles } from 'lucide-react';
 
 export default function ResellerLicenses() {
   const { data: licenses, isLoading } = useResellerLicenses();
@@ -63,6 +65,57 @@ export default function ResellerLicenses() {
   const [renewPixOrder, setRenewPixOrder] = useState<PixOrderData | null>(null);
   const [renewPixModalOpen, setRenewPixModalOpen] = useState(false);
   const renewPixStatus = usePixOrderPolling(renewPixOrder?.order_id || null);
+
+  // Regenerate lifetime key (no credit cost — same lifetime slot, new key)
+  const [regenDialog, setRegenDialog] = useState<{ id: string; key: string } | null>(null);
+  const [regenLoading, setRegenLoading] = useState(false);
+  const [regenResult, setRegenResult] = useState<string | null>(null);
+
+  const handleRegenerateLifetime = async () => {
+    if (!regenDialog) return;
+    setRegenLoading(true);
+    try {
+      const { data: newKey, error: keyErr } = await supabase.rpc('generate_license_key');
+      if (keyErr || !newKey) throw keyErr || new Error('Falha ao gerar nova chave');
+
+      // Wipe devices and sessions BEFORE swapping the key so old client loses access immediately
+      const [{ error: sErr }, { error: dErr }] = await Promise.all([
+        supabase.from('sessions').delete().eq('license_id', regenDialog.id).select(),
+        supabase.from('devices').delete().eq('license_id', regenDialog.id).select(),
+      ]);
+      if (sErr) throw sErr;
+      if (dErr) throw dErr;
+
+      const { data: updated, error: upErr } = await supabase
+        .from('licenses')
+        .update({
+          license_key: newKey as unknown as string,
+          first_activated_at: null,
+          status: 'active',
+          messages_used: 0,
+        })
+        .eq('id', regenDialog.id)
+        .select();
+      if (upErr) throw upErr;
+      if (!updated || updated.length === 0) throw new Error('Sem permissão para regenerar esta chave');
+
+      // Best-effort log
+      await supabase.from('license_logs').insert({
+        license_id: regenDialog.id,
+        action: 'regenerated_lifetime',
+        details: { old_key: regenDialog.key, new_key: newKey } as any,
+      });
+
+      setRegenResult(newKey as unknown as string);
+      queryClient.invalidateQueries({ queryKey: ['reseller-licenses'] });
+      queryClient.invalidateQueries({ queryKey: ['licenses'] });
+      toast({ title: 'Chave regenerada!', description: 'A chave antiga foi invalidada.' });
+    } catch (e: any) {
+      toast({ title: 'Erro', description: e?.message || 'Não foi possível regenerar.', variant: 'destructive' });
+    } finally {
+      setRegenLoading(false);
+    }
+  };
 
   const openRenewPix = (licenseId: string, licenseKey: string) => {
     setRenewPixLicense({ id: licenseId, key: licenseKey });
@@ -322,6 +375,11 @@ export default function ResellerLicenses() {
                               )}
                               <DropdownMenuSeparator className="bg-border/20" />
                               <DropdownMenuItem onClick={() => resetDevice.mutate(license.id)}><Monitor className="mr-2 h-4 w-4" />Resetar device</DropdownMenuItem>
+                              {license.is_wildcard && (
+                                <DropdownMenuItem onClick={() => { setRegenResult(null); setRegenDialog({ id: license.id, key: license.license_key }); }}>
+                                  <Sparkles className="mr-2 h-4 w-4 text-amber-400" />Regenerar chave vitalícia
+                                </DropdownMenuItem>
+                              )}
                             </>
                           )}
                         </DropdownMenuContent>
@@ -399,6 +457,57 @@ export default function ResellerLicenses() {
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsTestOpen(false)} className="border-border/30">Cancelar</Button>
               <Button onClick={handleCreateTest} disabled={createLicense.isPending || !testEmail.trim()} className="bg-gradient font-display">{createLicense.isPending ? 'Criando...' : 'Criar Teste'}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Regenerate Lifetime Key Dialog */}
+        <Dialog open={!!regenDialog} onOpenChange={(open) => { if (!open) { setRegenDialog(null); setRegenResult(null); } }}>
+          <DialogContent className="bg-card/95 backdrop-blur-xl border-border/30 max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-display flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-amber-400" /> Regenerar Chave Vitalícia
+              </DialogTitle>
+              <DialogDescription>
+                {regenResult
+                  ? 'Nova chave gerada com sucesso. A anterior foi invalidada.'
+                  : 'Uma nova chave será gerada e a atual será invalidada imediatamente — devices e sessões vinculadas serão apagados. Ideal para revender a mesma vitalícia por dia/semana. Sem custo de crédito.'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 py-2">
+              {!regenResult ? (
+                <>
+                  <div>
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-display">Chave atual</Label>
+                    <p className="font-mono text-[13px] font-semibold line-through text-muted-foreground">{regenDialog?.key}</p>
+                  </div>
+                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/[0.06] p-3 text-xs text-amber-200/90">
+                    ⚠️ O cliente atual perderá acesso imediatamente. Você receberá uma nova chave para revender.
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-display">Nova chave</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <code className="font-mono text-[14px] font-bold text-foreground bg-background/60 rounded-md px-3 py-2 flex-1">{regenResult}</code>
+                    <Button variant="outline" size="icon" onClick={() => { navigator.clipboard.writeText(regenResult); toast({ title: 'Copiado!' }); }}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              {!regenResult ? (
+                <>
+                  <Button variant="outline" onClick={() => setRegenDialog(null)} className="border-border/30" disabled={regenLoading}>Cancelar</Button>
+                  <Button onClick={handleRegenerateLifetime} disabled={regenLoading} className="bg-gradient font-display">
+                    {regenLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Regenerando...</> : <><Sparkles className="mr-2 h-4 w-4" />Confirmar regeneração</>}
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={() => { setRegenDialog(null); setRegenResult(null); }} className="bg-gradient font-display">Fechar</Button>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>
