@@ -375,7 +375,8 @@ export default function ResellerLicenses() {
                               )}
                               <DropdownMenuSeparator className="bg-border/20" />
                               <DropdownMenuItem onClick={() => resetDevice.mutate(license.id)}><Monitor className="mr-2 h-4 w-4" />Resetar device</DropdownMenuItem>
-                              {license.is_wildcard && (
+                              {/* Regeneração só disponível para chaves vitalícias/wildcard */}
+                              {!!license.is_wildcard && (
                                 <DropdownMenuItem onClick={() => { setRegenResult(null); setRegenDialog({ id: license.id, key: license.license_key }); }}>
                                   <Sparkles className="mr-2 h-4 w-4 text-amber-400" />Regenerar chave vitalícia
                                 </DropdownMenuItem>
