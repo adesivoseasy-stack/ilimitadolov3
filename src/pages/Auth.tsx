@@ -133,6 +133,7 @@ export default function Auth() {
       if (isAdmin) navigate('/dashboard');
       else if (isManager) navigate('/manager/dashboard');
       else if (isReseller && resellerStatus === 'approved') navigate('/reseller/dashboard');
+      else navigate('/minhas-aprovacoes');
     }
   }, [user, isAdmin, isManager, isReseller, resellerStatus, isLoading, navigate]);
 
