@@ -17,7 +17,7 @@ export function ResellerLayout({ children }: ResellerLayoutProps) {
       if (!user) {
         navigate('/auth');
       } else if (!isReseller || resellerStatus !== 'approved') {
-        navigate('/auth');
+        navigate('/minhas-aprovacoes');
       }
     }
   }, [user, isReseller, resellerStatus, isLoading, navigate]);
