@@ -223,7 +223,7 @@ Deno.serve(async (req) => {
     } else if (lifetimeBulk) {
       // Promoção Vitalícia em Lote: 10 chaves vitalícias por R$ 299,00
       // Válido até 03/07/2026 às 20h
-      const LIFETIME_BULK_END = new Date('2026-07-21T20:00:00-03:00').getTime()
+      const LIFETIME_BULK_END = new Date('2026-07-22T20:00:00-03:00').getTime()
       if (Date.now() >= LIFETIME_BULK_END) {
         return new Response(JSON.stringify({ error: 'Promoção de vitalícias em lote encerrada' }), { status: 400, headers: corsHeaders })
       }
@@ -241,7 +241,7 @@ Deno.serve(async (req) => {
       if (buyerEmail === 'wallacesouzasantos@gmail.com' || buyerEmail === 'ecombrunobp@gmail.com' || buyerEmail === 'techmind.pro4.0@gmail.com') {
         totalReais = 29.90
       } else {
-        const LIFETIME_PROMO_END = new Date('2026-07-21T20:00:00-03:00').getTime()
+        const LIFETIME_PROMO_END = new Date('2026-07-22T20:00:00-03:00').getTime()
         const isLifetimePromo = Date.now() < LIFETIME_PROMO_END
         totalReais = isLifetimePromo ? 79.90 : 147.90
       }
