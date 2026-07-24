@@ -36,14 +36,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const clearInvalidSession = async () => {
+    // Do NOT call supabase.auth.signOut here — it races with a subsequent
+    // signInWithPassword and wipes the freshly-issued JWT from localStorage,
+    // causing RLS queries to return 0 rows even for valid reseller profiles.
+    // The expired refresh token is already unusable; just clear local state.
     try {
-      await supabase.auth.signOut({ scope: 'local' });
+      localStorage.removeItem(
+        `sb-${new URL(import.meta.env.VITE_SUPABASE_URL).hostname.split('.')[0]}-auth-token`
+      );
     } catch {
       // noop
-    } finally {
-      resetAuthState();
-      setIsLoading(false);
     }
+    resetAuthState();
+    setIsLoading(false);
   };
 
   // Fetch all roles in a single round-trip instead of 3 separate queries.
