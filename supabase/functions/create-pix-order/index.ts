@@ -24,6 +24,7 @@ const BodySchema = z.object({
   manusCredits: z.boolean().optional(),
   geminiPro: z.boolean().optional(),
   seedanceAccount: z.boolean().optional(),
+  capcutPro: z.boolean().optional(),
   renewal: z.boolean().optional(),
   licenseId: z.string().uuid().optional(),
 })
@@ -134,7 +135,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro, seedanceAccount, renewal, licenseId } = bodyResult.data
+    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro, seedanceAccount, capcutPro, renewal, licenseId } = bodyResult.data
     const userId = authUser.id
 
     const adminClient = createClient(
@@ -195,6 +196,12 @@ Deno.serve(async (req) => {
       quantity = 1
       totalReais = 97.00
       pricePerKey = 97.00
+      promo = false
+    } else if (capcutPro) {
+      // CapCut Pro 30 dias — R$ 24,90 (entrega manual via ADM: login e senha por WhatsApp)
+      quantity = 1
+      totalReais = 24.99
+      pricePerKey = 24.99
       promo = false
     } else if (seedanceAccount) {
       // Conta Seedance com 8.500K créditos — R$ 19,90 (entrega manual via ADM)
@@ -322,7 +329,7 @@ Deno.serve(async (req) => {
         customer_email: email,
         customer_phone: phoneNumber,
         customer_document: document,
-        product_type: renewal ? 'renewal' : (seedanceAccount ? 'seedance_account' : (geminiPro ? 'gemini_pro' : (manusCredits ? 'manus_credits' : (comboAccount ? 'combo_account' : (comboChampion ? 'combo_champion' : (combo ? 'combo' : ((lifetime || lifetimeBulk) ? 'lifetime' : 'standard'))))))),
+        product_type: renewal ? 'renewal' : (capcutPro ? 'capcut_pro' : (seedanceAccount ? 'seedance_account' : (geminiPro ? 'gemini_pro' : (manusCredits ? 'manus_credits' : (comboAccount ? 'combo_account' : (comboChampion ? 'combo_champion' : (combo ? 'combo' : ((lifetime || lifetimeBulk) ? 'lifetime' : 'standard')))))))),
         target_license_id: renewalLicenseId,
       })
       .select()
