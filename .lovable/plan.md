@@ -1,97 +1,81 @@
+# Desconto Progressivo da Comunidade (por revendedor)
 
+Sistema de gamificação com barra de progresso que aumenta desconto automaticamente à medida que cada revendedor acumula vendas pagas.
 
-## Nova página pública `/creditos` para revenda de Créditos Lovable
+## Regras confirmadas
+- **Contador por revendedor** (cada um tem sua barra e nível).
+- **Toda venda PIX paga** conta (qualquer produto: chaves, combos, Gemini, CapCut, Manus, Seedance). Incremento = `quantity` do pedido.
+- **Desconto aplica em todos os produtos** da loja (chave mensal + todos os produtos externos).
+- **Backfill inicial**: contador começa contando todos os `credit_orders` com `status='paid'` já existentes.
+- Níveis padrão: Bronze 10→3%, Prata 20→5%, Ouro 35→8%, Platina 50→12%, Diamante 75→15%.
 
-Criar uma rota pública standalone (`/creditos`) com layout inspirado na segunda imagem (Painel de Revenda), reutilizando 100% da lógica de PIX/SyncPay e provisionamento LVB já existente. Adicionar autenticação dedicada (login + cadastro próprio) na mesma página, e um painel admin de configuração de preços específico desta nova aba.
+## Backend
 
-### O que será construído
+### Migração
+1. Tabela `community_discount_levels` (compartilhada, editável por admin):
+   - `name`, `sales_required`, `discount_percentage`, `order_index`, `emoji`
+   - Seed com os 5 níveis.
+2. Tabela `reseller_community_progress` (uma linha por revendedor):
+   - `reseller_id` (PK, FK auth.users), `current_sales`, `current_level_id`, `current_discount`, `next_level_id`, `sales_to_next`, timestamps.
+3. Tabela `community_discount_config` (linha singleton):
+   - `is_active`, `applies_to_products` (jsonb com whitelist de product keys, default = todos).
+4. RLS:
+   - `community_discount_levels` / `community_discount_config`: SELECT para authenticated; ALL para admin/manager.
+   - `reseller_community_progress`: SELECT/UPDATE só do próprio (`auth.uid() = reseller_id`), ALL para admin/manager.
+   - GRANTs padrão em todas as tabelas novas.
+5. Função `recalc_reseller_progress(_reseller_id uuid)` (SECURITY DEFINER): soma `quantity` de `credit_orders` pagos daquele reseller, resolve o nível atual + próximo, faz UPSERT em `reseller_community_progress`.
+6. Trigger `AFTER UPDATE ON credit_orders` quando `status` muda para `'paid'`: chama `recalc_reseller_progress(NEW.reseller_id)`.
+7. Habilitar Realtime na tabela `reseller_community_progress` (via `ALTER PUBLICATION supabase_realtime ADD TABLE`).
+8. Backfill: rodar `recalc_reseller_progress` para cada `reseller_id` distinto em `credit_orders WHERE status='paid'`.
 
-**1. Rota pública `/creditos` (uma única página, dois estados)**
+### Edge functions
+- **`create-pix-order`**: aceita novo campo opcional `communityDiscountApplied` no body só para registro; o preço final continua vindo do servidor. Server lê `reseller_community_progress` do usuário autenticado e aplica `preçoFinal = round(preçoOriginal * (1 - discount/100), 2)` em todos os `amount_cents` calculados hoje. Guardar `discount_snapshot` (level + %) em `credit_orders.metadata` para auditoria.
+- Nenhum outro edge function precisa mudar (o trigger cuida da progressão quando o webhook marca `status='paid'`).
 
-- **Estado deslogado**: tela split-screen (estilo `ResellerRegister.tsx`) com tabs "Entrar" e "Cadastrar":
-  - **Entrar**: email + senha → `supabase.auth.signInWithPassword` (mesma credencial do painel principal). Inclui botão "Continuar com Google" via `lovable.auth.signInWithOAuth`.
-  - **Cadastrar**: nome + email + senha + telefone (opcional) → cria usuário Supabase + insere em nova tabela `credits_customers` (status `approved` automático, **diferente** de `reseller_profiles` que exige aprovação manual).
-  - Após login/cadastro bem-sucedido, atualiza estado para "logado".
+## Frontend
 
-- **Estado logado**: layout exatamente como image-150:
-  - Header: logo "Painel de Revenda", saldo (placeholder `R$ 0,00`), botões "Pedidos", "Lojinha" (visual apenas), "Avisos", logout.
-  - Saudação: "Olá, {nome}!" + "Gerencie seus pedidos de créditos Lovable".
-  - Tabs internas: **Novo Pedido** | **Histórico**.
-  - **Novo Pedido (esquerda)**: chips de quantidade rápida (100/200/300/500/1000/2000/3000/5000), input numérico com −/+ , campo "Identificador do Pedido (opcional)", método de pagamento "PIX Direto" (apenas, "Saldo" desabilitado/oculto na v1), total dinâmico, botão "Criar Pedido".
-  - **Tabela de Preços (direita)**: lista vertical de todos os pacotes com preço atual (busca de `system_config` com prefixo novo `creditos_pkg_*`).
-  - **Histórico**: tabela dos próprios pedidos (`lvb_credit_orders` filtrado por `reseller_id = user.id`).
+### Hook `useCommunityDiscount()`
+- Query React Query: busca `reseller_community_progress` do usuário + `community_discount_levels` + config.
+- Assina realtime em `reseller_community_progress` filtrando pelo próprio `reseller_id`; ao receber evento, invalida query e dispara animação de "level up" se `current_level_id` mudou.
+- Expõe: `currentSales`, `currentLevel`, `nextLevel`, `salesToNext`, `discountPct`, `applyDiscount(price)` helper, `isActive`.
 
-**2. Fluxo de pagamento (reutiliza tudo)**
+### Componente `<CommunityDiscountBanner />`
+- Card acima do grid de produtos em `ResellerDashboard.tsx` (aba `loja`).
+- Layout: glass-card com borda gradiente roxo, badges dos 5 níveis distribuídos horizontalmente sobre a trilha, barra neon (Framer Motion `motion.div` com `layout` + `spring`), contador animado do número de vendas, badge do nível atual, próximo nível + "faltam X vendas".
+- Mensagens dinâmicas:
+  - Padrão: "Faltam apenas {X} vendas para desbloquear {N}% OFF."
+  - Se `X === 1`: "🚨 Falta apenas UMA venda para desbloquear o próximo desconto!".
+  - Se nível máximo: "🏆 Nível máximo atingido — {N}% OFF em toda a loja".
+- Ao subir de nível: confete (`canvas-confetti`), pulse no badge, glow neon.
+- Totalmente responsivo (empilha em mobile: barra full-width, badges viram legenda abaixo).
 
-- Ao clicar "Criar Pedido": abre `PixCustomerDialog` (mesmo já existente) → chama `create-lvb-pix` (reutilizada, sem mudanças) → mostra QR/copy-paste em modal → poll a cada 5s em `lvb_credit_orders` até `status = 'configurando'` → exibe mesmo wizard de `LvbCreditsTab` (criado/promote/tracking) ou versão simplificada.
-- O `syncpay-webhook` já trata `lvb_credit_orders` corretamente — nenhuma mudança necessária no backend de pagamento.
+### Aplicação de desconto nos cards de produto
+- Em `ResellerDashboard.tsx` (chaves + todos os produtos externos) e no cálculo do PIX:
+  - Se `isActive && discountPct > 0`: mostrar preço original riscado + novo preço + badge "🔥 -{X}%".
+  - Formula: `finalPrice = Math.round(originalPrice * (1 - pct/100) * 100) / 100`.
+- Continuar respeitando promoções fixas (usa o menor entre promo e desconto comunidade).
 
-**3. Roles e segurança**
+### Página admin `/admin/desconto-progressivo`
+- Nova rota + item no `Sidebar.tsx` (admin/manager).
+- Seções:
+  - Tabela editável de níveis (nome, emoji, vendas necessárias, %, ordem, adicionar/remover linha).
+  - Toggle "Campanha ativa" (`is_active`).
+  - Whitelist de produtos participantes (checkbox por product key).
+  - Lista de revendedores com progresso atual + botão "editar vendas manualmente" + "resetar campanha deste revendedor".
+  - Botão "Resetar campanha para todos" (zera todos os `current_sales`; útil para relançar).
 
-- Nova role `credits_customer` adicionada ao enum `app_role`.
-- Novos cadastros via `/creditos` recebem essa role (não `reseller`), via trigger ou insert direto no signup.
-- A edge function `create-lvb-pix` já aceita roles `['reseller', 'apollo', 'admin', 'manager']` — adicionar `'credits_customer'` na whitelist.
-- `lvb-credits` (mesmo update na whitelist).
-- RLS na nova tabela `credits_customers`: cada usuário só vê seu próprio perfil; admin vê todos.
+## Detalhes técnicos
 
-**4. Painel admin: nova rota `/admin/creditos-config`**
+- Stack: React Query + Supabase Realtime + Framer Motion + `canvas-confetti` (adicionar dependência).
+- Todos os cálculos de preço final também são feitos no servidor (`create-pix-order`) — o cliente nunca decide o valor pago.
+- O trigger é AFTER UPDATE para pegar transição `pending → paid` do webhook SyncPay/Hoopay atual (que já dá UPDATE em `credit_orders`).
+- `reseller_community_progress.current_sales` é sempre recalculado a partir de `credit_orders` (fonte da verdade), evitando drift.
+- RLS estrita: revendedor só lê o próprio progresso; níveis/config são lidos por todos os autenticados.
+- Idioma: pt-BR em toda a UI, seguindo identidade glass roxa.
 
-- Adicionar item "Config Créditos" no `Sidebar.tsx` admin (ícone `Coins` ou `Settings2`).
-- Página com:
-  - Tabela editável de pacotes (mesmo padrão de `LvbCreditsAdmin.tsx` aba "Preços"), mas usando chave `creditos_pkg_{N}` em `system_config` — **separada** dos preços de `lvb_package_*` para que admin possa cobrar diferente nos dois canais.
-  - Lista de clientes cadastrados em `/creditos` (`credits_customers`) com email, nome, data, total de pedidos.
-  - Tabela resumida dos últimos pedidos vindos da rota `/creditos` (filtrar por `lvb_credit_orders.source = 'creditos_page'`).
-
-**5. Mudanças de banco (migrations)**
-
-```sql
--- 1. Adicionar role
-ALTER TYPE app_role ADD VALUE 'credits_customer';
-
--- 2. Tabela de perfis dos clientes da página /creditos
-CREATE TABLE credits_customers (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
-  name text NOT NULL,
-  phone text,
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE credits_customers ENABLE ROW LEVEL SECURITY;
--- policies: self read/insert/update + admin all
-
--- 3. Coluna source para distinguir origem
-ALTER TABLE lvb_credit_orders 
-  ADD COLUMN source text DEFAULT 'reseller_panel';
--- valores: 'reseller_panel' | 'creditos_page'
-```
-
-- `create-lvb-pix` aceitará `source` opcional no body para gravar na coluna; usará `creditos_pkg_{N}` como override de preço quando `source = 'creditos_page'`.
-
-### Detalhes técnicos
-
-**Arquivos a criar:**
-- `src/pages/CreditosPage.tsx` — rota principal (estados deslogado/logado).
-- `src/components/creditos/CreditosLogin.tsx` — formulário login + cadastro (split-screen).
-- `src/components/creditos/CreditosPanel.tsx` — painel logado (Novo Pedido + Tabela + Histórico).
-- `src/pages/admin/CreditosConfig.tsx` — admin para preços + clientes da página.
-- `src/hooks/useCreditosCustomer.ts` — busca/cria perfil em `credits_customers`.
-
-**Arquivos a editar:**
-- `src/App.tsx` — adicionar rotas `/creditos` (pública) e `/admin/creditos-config` (admin).
-- `src/components/admin/Sidebar.tsx` — novo item "Config Créditos".
-- `supabase/functions/create-lvb-pix/index.ts` — whitelist `credits_customer`, suportar `source`, ler `creditos_pkg_*` quando `source='creditos_page'`.
-- `supabase/functions/lvb-credits/index.ts` — whitelist `credits_customer` para `confirm-invite`/`get-action`/`get-order` (read-only do próprio pedido).
-
-**Reuso garantido:**
-- `PixCustomerDialog`, `PixQrCode`, `useLvbCredits`, `syncpay-webhook`, lógica de polling/wizard de `LvbCreditsTab.tsx`.
-
-**Estética:** mesma paleta roxa/glassmorphism do projeto (`identidade-visual` memory). Cards `rounded-2xl`, gradientes `from-primary to-accent`, badges "MAIS PEDIDO" no pacote 1000.
-
-**Separação de preços:** `lvb_package_*` (revendedores no painel) vs `creditos_pkg_*` (clientes finais via `/creditos`). Admin define os dois separadamente.
-
-### Itens explicitamente fora do escopo
-
-- "Saldo" como método de pagamento (apenas PIX Direto na v1 — implementar saldo exigiria nova tabela `customer_balance` + crédito/débito).
-- Sistema de planos/qualificação (Pro/Diamante/Ouro) visível na image-150 — apenas visual estático na v1, sem regra de negócio.
-- "Lojinha", "Afiliados", "API" — botões visuais sem destino na v1.
-
+## Ordem de implementação
+1. Migração (tabelas + RLS + função + trigger + realtime + backfill).
+2. Hook `useCommunityDiscount` + `CommunityDiscountBanner`.
+3. Integração de preços nos cards da loja + no `create-pix-order`.
+4. Página admin.
+5. Sidebar admin + rota.
