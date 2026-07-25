@@ -1895,7 +1895,16 @@ export default function ResellerDashboard() {
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">Pagamento Confirmado!</h3>
-                {lastOrderWasSeedance ? (
+                {lastOrderWasCapcutPro ? (
+                  <>
+                    <p className="text-sm text-muted-foreground text-center">
+                      <span className="font-semibold text-foreground">CapCut Pro 30 dias</span> reservado. Entre no grupo, chame o ADM e envie o comprovante para receber o login e a senha via WhatsApp.
+                    </p>
+                    <Button variant="ghost" size="sm" onClick={() => { setIsPixModalOpen(false); setPixOrder(null); setLastOrderWasCapcutPro(false); }}>
+                      Fechar
+                    </Button>
+                  </>
+                ) : lastOrderWasSeedance ? (
                   <>
                     <p className="text-sm text-muted-foreground text-center">
                       <span className="font-semibold text-foreground">Conta Seedance 8.500K</span> reservada. Entre no grupo, chame o ADM e envie o comprovante para receber o login e a senha da conta.
