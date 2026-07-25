@@ -43,6 +43,7 @@ const CreditosConfig = lazy(() => import("./pages/admin/CreditosConfig"));
 const MyApprovals = lazy(() => import("./pages/MyApprovals"));
 const IpAudit = lazy(() => import("./pages/admin/IpAudit"));
 const ProjectAudit = lazy(() => import("./pages/admin/ProjectAudit"));
+const CommunityDiscount = lazy(() => import("./pages/admin/CommunityDiscount"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -105,6 +106,7 @@ const App = () => (
               <Route path="/minhas-aprovacoes" element={<MyApprovals />} />
               <Route path="/admin/ip-audit" element={<IpAudit />} />
               <Route path="/admin/project-audit" element={<ProjectAudit />} />
+              <Route path="/admin/desconto-progressivo" element={<CommunityDiscount />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </Suspense>
