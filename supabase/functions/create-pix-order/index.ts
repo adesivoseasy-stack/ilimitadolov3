@@ -302,7 +302,34 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Apply Community Discount if active (per-reseller progressive discount)
+    let communityDiscountPct = 0
+    try {
+      const { data: cfg } = await adminClient
+        .from('community_discount_config')
+        .select('is_active')
+        .limit(1)
+        .maybeSingle()
+      const isActive = cfg?.is_active ?? true
+      if (isActive) {
+        const { data: prog } = await adminClient
+          .from('reseller_community_progress')
+          .select('current_discount')
+          .eq('reseller_id', userId)
+          .maybeSingle()
+        const pct = Number(prog?.current_discount ?? 0)
+        if (pct > 0) {
+          communityDiscountPct = pct
+          totalReais = Math.round(totalReais * (1 - pct / 100) * 100) / 100
+          pricePerKey = Math.round(pricePerKey * (1 - pct / 100) * 100) / 100
+        }
+      }
+    } catch (e) {
+      console.error('community discount lookup failed', e)
+    }
+
     const totalCents = Math.round(totalReais * 100)
+    console.log('[create-pix-order] community discount applied:', communityDiscountPct, '% total=', totalReais)
 
     const syncClientId = Deno.env.get('SYNCPAY_CLIENT_ID') || ''
     const syncClientSecret = Deno.env.get('SYNCPAY_CLIENT_SECRET') || ''

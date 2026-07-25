@@ -20,6 +20,7 @@ import {
   Settings2,
   ShieldAlert,
   FolderGit2,
+  Flame,
 } from 'lucide-react';
 import logoImg from '@/assets/logo.webp';
 import { useState } from 'react';
@@ -40,6 +41,7 @@ const navItems = [
   { href: '/admin/remarketing', label: 'Remarketing', icon: Megaphone },
   { href: '/admin/ip-audit', label: 'Auditoria IP', icon: ShieldAlert },
   { href: '/admin/project-audit', label: 'Auditoria Projetos', icon: FolderGit2 },
+  { href: '/admin/desconto-progressivo', label: 'Desconto Comunidade', icon: Flame },
 ];
 
 export function Sidebar() {
