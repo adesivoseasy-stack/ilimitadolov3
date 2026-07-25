@@ -76,12 +76,28 @@ export function CommunityDiscountBanner() {
             })}
           </div>
 
-          {/* Inline hint (only when relevant) */}
-          {oneAway && !isMax && (
-            <p className="text-[10px] text-yellow-300/90 font-display mt-1.5 flex items-center gap-1">
-              <Sparkles className="h-3 w-3" /> Falta 1 venda para {nextLevel?.discount_percentage}% OFF
-            </p>
-          )}
+          {/* Inline hint */}
+          <p
+            className={cn(
+              'text-[10px] font-display mt-1.5 flex items-center gap-1',
+              isMax
+                ? 'text-green-300/90'
+                : oneAway
+                ? 'text-yellow-300/90'
+                : 'text-muted-foreground'
+            )}
+          >
+            <Sparkles className="h-3 w-3 shrink-0" />
+            {isMax ? (
+              <span>Nível máximo — <b>{discountPct}% OFF</b> aplicado no PIX</span>
+            ) : oneAway ? (
+              <span>Falta <b>1 venda</b> para <b>{nextLevel?.discount_percentage}% OFF</b></span>
+            ) : currentLevel ? (
+              <span>Faça mais vendas pra subir de nível e aumentar seu desconto</span>
+            ) : (
+              <span>Faça mais vendas pra subir de nível e liberar desconto</span>
+            )}
+          </p>
         </div>
       </div>
     </motion.div>
