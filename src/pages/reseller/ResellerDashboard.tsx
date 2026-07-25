@@ -44,6 +44,7 @@ import extensionZipAsset from '@/assets/LOV3.1_PURPLE_OBSC.zip.asset.json';
 import JSZip from 'jszip';
 import { LvbCreditsTab } from '@/components/reseller/LvbCreditsTab';
 import { PixQrCode } from '@/components/reseller/PixQrCode';
+import { CommunityDiscountBanner } from '@/components/reseller/CommunityDiscountBanner';
 
 type TabId = 'loja' | 'clientes' | 'estoque' | 'creditos_lovable';
 
@@ -516,6 +517,7 @@ export default function ResellerDashboard() {
         {/* Tab Content */}
         {activeTab === 'loja' && (
           <div className="space-y-6">
+            <CommunityDiscountBanner />
             {isUnlimited ? (
               /* Unlimited plan */
               <div className="relative group">
