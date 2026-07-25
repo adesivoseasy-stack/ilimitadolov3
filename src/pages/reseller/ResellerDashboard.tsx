@@ -1821,6 +1821,53 @@ export default function ResellerDashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* CapCut Pro Requirements Dialog */}
+        <AlertDialog open={capcutProRequirementsOpen} onOpenChange={setCapcutProRequirementsOpen}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-purple-400" />
+                Requisitos — CapCut Pro 30 dias
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="font-semibold text-foreground">Você está adquirindo:</p>
+                  <ul className="space-y-2 list-none pl-0">
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> <span><span className="font-bold text-foreground">Acesso CapCut Pro</span> por <span className="font-bold text-foreground">30 dias</span> (login e senha).</span></li>
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> Todos os recursos PRO liberados, exportação em 4K e sem marca d'água.</li>
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> Acesso completo à conta premium (login + senha entregues pelo ADM).</li>
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> Entrega manual pelo ADM via WhatsApp após o pagamento — envie o comprovante no grupo.</li>
+                    <li className="flex gap-2"><span className="text-purple-400">●</span> Compra não reembolsável após a entrega.</li>
+                  </ul>
+                  <label className="flex items-start gap-2 pt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={capcutProAccepted}
+                      onChange={(e) => setCapcutProAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-purple-500"
+                    />
+                    <span className="text-foreground">Li, entendi e confirmo a compra do <span className="font-bold">CapCut Pro 30 dias</span>.</span>
+                  </label>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setCapcutProAccepted(false)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!capcutProAccepted}
+                onClick={() => {
+                  setCapcutProRequirementsOpen(false);
+                  setPendingPixAction({ qty: 1, capcutPro: true });
+                  setPixCustomerOpen(true);
+                }}
+                className="bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white"
+              >
+                Continuar para pagamento
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* PIX Payment Modal */}
         <Dialog open={isPixModalOpen} onOpenChange={(open) => {
           if (!open && pixStatus !== 'pending') {
