@@ -71,6 +71,63 @@ export type Database = {
         }
         Relationships: []
       }
+      community_discount_config: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      community_discount_levels: {
+        Row: {
+          created_at: string
+          discount_percentage: number
+          emoji: string
+          id: string
+          name: string
+          order_index: number
+          sales_required: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          discount_percentage: number
+          emoji?: string
+          id?: string
+          name: string
+          order_index: number
+          sales_required: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          discount_percentage?: number
+          emoji?: string
+          id?: string
+          name?: string
+          order_index?: number
+          sales_required?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credit_orders: {
         Row: {
           amount_cents: number
@@ -418,6 +475,54 @@ export type Database = {
           workspace_name?: string | null
         }
         Relationships: []
+      }
+      reseller_community_progress: {
+        Row: {
+          created_at: string
+          current_discount: number
+          current_level_id: string | null
+          current_sales: number
+          next_level_id: string | null
+          reseller_id: string
+          sales_to_next: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_discount?: number
+          current_level_id?: string | null
+          current_sales?: number
+          next_level_id?: string | null
+          reseller_id: string
+          sales_to_next?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_discount?: number
+          current_level_id?: string | null
+          current_sales?: number
+          next_level_id?: string | null
+          reseller_id?: string
+          sales_to_next?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reseller_community_progress_current_level_id_fkey"
+            columns: ["current_level_id"]
+            isOneToOne: false
+            referencedRelation: "community_discount_levels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reseller_community_progress_next_level_id_fkey"
+            columns: ["next_level_id"]
+            isOneToOne: false
+            referencedRelation: "community_discount_levels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reseller_credits: {
         Row: {
@@ -886,6 +991,7 @@ export type Database = {
     Functions: {
       admin_list_licenses: { Args: never; Returns: Json }
       admin_list_resellers: { Args: never; Returns: Json }
+      admin_reset_community_progress: { Args: never; Returns: undefined }
       clean_expired_sessions: { Args: never; Returns: undefined }
       clean_old_bot_states: { Args: never; Returns: undefined }
       execute_sql: { Args: { query: string }; Returns: Json }
@@ -897,6 +1003,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      recalc_reseller_progress: {
+        Args: { _reseller_id: string }
+        Returns: undefined
       }
       register_license_ip: {
         Args: {
