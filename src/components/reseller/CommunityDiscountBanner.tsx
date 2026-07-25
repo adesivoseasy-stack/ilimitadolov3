@@ -51,14 +51,16 @@ export function CommunityDiscountBanner() {
             </span>
           </div>
 
-          {/* Slim bar */}
-          <div className="relative h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPct}%` }}
-              transition={{ type: 'spring', stiffness: 60, damping: 20 }}
-              className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-purple-500 to-primary"
-            />
+          {/* Slim bar with level icons */}
+          <div className="relative pt-3 pb-4">
+            <div className="relative h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPct}%` }}
+                transition={{ type: 'spring', stiffness: 60, damping: 20 }}
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-purple-500 to-primary"
+              />
+            </div>
             {levels.map((lvl) => {
               const maxReq = levels[levels.length - 1].sales_required;
               const pos = (lvl.sales_required / maxReq) * 100;
@@ -66,12 +68,27 @@ export function CommunityDiscountBanner() {
               return (
                 <div
                   key={lvl.id}
-                  className={cn(
-                    'absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-1.5 w-1.5 rounded-full',
-                    reached ? 'bg-white' : 'bg-white/20'
-                  )}
+                  className="absolute top-0 -translate-x-1/2 flex flex-col items-center gap-0.5"
                   style={{ left: `${pos}%` }}
-                />
+                  title={`${lvl.name} · ${lvl.sales_required} vendas · ${lvl.discount_percentage}% OFF`}
+                >
+                  <span
+                    className={cn(
+                      'text-[11px] leading-none transition-all',
+                      reached ? 'grayscale-0 opacity-100 drop-shadow-[0_0_6px_rgba(168,139,250,0.7)]' : 'grayscale opacity-40'
+                    )}
+                  >
+                    {lvl.emoji}
+                  </span>
+                  <span
+                    className={cn(
+                      'text-[8px] font-display leading-none tracking-wide',
+                      reached ? 'text-primary font-bold' : 'text-muted-foreground/60'
+                    )}
+                  >
+                    {lvl.discount_percentage}%
+                  </span>
+                </div>
               );
             })}
           </div>
