@@ -1052,7 +1052,7 @@ export default function ResellerDashboard() {
                           10 Chaves <span className="bg-gradient-to-r from-purple-400 to-amber-400 bg-clip-text text-transparent">Vitalícias</span>
                         </h3>
                         <p className="text-sm text-muted-foreground mt-1 max-w-md">
-                          Pacote com 10 chaves de validade ilimitada por apenas R$ 29,90 cada. Estoque premium para vender em escala.
+                          Pacote com 10 chaves de validade ilimitada por apenas R$ 22,99 cada. Estoque premium para vender em escala.
                         </p>
                         <p className="text-xs font-bold text-amber-300 mt-2 flex items-center gap-1.5">
                           <Clock className="h-3.5 w-3.5" />
@@ -1064,9 +1064,9 @@ export default function ResellerDashboard() {
                       <div className="text-right">
                         <div className="flex items-baseline gap-2 justify-end">
                           <span className="text-sm text-muted-foreground line-through">R$ 1.479,00</span>
-                          <span className="text-3xl font-black bg-gradient-to-r from-purple-400 to-amber-400 bg-clip-text text-transparent">R$ 299,00</span>
+                          <span className="text-3xl font-black bg-gradient-to-r from-purple-400 to-amber-400 bg-clip-text text-transparent">R$ 229,90</span>
                         </div>
-                        <p className="text-[11px] text-amber-300 font-bold">R$ 29,90 por chave • economize R$ 1.180</p>
+                        <p className="text-[11px] text-amber-300 font-bold">R$ 22,99 por chave • economize R$ 1.249,10</p>
                       </div>
                       <Button
                         disabled={loadingQty !== null}
