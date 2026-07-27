@@ -228,15 +228,15 @@ Deno.serve(async (req) => {
       pricePerKey = 89.90
       promo = false
     } else if (lifetimeBulk) {
-      // Promoção Vitalícia em Lote: 10 chaves vitalícias por R$ 299,00
-      // Válido até 03/07/2026 às 20h
+      // Promoção Vitalícia em Lote: 10 chaves vitalícias por R$ 229,90
+      // Válido até 28/07/2026 às 20h
       const LIFETIME_BULK_END = new Date('2026-07-28T20:00:00-03:00').getTime()
       if (Date.now() >= LIFETIME_BULK_END) {
         return new Response(JSON.stringify({ error: 'Promoção de vitalícias em lote encerrada' }), { status: 400, headers: corsHeaders })
       }
       quantity = 10
-      totalReais = 299.00
-      pricePerKey = 29.90
+      totalReais = 229.90
+      pricePerKey = 22.99
       promo = false
     } else if (lifetime) {
       // Chave Vitalícia: 1 chave com validade ilimitada (100 anos)
