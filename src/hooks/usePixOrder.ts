@@ -26,10 +26,32 @@ export function useCreatePixOrder() {
     setIsLoading(true);
     setError(null);
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      let accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        accessToken = refreshed.session?.access_token;
+      }
+      if (!accessToken) {
+        throw new Error('Sessão expirada. Faça login novamente para gerar o PIX.');
+      }
+
       const { data, error: fnError } = await supabase.functions.invoke('create-pix-order', {
+        headers: { Authorization: `Bearer ${accessToken}` },
         body: { quantity, ...customer, ...(promo ? { promo: true } : {}), ...(lifetime ? { lifetime: true } : {}), ...(lifetimeBulk ? { lifetimeBulk: true } : {}), ...(combo ? { combo: true } : {}), ...(comboChampion ? { comboChampion: true } : {}), ...(comboAccount ? { comboAccount: true } : {}), ...(manusCredits ? { manusCredits: true } : {}), ...(geminiPro ? { geminiPro: true } : {}), ...(seedanceAccount ? { seedanceAccount: true } : {}), ...(capcutPro ? { capcutPro: true } : {}), ...(renewal ? { renewal: true, licenseId: renewal.licenseId } : {}) },
       });
-      if (fnError) throw fnError;
+      if (fnError) {
+        const ctx = (fnError as any)?.context;
+        if (ctx && typeof ctx.json === 'function') {
+          try {
+            const body = await ctx.json();
+            if (body?.error) throw new Error(body.error);
+          } catch (parseErr: any) {
+            if (parseErr instanceof Error && parseErr.message && !/json/i.test(parseErr.message)) throw parseErr;
+          }
+        }
+        throw fnError;
+      }
       if (data?.error) throw new Error(data.error);
       return data as PixOrderData;
     } catch (err: any) {
