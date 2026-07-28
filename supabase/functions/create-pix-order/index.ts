@@ -117,15 +117,27 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders })
     }
 
-    const supabase = createClient(
-      supabaseUrl,
-      supabaseAnonKey,
-      { global: { headers: { Authorization: authHeader } } }
-    )
+    const jwt = authHeader.replace('Bearer ', '').trim()
 
-    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
+
+    let { data: { user: authUser }, error: authError } = await authClient.auth.getUser(jwt)
+
     if (authError || !authUser) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders })
+      // Fallback: validate the token with the service role client (signing-keys safe)
+      const fallbackClient = createClient(supabaseUrl, serviceRoleKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      })
+      const fallback = await fallbackClient.auth.getUser(jwt)
+      authUser = fallback.data.user
+      authError = fallback.error
+    }
+
+    if (!authUser) {
+      console.error('[create-pix-order] Auth failed:', authError?.message || 'no user')
+      return new Response(JSON.stringify({ error: 'Sessão expirada. Faça login novamente.' }), { status: 401, headers: corsHeaders })
     }
 
     const bodyResult = BodySchema.safeParse(await req.json())
