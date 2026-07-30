@@ -330,7 +330,9 @@ export default function IpAudit() {
                   </div>
                 )}
               </CardContent>
-            </TabsContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="suspicious" className="space-y-4">
             <Card>
               <CardHeader>
