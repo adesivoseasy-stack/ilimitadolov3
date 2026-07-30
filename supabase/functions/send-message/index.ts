@@ -106,14 +106,18 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Increment messages_used
-      await supabase
-        .from('licenses')
-        .update({ messages_used: (license.messages_used || 0) + 1 })
-        .eq('id', license.id);
-
       console.log(`[send-message] License message ${(license.messages_used || 0) + 1}/${effectiveLimit}`);
     }
+
+    // Contabiliza mensagem para TODAS as licenças (auditoria de uso)
+    await supabase
+      .from('licenses')
+      .update({
+        messages_used: (license.messages_used || 0) + 1,
+        last_message_at: new Date().toISOString(),
+      })
+      .eq('id', license.id);
+    license.messages_used = (license.messages_used || 0) + 1;
 
     // For wildcard licenses, just track usage (no limit)
     if (license.is_wildcard) {

@@ -254,13 +254,18 @@ Deno.serve(async (req) => {
         });
       }
 
-      await supabase
-        .from('licenses')
-        .update({ messages_used: (license.messages_used || 0) + 1 })
-        .eq('id', license.id);
-
       console.log(`[process-message] License message ${(license.messages_used || 0) + 1}/${effectiveLimit}`);
     }
+
+    // Contabiliza mensagem para TODAS as licenças (auditoria de uso)
+    await supabase
+      .from('licenses')
+      .update({
+        messages_used: (license.messages_used || 0) + 1,
+        last_message_at: new Date().toISOString(),
+      })
+      .eq('id', license.id);
+    license.messages_used = (license.messages_used || 0) + 1;
 
     // For wildcard licenses, just track usage (no limit)
     if (license.is_wildcard) {
@@ -357,6 +362,32 @@ Deno.serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    // 🛡️ Rastreio de projetos por licença (auditoria + anti-revenda)
+    try {
+      const { data: trackResult } = await supabase.rpc('register_license_project', {
+        _license_id: license.id,
+        _project_id: project_id,
+        _max_unique_projects: 2,
+        _window_seconds: 60,
+      });
+      if (trackResult && (trackResult as { revoked?: boolean; reason?: string }).revoked) {
+        const reason = (trackResult as { reason?: string }).reason;
+        if (reason === 'project_abuse' || reason === 'already_revoked') {
+          console.log(`[process-message] License auto-revoked: ${reason}`);
+          await supabase.from('sessions').delete().eq('id', session.id);
+          return new Response(JSON.stringify({
+            status: 'session_invalid',
+            message: 'Licença revogada por uso suspeito (compartilhamento entre múltiplos projetos detectado).',
+          }), {
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+    } catch (trackErr) {
+      console.error('[process-message] project tracking error:', (trackErr as Error).message);
     }
 
     // === GET API TOKEN FROM USER'S REAL TOKEN ===
