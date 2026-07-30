@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, Search, Globe, Shield, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Search, Globe, Shield, RefreshCw, MessageSquare, FolderGit2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -32,7 +32,60 @@ interface IpRow {
 
 export default function IpAudit() {
   const [search, setSearch] = useState('');
+  const [usageSearch, setUsageSearch] = useState('');
   const { toast } = useToast();
+
+  // Uso por licença: mensagens + projetos únicos
+  const { data: usage, isLoading: usageLoading, refetch: refetchUsage } = useQuery({
+    queryKey: ['license-usage-audit'],
+    queryFn: async () => {
+      const { data: tracking, error } = await supabase
+        .from('license_project_tracking')
+        .select('license_id, project_id, message_count, last_seen_at')
+        .order('last_seen_at', { ascending: false })
+        .limit(5000);
+      if (error) throw error;
+
+      const ids = Array.from(new Set((tracking || []).map((t: any) => t.license_id)));
+      const licMap = new Map<string, any>();
+      for (let i = 0; i < ids.length; i += 200) {
+        const { data: lics } = await supabase
+          .from('licenses')
+          .select('id, license_key, email, status, customer_name, messages_used, is_wildcard, last_message_at')
+          .in('id', ids.slice(i, i + 200));
+        (lics || []).forEach((l: any) => licMap.set(l.id, l));
+      }
+
+      const grouped = new Map<string, any>();
+      (tracking || []).forEach((t: any) => {
+        const cur = grouped.get(t.license_id) || {
+          license_id: t.license_id,
+          projects: new Set<string>(),
+          messages: 0,
+          last_seen: t.last_seen_at,
+        };
+        cur.projects.add(t.project_id);
+        cur.messages += t.message_count || 0;
+        if (t.last_seen_at > cur.last_seen) cur.last_seen = t.last_seen_at;
+        grouped.set(t.license_id, cur);
+      });
+
+      return Array.from(grouped.values())
+        .map((g) => {
+          const lic = licMap.get(g.license_id);
+          return {
+            license_id: g.license_id,
+            license: lic,
+            project_count: g.projects.size,
+            projects: Array.from(g.projects) as string[],
+            tracked_messages: g.messages,
+            total_messages: Math.max(g.messages, lic?.messages_used || 0),
+            last_seen: g.last_seen,
+          };
+        })
+        .sort((a, b) => b.total_messages - a.total_messages);
+    },
+  });
 
   const { data: ips, isLoading, refetch } = useQuery({
     queryKey: ['license-ip-tracking'],
@@ -112,7 +165,21 @@ export default function IpAudit() {
     });
     toast({ title: 'Licença revogada', description: 'A licença foi revogada por abuso de IP.' });
     refetch();
+    refetchUsage();
   };
+
+  const filteredUsage = (usage || []).filter((u) => {
+    if (!usageSearch) return true;
+    const s = usageSearch.toLowerCase();
+    return (
+      u.license?.license_key?.toLowerCase().includes(s) ||
+      u.license?.email?.toLowerCase().includes(s) ||
+      u.license?.customer_name?.toLowerCase().includes(s) ||
+      u.projects.some((p) => p.toLowerCase().includes(s))
+    );
+  });
+
+  const totalMessages = (usage || []).reduce((sum, u) => sum + u.total_messages, 0);
 
   return (
     <AdminLayout>
@@ -127,12 +194,28 @@ export default function IpAudit() {
               Detecção e revogação automática de licenças compartilhadas. Limite atual: <strong>1 IP único por 24h</strong>.
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => refetch()}>
+          <Button variant="outline" size="sm" onClick={() => { refetch(); refetchUsage(); }}>
             <RefreshCw className="h-4 w-4 mr-2" /> Atualizar
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Mensagens totais</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-primary">{totalMessages}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Licenças com uso</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{usage?.length ?? 0}</div>
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total de IPs rastreados</CardTitle>
@@ -163,6 +246,9 @@ export default function IpAudit() {
 
         <Tabs defaultValue="suspicious">
           <TabsList>
+            <TabsTrigger value="usage">
+              <MessageSquare className="h-4 w-4 mr-2" /> Uso por licença ({usage?.length ?? 0})
+            </TabsTrigger>
             <TabsTrigger value="suspicious">
               <AlertTriangle className="h-4 w-4 mr-2" /> Suspeitas ({suspicious.length})
             </TabsTrigger>
@@ -171,6 +257,80 @@ export default function IpAudit() {
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="usage">
+            <Card>
+              <CardHeader>
+                <CardTitle>Mensagens e projetos por licença</CardTitle>
+                <div className="relative mt-2">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por chave, email, cliente ou projeto..."
+                    value={usageSearch}
+                    onChange={(e) => setUsageSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </CardHeader>
+              <CardContent>
+                {usageLoading ? (
+                  <p className="text-sm text-muted-foreground py-8 text-center">Carregando...</p>
+                ) : filteredUsage.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-8 text-center">Nenhum uso registrado ainda.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Licença</TableHead>
+                          <TableHead>Mensagens</TableHead>
+                          <TableHead>Projetos</TableHead>
+                          <TableHead>Última atividade</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredUsage.slice(0, 300).map((u) => (
+                          <TableRow key={u.license_id}>
+                            <TableCell>
+                              <code className="text-xs font-mono">{u.license?.license_key || u.license_id.slice(0, 8)}</code>
+                              <p className="text-xs text-muted-foreground">
+                                {u.license?.email}{u.license?.customer_name ? ` • ${u.license.customer_name}` : ''}
+                              </p>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary" className="gap-1">
+                                <MessageSquare className="h-3 w-3" /> {u.total_messages}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={u.project_count > 2 && !u.license?.is_wildcard ? 'destructive' : 'outline'} className="gap-1">
+                                <FolderGit2 className="h-3 w-3" /> {u.project_count}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(new Date(u.last_seen), { locale: ptBR, addSuffix: true })}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={u.license?.status === 'revoked' ? 'destructive' : 'outline'}>
+                                {u.license?.is_wildcard ? 'vitalícia' : u.license?.status || '?'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {u.license && u.license.status !== 'revoked' && (
+                                <Button variant="ghost" size="sm" onClick={() => handleRevoke(u.license_id, u.license?.license_key)}>
+                                  Revogar
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </TabsContent>
           <TabsContent value="suspicious" className="space-y-4">
             <Card>
               <CardHeader>
