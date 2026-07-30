@@ -656,25 +656,26 @@ export default function ResellerDashboard() {
                             </span>
                           </div>
                           <div className="relative flex-1 flex flex-col gap-3">
-                            <div className="relative rounded-xl overflow-hidden bg-black">
+                             <div className="relative rounded-xl overflow-hidden bg-black">
                               <img
                                 src={comboBannerAsset.url}
                                 alt="300 Créditos Lovable + 1 Ano PRO Lite por R$ 89,90"
-                                className="w-full h-auto object-cover aspect-square"
+                                className="w-full h-auto object-cover aspect-square grayscale opacity-50"
                                 loading="lazy"
                               />
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                                <span className="rotate-[-12deg] border-2 border-red-500 text-red-400 text-lg font-extrabold uppercase tracking-widest px-4 py-1 rounded-md bg-black/70">
+                                  Esgotado
+                                </span>
+                              </div>
                             </div>
                             <Button
-                              disabled={loadingQty !== null}
-                              onClick={() => { setComboAccepted(false); setComboRequirementsOpen(true); }}
-                              className="cta-premium cta-purple mt-auto"
+                              disabled
+                              className="mt-auto"
+                              variant="secondary"
                               size="sm"
                             >
-                              <span className="cta-shine" aria-hidden />
-                              {loadingQty === -3 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
-                              <span className="relative z-10">
-                              {loadingQty === -3 ? 'Gerando PIX...' : 'Comprar por R$ 89,90'}
-                              </span>
+                              <span className="relative z-10">Esgotado</span>
                             </Button>
                           </div>
                         </div>
@@ -697,25 +698,26 @@ export default function ResellerDashboard() {
                             </span>
                           </div>
                           <div className="relative flex-1 flex flex-col gap-3">
-                            <div className="relative rounded-xl overflow-hidden bg-black">
+                             <div className="relative rounded-xl overflow-hidden bg-black">
                               <img
                                 src={comboChampionBannerAsset.url}
                                 alt="300 Créditos Lovable + 1 Ano PRO Lite + Chave Vitalícia por R$ 149,90"
-                                className="w-full h-auto object-cover aspect-square"
+                                className="w-full h-auto object-cover aspect-square grayscale opacity-50"
                                 loading="lazy"
                               />
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                                <span className="rotate-[-12deg] border-2 border-red-500 text-red-400 text-lg font-extrabold uppercase tracking-widest px-4 py-1 rounded-md bg-black/70">
+                                  Esgotado
+                                </span>
+                              </div>
                             </div>
                             <Button
-                              disabled={loadingQty !== null}
-                              onClick={() => { setComboChampionAccepted(false); setComboChampionRequirementsOpen(true); }}
-                              className="cta-premium cta-gold mt-auto"
+                              disabled
+                              className="mt-auto"
+                              variant="secondary"
                               size="sm"
                             >
-                              <span className="cta-shine" aria-hidden />
-                              {loadingQty === -4 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
-                              <span className="relative z-10">
-                              {loadingQty === -4 ? 'Gerando PIX...' : 'Comprar por R$ 149,90'}
-                              </span>
+                              <span className="relative z-10">Esgotado</span>
                             </Button>
                           </div>
                         </div>
