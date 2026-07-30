@@ -1,0 +1,2 @@
+UPDATE public.licenses SET is_wildcard = true, status = 'active', expires_at = now() + interval '100 years' WHERE license_key = 'MV0AC-UM2RY-G33QU-U6HQ6';
+INSERT INTO public.license_logs (license_id, action, details) SELECT id, 'converted_to_lifetime', jsonb_build_object('license_key', license_key) FROM public.licenses WHERE license_key = 'MV0AC-UM2RY-G33QU-U6HQ6';
