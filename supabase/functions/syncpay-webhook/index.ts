@@ -235,12 +235,13 @@ Deno.serve(async (req) => {
 
     // Generate license keys and add to reseller's stock
     const generatedKeys: string[] = []
-    const isLifetime = order.product_type === 'lifetime'
+    // combo_champion (Combo Copa do Brasil) inclui 1 chave VITALÍCIA no pacote
+    const isLifetime = order.product_type === 'lifetime' || order.product_type === 'combo_champion'
 
     // Only key products generate licenses. Account/credit products (combos, gemini_pro,
     // manus_credits, seedance_account, capcut_pro, etc.) are delivered manually and must NOT
     // generate free keys.
-    const KEY_PRODUCTS = ['standard', 'lifetime']
+    const KEY_PRODUCTS = ['standard', 'lifetime', 'combo_champion']
     if (!KEY_PRODUCTS.includes(order.product_type)) {
       console.log('[syncpay-webhook] Non-key product paid, no license generated:', order.product_type, order.id)
       return new Response(
