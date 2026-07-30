@@ -76,6 +76,16 @@ Deno.serve(async (req) => {
 
     // Generate keys
     const generatedKeys: string[] = []
+
+    // Somente produtos de chave geram licenças (contas/créditos são entregues manualmente)
+    const KEY_PRODUCTS = ['standard', 'lifetime', 'combo_champion']
+    if (!KEY_PRODUCTS.includes(order.product_type)) {
+      return new Response(
+        JSON.stringify({ ok: true, keys_generated: 0, product_type: order.product_type, manual_delivery: true }),
+        { headers: corsHeaders },
+      )
+    }
+
     for (let i = 0; i < order.quantity; i++) {
       const { data: keyData, error: keyError } = await adminClient.rpc('generate_license_key')
       if (keyError) continue
