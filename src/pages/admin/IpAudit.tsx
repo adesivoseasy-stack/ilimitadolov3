@@ -244,7 +244,7 @@ export default function IpAudit() {
           </Card>
         </div>
 
-        <Tabs defaultValue="suspicious">
+        <Tabs defaultValue="usage">
           <TabsList>
             <TabsTrigger value="usage">
               <MessageSquare className="h-4 w-4 mr-2" /> Uso por licença ({usage?.length ?? 0})
