@@ -1923,6 +1923,7 @@ export default function ResellerDashboard() {
         </AlertDialog>
 
         {/* PIX Payment Modal */}
+        {/* Conta Lovable AI Pro Requirements Dialog */}
         <Dialog open={isPixModalOpen} onOpenChange={(open) => {
           if (!open && pixStatus !== 'pending') {
             setIsPixModalOpen(false);
