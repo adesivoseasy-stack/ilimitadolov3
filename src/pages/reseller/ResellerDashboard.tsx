@@ -2002,7 +2002,16 @@ export default function ResellerDashboard() {
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">Pagamento Confirmado!</h3>
-                {lastOrderWasCapcutPro ? (
+                {lastOrderWasLovableAccount ? (
+                  <>
+                    <p className="text-sm text-muted-foreground text-center">
+                      <span className="font-semibold text-foreground">Conta Lovable AI Pro (105 créditos)</span> reservada. Entre no grupo, chame o ADM e envie o comprovante para receber o login, a senha e o acesso ao e-mail da conta.
+                    </p>
+                    <Button variant="ghost" size="sm" onClick={() => { setIsPixModalOpen(false); setPixOrder(null); setLastOrderWasLovableAccount(false); }}>
+                      Fechar
+                    </Button>
+                  </>
+                ) : lastOrderWasCapcutPro ? (
                   <>
                     <p className="text-sm text-muted-foreground text-center">
                       <span className="font-semibold text-foreground">CapCut Pro 30 dias</span> reservado. Entre no grupo, chame o ADM e envie o comprovante para receber o login e a senha via WhatsApp.
