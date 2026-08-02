@@ -37,6 +37,7 @@ import manusCreditsBannerAsset from '@/assets/manus-ai-1000-creditos.png.asset.j
 import geminiProBanner from '@/assets/gemini-pro-18-meses.webp';
 import seedanceBannerAsset from '@/assets/seedance-8500k-creditos.png.asset.json';
 import capcutProBannerAsset from '@/assets/capcut-pro-30d.png.asset.json';
+import lovableAccountBannerAsset from '@/assets/conta-lovable-pro-105-creditos.png.asset.json';
 import { format, parseISO, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -112,7 +113,7 @@ export default function ResellerDashboard() {
   const [isPixModalOpen, setIsPixModalOpen] = useState(false);
   const pixStatus = usePixOrderPolling(pixOrder?.order_id || null);
   const [pixCustomerOpen, setPixCustomerOpen] = useState(false);
-  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; lifetimeBulk?: boolean; combo?: boolean; comboChampion?: boolean; comboAccount?: boolean; manusCredits?: boolean; geminiPro?: boolean; seedanceAccount?: boolean; capcutPro?: boolean } | null>(null);
+  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; lifetimeBulk?: boolean; combo?: boolean; comboChampion?: boolean; comboAccount?: boolean; manusCredits?: boolean; geminiPro?: boolean; seedanceAccount?: boolean; capcutPro?: boolean; lovableAccount?: boolean } | null>(null);
   const [comboRequirementsOpen, setComboRequirementsOpen] = useState(false);
   const [comboAccepted, setComboAccepted] = useState(false);
   const [lastOrderWasCombo, setLastOrderWasCombo] = useState(false);
@@ -134,6 +135,9 @@ export default function ResellerDashboard() {
   const [capcutProRequirementsOpen, setCapcutProRequirementsOpen] = useState(false);
   const [capcutProAccepted, setCapcutProAccepted] = useState(false);
   const [lastOrderWasCapcutPro, setLastOrderWasCapcutPro] = useState(false);
+  const [lovableAccountRequirementsOpen, setLovableAccountRequirementsOpen] = useState(false);
+  const [lovableAccountAccepted, setLovableAccountAccepted] = useState(false);
+  const [lastOrderWasLovableAccount, setLastOrderWasLovableAccount] = useState(false);
 
   const [isPromoOpen, setIsPromoOpen] = useState(false);
   const PROMO_QTY = 10;
@@ -258,10 +262,10 @@ export default function ResellerDashboard() {
 
   const handlePixCustomerConfirm = async (customerData: PixCustomerFormData) => {
     if (!pendingPixAction) return;
-    const { qty, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro, seedanceAccount, capcutPro } = pendingPixAction;
+    const { qty, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro, seedanceAccount, capcutPro, lovableAccount } = pendingPixAction;
     setPixCustomerOpen(false);
-    setLoadingQty(capcutPro ? -10 : seedanceAccount ? -9 : geminiPro ? -8 : lifetimeBulk ? -7 : manusCredits ? -6 : comboAccount ? -5 : comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
-    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion, undefined, comboAccount, manusCredits, lifetimeBulk, geminiPro, seedanceAccount, capcutPro);
+    setLoadingQty(lovableAccount ? -11 : capcutPro ? -10 : seedanceAccount ? -9 : geminiPro ? -8 : lifetimeBulk ? -7 : manusCredits ? -6 : comboAccount ? -5 : comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
+    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion, undefined, comboAccount, manusCredits, lifetimeBulk, geminiPro, seedanceAccount, capcutPro, lovableAccount);
     setLoadingQty(null);
     if (order) {
       setPixOrder(order);
@@ -272,6 +276,7 @@ export default function ResellerDashboard() {
       setLastOrderWasGeminiPro(!!geminiPro);
       setLastOrderWasSeedance(!!seedanceAccount);
       setLastOrderWasCapcutPro(!!capcutPro);
+      setLastOrderWasLovableAccount(!!lovableAccount);
       if (promo) setIsPromoOpen(false);
       setIsPixModalOpen(true);
     } else {
@@ -943,6 +948,51 @@ export default function ResellerDashboard() {
                               {loadingQty === -10 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
                               <span className="relative z-10">
                               {loadingQty === -10 ? 'Gerando PIX...' : 'Comprar por R$ 24,99'}
+                              </span>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {isPricingReady && (
+                      <div className="relative">
+                        <div
+                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
+                          style={{
+                            background: 'linear-gradient(135deg, #a855f7, #7c3aed, #4c1d95, #c026d3)',
+                            backgroundSize: '300% 300%',
+                            animation: 'fire-glow 4s ease infinite',
+                          }}
+                        />
+                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+                            <span className="bg-gradient-to-r from-violet-500 to-purple-600 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider animate-pulse">
+                              🔒 Conta Lovable Pro
+                            </span>
+                          </div>
+                          <div className="relative flex-1 flex flex-col gap-3">
+                            <div className="relative rounded-xl overflow-hidden bg-black">
+                              <img
+                                src={lovableAccountBannerAsset.url}
+                                alt="Conta Lovable AI Pro privada com 105 créditos e 30 dias Pro por R$ 27,90"
+                                className="w-full h-auto object-cover aspect-square"
+                                loading="lazy"
+                              />
+                            </div>
+                            <Button
+                              disabled={loadingQty !== null}
+                              onClick={() => { setLovableAccountAccepted(false); setLovableAccountRequirementsOpen(true); }}
+                              className="cta-premium mt-auto text-white"
+                              style={{
+                                background: 'linear-gradient(110deg, #4c1d95 0%, #7c3aed 50%, #a855f7 100%)',
+                                boxShadow: '0 8px 24px -8px rgba(124, 58, 237, 0.6)',
+                              }}
+                              size="sm"
+                            >
+                              <span className="cta-shine" aria-hidden />
+                              {loadingQty === -11 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
+                              <span className="relative z-10">
+                              {loadingQty === -11 ? 'Gerando PIX...' : 'Comprar por R$ 27,90'}
                               </span>
                             </Button>
                           </div>
@@ -1872,6 +1922,59 @@ export default function ResellerDashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* Conta Lovable AI Pro Requirements Dialog */}
+        <AlertDialog open={lovableAccountRequirementsOpen} onOpenChange={setLovableAccountRequirementsOpen}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-violet-400" />
+                Requisitos — Lovable AI Pro | Conta Privada
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="font-semibold text-foreground">O que está incluído:</p>
+                  <ul className="space-y-2 list-none pl-0">
+                    <li className="flex gap-2"><span className="text-violet-400">●</span> <span>Plano <span className="font-bold text-foreground">Pro de 1 mês</span> (30 dias).</span></li>
+                    <li className="flex gap-2"><span className="text-violet-400">●</span> <span><span className="font-bold text-foreground">105 créditos</span> inclusos.</span></li>
+                    <li className="flex gap-2"><span className="text-violet-400">●</span> Conta segura e privada, com acesso total ao e-mail incluído.</li>
+                    <li className="flex gap-2"><span className="text-violet-400">●</span> Acesso imediato — entrega automática após a confirmação do pagamento.</li>
+                  </ul>
+                  <p className="font-semibold text-foreground pt-1">IMPORTANTE:</p>
+                  <ul className="space-y-2 list-none pl-0">
+                    <li className="flex gap-2"><span className="text-amber-400">●</span> Transferências de workspace e de projetos não são garantidas. Não oferecemos garantia para problemas relacionados a transferências.</li>
+                    <li className="flex gap-2"><span className="text-amber-400">●</span> Se aparecer a mensagem de "Atividade Suspeita" ao fazer login, tente usar uma VPN e faça login novamente.</li>
+                    <li className="flex gap-2"><span className="text-amber-400">●</span> Transferências podem parar de funcionar devido a mudanças nas políticas e sistemas da Lovable.</li>
+                    <li className="flex gap-2"><span className="text-amber-400">●</span> Precisa de ajuda? Fale com o suporte a qualquer momento.</li>
+                  </ul>
+                  <label className="flex items-start gap-2 pt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={lovableAccountAccepted}
+                      onChange={(e) => setLovableAccountAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-purple-500"
+                    />
+                    <span className="text-foreground">Li, entendi e confirmo a compra da <span className="font-bold">Conta Lovable AI Pro (105 créditos)</span>.</span>
+                  </label>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setLovableAccountAccepted(false)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!lovableAccountAccepted}
+                onClick={() => {
+                  setLovableAccountRequirementsOpen(false);
+                  setPendingPixAction({ qty: 1, lovableAccount: true });
+                  setPixCustomerOpen(true);
+                }}
+                className="bg-gradient-to-r from-violet-600 to-purple-500 text-white"
+              >
+                Continuar para pagamento
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         {/* PIX Payment Modal */}
         <Dialog open={isPixModalOpen} onOpenChange={(open) => {
           if (!open && pixStatus !== 'pending') {
@@ -1899,7 +2002,16 @@ export default function ResellerDashboard() {
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">Pagamento Confirmado!</h3>
-                {lastOrderWasCapcutPro ? (
+                {lastOrderWasLovableAccount ? (
+                  <>
+                    <p className="text-sm text-muted-foreground text-center">
+                      <span className="font-semibold text-foreground">Conta Lovable AI Pro (105 créditos)</span> reservada. Entre no grupo, chame o ADM e envie o comprovante para receber o login, a senha e o acesso ao e-mail da conta.
+                    </p>
+                    <Button variant="ghost" size="sm" onClick={() => { setIsPixModalOpen(false); setPixOrder(null); setLastOrderWasLovableAccount(false); }}>
+                      Fechar
+                    </Button>
+                  </>
+                ) : lastOrderWasCapcutPro ? (
                   <>
                     <p className="text-sm text-muted-foreground text-center">
                       <span className="font-semibold text-foreground">CapCut Pro 30 dias</span> reservado. Entre no grupo, chame o ADM e envie o comprovante para receber o login e a senha via WhatsApp.

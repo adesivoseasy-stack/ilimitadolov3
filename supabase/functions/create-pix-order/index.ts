@@ -25,6 +25,7 @@ const BodySchema = z.object({
   geminiPro: z.boolean().optional(),
   seedanceAccount: z.boolean().optional(),
   capcutPro: z.boolean().optional(),
+  lovableAccount: z.boolean().optional(),
   renewal: z.boolean().optional(),
   licenseId: z.string().uuid().optional(),
 })
@@ -147,7 +148,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro, seedanceAccount, capcutPro, renewal, licenseId } = bodyResult.data
+    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro, seedanceAccount, capcutPro, lovableAccount, renewal, licenseId } = bodyResult.data
     const userId = authUser.id
 
     const adminClient = createClient(
@@ -214,6 +215,12 @@ Deno.serve(async (req) => {
       quantity = 1
       totalReais = 24.99
       pricePerKey = 24.99
+      promo = false
+    } else if (lovableAccount) {
+      // Lovable AI Pro — Conta Privada | 105 Créditos | 30 dias — R$ 27,90 (entrega automática do acesso)
+      quantity = 1
+      totalReais = 27.90
+      pricePerKey = 27.90
       promo = false
     } else if (seedanceAccount) {
       // Conta Seedance com 8.500K créditos — R$ 19,90 (entrega manual via ADM)
@@ -368,7 +375,7 @@ Deno.serve(async (req) => {
         customer_email: email,
         customer_phone: phoneNumber,
         customer_document: document,
-        product_type: renewal ? 'renewal' : (capcutPro ? 'capcut_pro' : (seedanceAccount ? 'seedance_account' : (geminiPro ? 'gemini_pro' : (manusCredits ? 'manus_credits' : (comboAccount ? 'combo_account' : (comboChampion ? 'combo_champion' : (combo ? 'combo' : ((lifetime || lifetimeBulk) ? 'lifetime' : 'standard')))))))),
+        product_type: renewal ? 'renewal' : (lovableAccount ? 'lovable_account' : (capcutPro ? 'capcut_pro' : (seedanceAccount ? 'seedance_account' : (geminiPro ? 'gemini_pro' : (manusCredits ? 'manus_credits' : (comboAccount ? 'combo_account' : (comboChampion ? 'combo_champion' : (combo ? 'combo' : ((lifetime || lifetimeBulk) ? 'lifetime' : 'standard'))))))))),
         target_license_id: renewalLicenseId,
       })
       .select()
