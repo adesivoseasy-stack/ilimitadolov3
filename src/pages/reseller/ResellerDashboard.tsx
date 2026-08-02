@@ -1922,8 +1922,60 @@ export default function ResellerDashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* PIX Payment Modal */}
         {/* Conta Lovable AI Pro Requirements Dialog */}
+        <AlertDialog open={lovableAccountRequirementsOpen} onOpenChange={setLovableAccountRequirementsOpen}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-violet-400" />
+                Requisitos — Lovable AI Pro | Conta Privada
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="font-semibold text-foreground">O que está incluído:</p>
+                  <ul className="space-y-2 list-none pl-0">
+                    <li className="flex gap-2"><span className="text-violet-400">●</span> <span>Plano <span className="font-bold text-foreground">Pro de 1 mês</span> (30 dias).</span></li>
+                    <li className="flex gap-2"><span className="text-violet-400">●</span> <span><span className="font-bold text-foreground">105 créditos</span> inclusos.</span></li>
+                    <li className="flex gap-2"><span className="text-violet-400">●</span> Conta segura e privada, com acesso total ao e-mail incluído.</li>
+                    <li className="flex gap-2"><span className="text-violet-400">●</span> Acesso imediato — entrega automática após a confirmação do pagamento.</li>
+                  </ul>
+                  <p className="font-semibold text-foreground pt-1">IMPORTANTE:</p>
+                  <ul className="space-y-2 list-none pl-0">
+                    <li className="flex gap-2"><span className="text-amber-400">●</span> Transferências de workspace e de projetos não são garantidas. Não oferecemos garantia para problemas relacionados a transferências.</li>
+                    <li className="flex gap-2"><span className="text-amber-400">●</span> Se aparecer a mensagem de "Atividade Suspeita" ao fazer login, tente usar uma VPN e faça login novamente.</li>
+                    <li className="flex gap-2"><span className="text-amber-400">●</span> Transferências podem parar de funcionar devido a mudanças nas políticas e sistemas da Lovable.</li>
+                    <li className="flex gap-2"><span className="text-amber-400">●</span> Precisa de ajuda? Fale com o suporte a qualquer momento.</li>
+                  </ul>
+                  <label className="flex items-start gap-2 pt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={lovableAccountAccepted}
+                      onChange={(e) => setLovableAccountAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-purple-500"
+                    />
+                    <span className="text-foreground">Li, entendi e confirmo a compra da <span className="font-bold">Conta Lovable AI Pro (105 créditos)</span>.</span>
+                  </label>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setLovableAccountAccepted(false)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!lovableAccountAccepted}
+                onClick={() => {
+                  setLovableAccountRequirementsOpen(false);
+                  setPendingPixAction({ qty: 1, lovableAccount: true });
+                  setPixCustomerOpen(true);
+                }}
+                className="bg-gradient-to-r from-violet-600 to-purple-500 text-white"
+              >
+                Continuar para pagamento
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* PIX Payment Modal */}
         <Dialog open={isPixModalOpen} onOpenChange={(open) => {
           if (!open && pixStatus !== 'pending') {
             setIsPixModalOpen(false);
