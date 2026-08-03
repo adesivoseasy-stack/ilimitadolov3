@@ -41,7 +41,7 @@ import lovableAccountBannerAsset from '@/assets/conta-lovable-pro-105-creditos.p
 import { format, parseISO, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import extensionZipAsset from '@/assets/LOV_3.3.zip.asset.json';
+import extensionZipAsset from '@/assets/lov3.4.zip.asset.json';
 import JSZip from 'jszip';
 import { LvbCreditsTab } from '@/components/reseller/LvbCreditsTab';
 import { PixQrCode } from '@/components/reseller/PixQrCode';
@@ -89,7 +89,7 @@ export default function ResellerDashboard() {
   const downloadExtension = () => {
     const link = document.createElement('a');
     link.href = `${extensionZipAsset.url}?t=${Date.now()}`;
-    link.download = 'LOV_3.3.zip';
+    link.download = 'lov3.4.zip';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
