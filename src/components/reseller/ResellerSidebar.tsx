@@ -8,7 +8,7 @@ import {
   Download, Loader2, GraduationCap, Store, Coins, Wrench, AlertTriangle, Lock,
 } from 'lucide-react';
 import logoImg from '@/assets/logo.webp';
-import extensionZipAsset from '@/assets/LOV_3.3.zip.asset.json';
+import extensionZipAsset from '@/assets/lov3.4.zip.asset.json';
 import { useState } from 'react';
 import { useResellerLicenses } from '@/hooks/useResellerLicenses';
 import { useToast } from '@/hooks/use-toast';
@@ -34,7 +34,7 @@ export function ResellerSidebar() {
     isWhitelisted ||
     (licenses || []).some((l: any) => l.status === 'active' && l.max_messages == null);
 
-  const EXTENSION_FILENAME = 'LOV_3.3.zip';
+  const EXTENSION_FILENAME = 'lov3.4.zip';
 
   const downloadExtension = () => {
     if (isDownloading) return;
