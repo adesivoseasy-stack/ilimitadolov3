@@ -124,7 +124,7 @@ export default function Licenses() {
         {/* Banner */}
         <div className="w-full rounded-2xl overflow-hidden glow-card purple-glow animate-fade-up">
           <img
-            src="https://wvelcefgihlxcnrmslul.supabase.co/storage/v1/object/public/public-assets/extension-banner.png?v=4"
+            src="https://ccqesqhkqbnnwmowrghj.supabase.co/storage/v1/object/public/public-assets/extension-banner.png?v=4"
             alt="Banner"
             className="w-full h-auto object-cover"
           />
