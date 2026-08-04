@@ -88,19 +88,11 @@ export default function Dashboard() {
 
           {/* Banner */}
           <div className="w-full max-w-3xl mx-auto rounded-2xl overflow-hidden border border-border/20 glow-card purple-glow">
-            <video
+            <img
               className="w-full h-auto max-h-[280px] sm:max-h-[340px] object-cover block"
-              autoPlay
-              loop
-              muted
-              playsInline
-              preload="metadata"
-              poster={bannerPoster.url}
-              aria-label="LOV 3.0 Banner"
-            >
-              <source src={bannerWebm.url} type="video/webm" />
-              <source src={bannerMp4.url} type="video/mp4" />
-            </video>
+              src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExcWQwcmZnOGprdnpocGpoczIwZm0zNTd1MHlxZjRsdGljemUyZDI0eCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/HdkfFLWKT8XeFz4v57/giphy.gif"
+              alt="LOV 3.0 Banner"
+            />
           </div>
         </div>
 
