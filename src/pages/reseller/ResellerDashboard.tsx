@@ -176,12 +176,30 @@ export default function ResellerDashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  const [activePromos, setActivePromos] = useState<any[]>([]);
+
   useEffect(() => {
-    // Promoção Chave Vitalícia: R$ 59,90 até 04/08/2026 às 22h
-    const LIFETIME_PROMO_END = new Date('2026-08-04T22:00:00-03:00');
+    supabase.from('promotions').select('*').eq('is_active', true).then(({data}) => {
+      setActivePromos(data || []);
+    });
+  }, []);
+
+  const vitaliciaPromo = activePromos.find(p => p.type === 'vitalicia' && (!p.expires_at || new Date(p.expires_at) > new Date()));
+  const bulkPromo = activePromos.find(p => p.type === 'pacote' && p.quantity === 10 && (!p.expires_at || new Date(p.expires_at) > new Date()));
+
+  useEffect(() => {
+    if (!vitaliciaPromo) {
+      setIsLifetimePromoActive(false);
+      return;
+    }
+    if (!vitaliciaPromo.expires_at) {
+      setIsLifetimePromoActive(true);
+      setLifetimePromoTimeLeft('');
+      return;
+    }
+    const end = new Date(vitaliciaPromo.expires_at).getTime();
     const tick = () => {
-      const now = new Date();
-      const diffMs = LIFETIME_PROMO_END.getTime() - now.getTime();
+      const diffMs = end - Date.now();
       const active = diffMs > 0;
       setIsLifetimePromoActive(active);
       if (active) {
@@ -195,7 +213,8 @@ export default function ResellerDashboard() {
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [vitaliciaPromo]);
+
 
   useEffect(() => {
     async function fetchWarning() {
@@ -516,7 +535,6 @@ export default function ResellerDashboard() {
         {activeTab === 'loja' && (
           <div className="space-y-6">
             <CommunityDiscountBanner />
-            <PromocoesWidget />
             {isUnlimited ? (
               /* Unlimited plan */
               <div className="relative group">
@@ -1044,9 +1062,9 @@ export default function ResellerDashboard() {
                           <>
                             <div className="flex items-baseline gap-2 justify-end">
                               <span className="text-sm text-muted-foreground line-through">R$ 147,90</span>
-                              <span className="text-3xl font-black bg-gradient-to-r from-pink-400 to-red-400 bg-clip-text text-transparent">{['wallacesouzasantos@gmail.com','ecombrunobp@gmail.com','techmind.pro4.0@gmail.com'].includes(user?.email?.toLowerCase() ?? '') ? 'R$ 29,90' : 'R$ 59,90'}</span>
+                              <span className="text-3xl font-black bg-gradient-to-r from-pink-400 to-red-400 bg-clip-text text-transparent">{['wallacesouzasantos@gmail.com','ecombrunobp@gmail.com','techmind.pro4.0@gmail.com'].includes(user?.email?.toLowerCase() ?? '') ? 'R$ 29,90' : `R$ ${Number(vitaliciaPromo?.price || 59.90).toFixed(2).replace('.', ',')}`}</span>
                             </div>
-                            <p className="text-[11px] text-pink-300 font-bold">{['wallacesouzasantos@gmail.com','ecombrunobp@gmail.com','techmind.pro4.0@gmail.com'].includes(user?.email?.toLowerCase() ?? '') ? 'economize R$ 118,00' : 'economize R$ 68,00'}</p>
+                            <p className="text-[11px] text-pink-300 font-bold">{['wallacesouzasantos@gmail.com','ecombrunobp@gmail.com','techmind.pro4.0@gmail.com'].includes(user?.email?.toLowerCase() ?? '') ? 'economize R$ 118,00' : `economize R$ ${(147.90 - Number(vitaliciaPromo?.price || 59.90)).toFixed(2).replace('.', ',')}`}</p>
                           </>
                         ) : (
                           <>
@@ -1069,7 +1087,7 @@ export default function ResellerDashboard() {
                 </div>
 
                 {/* Lifetime Bulk 10 keys */}
-                {isLifetimePromoActive && (
+                {bulkPromo && (
                 <div className="relative">
                   <div
                     className="absolute -inset-[2px] rounded-[1.3rem] z-0 animate-pulse opacity-90"
@@ -1109,10 +1127,10 @@ export default function ResellerDashboard() {
                     <div className="flex flex-col items-stretch sm:items-end gap-2 w-full sm:w-auto">
                       <div className="text-right">
                         <div className="flex items-baseline gap-2 justify-end">
-                          <span className="text-sm text-muted-foreground line-through">R$ 1.479,00</span>
-                          <span className="text-3xl font-black bg-gradient-to-r from-purple-400 to-amber-400 bg-clip-text text-transparent">R$ 229,90</span>
+                          <span className="text-sm text-muted-foreground line-through">R$ 799,90</span>
+                          <span className="text-3xl font-black bg-gradient-to-r from-amber-400 to-rose-400 bg-clip-text text-transparent">R$ {Number(bulkPromo?.price || 229.90).toFixed(2).replace('.', ',')}</span>
                         </div>
-                        <p className="text-[11px] text-amber-300 font-bold">R$ 22,99 por chave • economize R$ 1.249,10</p>
+                        <p className="text-[11px] text-amber-500 font-bold">R$ {(Number(bulkPromo?.price || 229.90) / 10).toFixed(2).replace('.', ',')} por chave</p>
                       </div>
                       <Button
                         disabled={loadingQty !== null}
