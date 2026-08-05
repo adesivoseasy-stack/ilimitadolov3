@@ -46,6 +46,7 @@ import JSZip from 'jszip';
 import { LvbCreditsTab } from '@/components/reseller/LvbCreditsTab';
 import { PixQrCode } from '@/components/reseller/PixQrCode';
 import { CommunityDiscountBanner } from '@/components/reseller/CommunityDiscountBanner';
+import { PromocoesWidget } from '@/components/reseller/PromocoesWidget';
 
 type TabId = 'loja' | 'clientes' | 'estoque' | 'creditos_lovable';
 
@@ -515,6 +516,7 @@ export default function ResellerDashboard() {
         {activeTab === 'loja' && (
           <div className="space-y-6">
             <CommunityDiscountBanner />
+            <PromocoesWidget />
             {isUnlimited ? (
               /* Unlimited plan */
               <div className="relative group">

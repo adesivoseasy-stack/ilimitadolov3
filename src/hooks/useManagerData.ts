@@ -124,8 +124,9 @@ export function useAddCredits() {
       queryClient.invalidateQueries({ queryKey: ['reseller-credits'] });
       toast({ title: 'Créditos adicionados', description: 'Os créditos foram adicionados com sucesso.' });
     },
-    onError: () => {
-      toast({ title: 'Erro', description: 'Não foi possível adicionar créditos.', variant: 'destructive' });
+    onError: (err: any) => {
+      console.error("ADD CREDITS ERROR:", err);
+      toast({ title: 'Erro', description: `Não foi possível adicionar créditos: ${err.message || JSON.stringify(err)}`, variant: 'destructive' });
     },
   });
 }
