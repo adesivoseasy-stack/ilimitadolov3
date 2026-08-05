@@ -125,15 +125,16 @@ export function useResellerCreateLicense() {
         }
       }
 
-      // Busca validade customizada definida pelo admin (custom_duration_days)
+      // Busca validade customizada definida pelo admin via system_config
       let adminCustomDays: number | null = null;
       try {
-        const { data: creditsRow } = await supabase
-          .from('reseller_credits')
-          .select('custom_duration_days')
-          .eq('reseller_id', user?.id)
+        const { data: cfgRow } = await supabase
+          .from('system_config')
+          .select('value')
+          .eq('key', `reseller_custom_duration_${user?.id}`)
           .maybeSingle();
-        adminCustomDays = (creditsRow as any)?.custom_duration_days ?? null;
+        const parsed = cfgRow?.value ? parseInt(cfgRow.value) : NaN;
+        adminCustomDays = !isNaN(parsed) && parsed > 0 ? parsed : null;
       } catch (_) { /* ignora falhas silenciosamente */ }
 
       const { data: keyData, error: keyError } = await supabase.rpc('generate_license_key');

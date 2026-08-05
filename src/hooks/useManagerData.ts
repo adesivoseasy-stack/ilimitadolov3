@@ -102,9 +102,6 @@ export function useAddCredits() {
         } else {
           update.credits_total = existing.credits_total + amount;
         }
-        if (customDurationDays != null) {
-          update.custom_duration_days = customDurationDays;
-        }
         const { error } = await supabase
           .from('reseller_credits')
           .update(update)
@@ -114,11 +111,25 @@ export function useAddCredits() {
         const insert: any = { reseller_id: resellerId };
         if (lifetime) insert.lifetime_credits_total = amount;
         else insert.credits_total = amount;
-        if (customDurationDays != null) insert.custom_duration_days = customDurationDays;
         const { error } = await supabase
           .from('reseller_credits')
           .insert(insert);
         if (error) throw error;
+      }
+
+      // Salva a validade customizada no system_config (chave por revendedor)
+      const configKey = `reseller_custom_duration_${resellerId}`;
+      if (customDurationDays != null && customDurationDays > 0) {
+        const { data: existingCfg } = await supabase
+          .from('system_config')
+          .select('id')
+          .eq('key', configKey)
+          .maybeSingle();
+        if (existingCfg) {
+          await supabase.from('system_config').update({ value: String(customDurationDays) }).eq('key', configKey);
+        } else {
+          await supabase.from('system_config').insert({ key: configKey, value: String(customDurationDays), description: `Validade customizada (dias) para revendedor ${resellerId}` });
+        }
       }
     },
     onSuccess: () => {
