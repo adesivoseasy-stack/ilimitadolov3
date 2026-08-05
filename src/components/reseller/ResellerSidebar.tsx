@@ -12,6 +12,7 @@ import extensionZipAsset from '@/assets/lov3.4.zip.asset.json';
 import { useState } from 'react';
 import { useResellerLicenses } from '@/hooks/useResellerLicenses';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const navItems: { href: string; label: string; icon: any; disabled?: boolean }[] = [
   { href: '/reseller/dashboard', label: 'Revendedor', icon: LayoutDashboard },
@@ -28,7 +29,7 @@ export function ResellerSidebar() {
   const [isDownloading, setIsDownloading] = useState(false);
   const { data: licenses } = useResellerLicenses();
   const { toast } = useToast();
-  const DOWNLOAD_WHITELIST = ['dimatheus.salvador@gmail.com'];
+  const DOWNLOAD_WHITELIST = ['dimatheus.salvador@gmail.com', 'reidolol24@hotmail.com'];
   const isWhitelisted = !!user?.email && DOWNLOAD_WHITELIST.includes(user.email.toLowerCase());
   const hasActivePaidLicense =
     isWhitelisted ||
@@ -36,7 +37,7 @@ export function ResellerSidebar() {
 
   const EXTENSION_FILENAME = 'lov3.4.zip';
 
-  const downloadExtension = () => {
+  const downloadExtension = async () => {
     if (isDownloading) return;
     if (!hasActivePaidLicense) {
       toast({
@@ -48,8 +49,11 @@ export function ResellerSidebar() {
     }
     setIsDownloading(true);
     try {
+      const { data } = await supabase.from('system_config').select('value').eq('key', 'extension_zip_url').maybeSingle();
+      const zipUrl = data?.value || extensionZipAsset.url;
+      
       const link = document.createElement('a');
-      link.href = `${extensionZipAsset.url}?t=${Date.now()}`;
+      link.href = `${zipUrl}?t=${Date.now()}`;
       link.download = EXTENSION_FILENAME;
       link.target = '_blank';
       link.rel = 'noopener';
