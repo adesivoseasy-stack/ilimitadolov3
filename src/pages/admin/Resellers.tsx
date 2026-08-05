@@ -194,6 +194,7 @@ export default function Resellers() {
   const [creditDialog, setCreditDialog] = useState<{ resellerId: string; name: string } | null>(null);
   const [creditAmount, setCreditAmount] = useState('');
   const [creditLifetime, setCreditLifetime] = useState(false);
+  const [creditDurationDays, setCreditDurationDays] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ resellerId: string; userId: string; name: string } | null>(null);
   const [priceDialog, setPriceDialog] = useState<{ resellerId: string; name: string; currentPrice: number | null } | null>(null);
   const [customPrice, setCustomPrice] = useState('');
@@ -229,8 +230,14 @@ export default function Resellers() {
     if (!creditDialog || !creditAmount) return;
     const amount = parseInt(creditAmount);
     if (isNaN(amount) || amount <= 0) return;
-    await addCredits.mutateAsync({ resellerId: creditDialog.resellerId, amount, lifetime: creditLifetime });
-    setCreditDialog(null); setCreditAmount(''); setCreditLifetime(false);
+    const durationDays = creditDurationDays.trim() !== '' ? parseInt(creditDurationDays) : null;
+    await addCredits.mutateAsync({ 
+      resellerId: creditDialog.resellerId, 
+      amount, 
+      lifetime: creditLifetime,
+      customDurationDays: durationDays && !isNaN(durationDays) && durationDays > 0 ? durationDays : null,
+    });
+    setCreditDialog(null); setCreditAmount(''); setCreditLifetime(false); setCreditDurationDays('');
   };
 
   const resetForm = () => { setNewEmail(''); setNewPassword(''); setNewName(''); };
@@ -368,7 +375,7 @@ export default function Resellers() {
         {!isLoading && resellers?.length === 0 && <p className="text-sm text-muted-foreground text-center py-12 font-display">Nenhum revendedor cadastrado</p>}
 
         {/* Credit Dialog */}
-        <Dialog open={!!creditDialog} onOpenChange={(open) => { if (!open) { setCreditDialog(null); setCreditAmount(''); setCreditLifetime(false); } }}>
+        <Dialog open={!!creditDialog} onOpenChange={(open) => { if (!open) { setCreditDialog(null); setCreditAmount(''); setCreditLifetime(false); setCreditDurationDays(''); } }}>
           <DialogContent className="max-w-sm bg-card/95 backdrop-blur-xl border-border/30">
             <DialogHeader><DialogTitle className="font-display">Adicionar Créditos</DialogTitle><DialogDescription>{creditDialog?.name}</DialogDescription></DialogHeader>
             <div className="space-y-4 py-2">
@@ -385,9 +392,42 @@ export default function Resellers() {
                   <p className="text-[11px] text-muted-foreground mt-0.5">Quando marcado, esses créditos permitem ao revendedor gerar <strong>chaves vitalícias</strong> em vez de chaves de 30 dias.</p>
                 </div>
               </label>
+              {!creditLifetime && (
+                <div>
+                  <Label className="font-display text-xs uppercase tracking-wider">Validade das chaves (dias)</Label>
+                  <div className="flex gap-2 mt-1">
+                    <Input
+                      type="number"
+                      min="1"
+                      placeholder="Padrão: 30 dias"
+                      value={creditDurationDays}
+                      onChange={(e) => setCreditDurationDays(e.target.value)}
+                      className="bg-background/50 border-border/30"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    {[7, 15, 30, 60].map(d => (
+                      <Button
+                        key={d}
+                        variant={creditDurationDays === String(d) ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setCreditDurationDays(String(d))}
+                        className={creditDurationDays !== String(d) ? 'border-border/30 hover:bg-primary/10 font-display text-xs' : 'bg-gradient font-display text-xs'}
+                      >
+                        {d}d
+                      </Button>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1.5">
+                    {creditDurationDays && parseInt(creditDurationDays) > 0
+                      ? `⏳ Chaves geradas terão ${creditDurationDays} dias de validade após ativação`
+                      : '⏳ Sem prazo definido, usará o padrão de 30 dias'}
+                  </p>
+                </div>
+              )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => { setCreditDialog(null); setCreditAmount(''); setCreditLifetime(false); }} className="border-border/30">Cancelar</Button>
+              <Button variant="outline" onClick={() => { setCreditDialog(null); setCreditAmount(''); setCreditLifetime(false); setCreditDurationDays(''); }} className="border-border/30">Cancelar</Button>
               <Button onClick={handleAddCredits} disabled={!creditAmount || addCredits.isPending} className="bg-gradient font-display">Adicionar</Button>
             </DialogFooter>
           </DialogContent>

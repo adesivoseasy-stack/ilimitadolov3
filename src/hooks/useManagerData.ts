@@ -87,7 +87,7 @@ export function useAddCredits() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ resellerId, amount, lifetime }: { resellerId: string; amount: number; lifetime?: boolean }) => {
+    mutationFn: async ({ resellerId, amount, lifetime, customDurationDays }: { resellerId: string; amount: number; lifetime?: boolean; customDurationDays?: number | null }) => {
       // Check if credits row exists
       const { data: existing } = await supabase
         .from('reseller_credits')
@@ -102,6 +102,9 @@ export function useAddCredits() {
         } else {
           update.credits_total = existing.credits_total + amount;
         }
+        if (customDurationDays != null) {
+          update.custom_duration_days = customDurationDays;
+        }
         const { error } = await supabase
           .from('reseller_credits')
           .update(update)
@@ -111,6 +114,7 @@ export function useAddCredits() {
         const insert: any = { reseller_id: resellerId };
         if (lifetime) insert.lifetime_credits_total = amount;
         else insert.credits_total = amount;
+        if (customDurationDays != null) insert.custom_duration_days = customDurationDays;
         const { error } = await supabase
           .from('reseller_credits')
           .insert(insert);

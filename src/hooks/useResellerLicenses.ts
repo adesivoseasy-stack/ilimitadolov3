@@ -125,17 +125,29 @@ export function useResellerCreateLicense() {
         }
       }
 
+      // Busca validade customizada definida pelo admin (custom_duration_days)
+      let adminCustomDays: number | null = null;
+      try {
+        const { data: creditsRow } = await supabase
+          .from('reseller_credits')
+          .select('custom_duration_days')
+          .eq('reseller_id', user?.id)
+          .maybeSingle();
+        adminCustomDays = (creditsRow as any)?.custom_duration_days ?? null;
+      } catch (_) { /* ignora falhas silenciosamente */ }
+
       const { data: keyData, error: keyError } = await supabase.rpc('generate_license_key');
       if (keyError) throw keyError;
       const rawKey = keyData as string;
       const shortTestKey = rawKey.split('-').slice(0, 3).join('-');
       const licenseKey = isTestLicense ? `TESTE-${shortTestKey}` : rawKey;
 
-      // Chaves pagas: mensais (30 dias) por padrão. Vitalícia/Wildcard: 100 anos.
+      // Chaves pagas: usa validade customizada do admin se definida, senão 30 dias. Vitalícia/Wildcard: 100 anos.
       const isLifetimeKey = isLifetime || isWildcard;
+      const defaultPaidDays = adminCustomDays && adminCustomDays > 0 ? adminCustomDays : 30;
       const effectiveDurationDays = isTestLicense
         ? durationDays
-        : (isLifetimeKey ? 36500 : 30);
+        : (isLifetimeKey ? 36500 : defaultPaidDays);
       const expiresAt = new Date();
       if (isTestLicense) {
         // Test: placeholder de 24h. Se não ativada nesse prazo, é purgada.
@@ -161,7 +173,7 @@ export function useResellerCreateLicense() {
           notes,
           duration_hours: isLifetimeKey
             ? null
-            : (isTestLicense ? testDurationHours : paidDurationHours),
+            : (isTestLicense ? testDurationHours : effectiveDurationDays * 24),
           first_activated_at: isLifetimeKey ? new Date().toISOString() : null,
           is_wildcard: isLifetimeKey ? true : false,
           created_by: user?.id,
