@@ -69,30 +69,90 @@ export function usePixOrderPolling(orderId: string | null) {
   const [status, setStatus] = useState<string>('pending');
   const queryClient = useQueryClient();
 
+  const handlePaid = useCallback(() => {
+    setStatus('paid');
+    queryClient.invalidateQueries({ queryKey: ['reseller-credits'] });
+    queryClient.invalidateQueries({ queryKey: ['reseller-licenses'] });
+    queryClient.invalidateQueries({ queryKey: ['reseller-stats'] });
+  }, [queryClient]);
+
   useEffect(() => {
     if (!orderId) return;
 
-    const interval = setInterval(async () => {
+    // Reset status on new order
+    setStatus('pending');
+
+    // ── Immediate check (payment may have happened before component mounted) ──
+    const checkNow = async () => {
       const { data, error } = await supabase
         .from('credit_orders' as any)
         .select('status')
         .eq('id', orderId)
-        .single();
-
-      if (!error && data) {
-        const orderStatus = (data as any).status;
-        setStatus(orderStatus);
-        if (orderStatus === 'paid') {
-          clearInterval(interval);
-          queryClient.invalidateQueries({ queryKey: ['reseller-credits'] });
-          queryClient.invalidateQueries({ queryKey: ['reseller-licenses'] });
-          queryClient.invalidateQueries({ queryKey: ['reseller-stats'] });
-        }
+        .maybeSingle();
+      if (!error && data && (data as any).status === 'paid') {
+        handlePaid();
+        return true;
       }
-    }, 5000);
+      return false;
+    };
 
-    return () => clearInterval(interval);
-  }, [orderId, queryClient]);
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let realtimeSub: any = null;
+    let stopped = false;
+
+    const startPolling = () => {
+      if (stopped) return;
+      intervalId = setInterval(async () => {
+        const { data, error } = await supabase
+          .from('credit_orders' as any)
+          .select('status')
+          .eq('id', orderId)
+          .maybeSingle();
+        if (!error && data) {
+          const s = (data as any).status;
+          if (s && s !== 'pending') setStatus(s);
+          if (s === 'paid') {
+            handlePaid();
+            if (intervalId) clearInterval(intervalId);
+          }
+        }
+      }, 4000);
+    };
+
+    // ── Realtime subscription (instant notification) ──
+    realtimeSub = supabase
+      .channel(`credit_order_${orderId}`)
+      .on(
+        'postgres_changes' as any,
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'credit_orders',
+          filter: `id=eq.${orderId}`,
+        },
+        (payload: any) => {
+          const newStatus = payload?.new?.status;
+          if (newStatus) setStatus(newStatus);
+          if (newStatus === 'paid') {
+            handlePaid();
+            if (intervalId) clearInterval(intervalId);
+          }
+        }
+      )
+      .subscribe();
+
+    // Run immediate check then start polling as fallback
+    checkNow().then((alreadyPaid) => {
+      if (!alreadyPaid && !stopped) startPolling();
+    });
+
+    return () => {
+      stopped = true;
+      if (intervalId) clearInterval(intervalId);
+      if (realtimeSub) supabase.removeChannel(realtimeSub);
+    };
+  }, [orderId, handlePaid]);
 
   return status;
 }
+
