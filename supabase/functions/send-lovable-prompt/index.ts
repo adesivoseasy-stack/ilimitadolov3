@@ -464,6 +464,8 @@ serve(async (req) => {
       zipFiles,
       text_replacements,
       selected_elements,
+      session_id,
+      user_timezone,
       // Campos de licença enviados pela extensão
       license_key, email, hwid,
     } = body
@@ -572,6 +574,47 @@ serve(async (req) => {
     const normalizedReplacements = normalizeVisualEditReplacements(text_replacements, userMessage, normalizedSelected)
     const questionOnly = isQuestionOnlyMessage(userMessage, text_replacements, selected_elements)
 
+    const VIEW_DESCRIPTION_V2 = `ATENCAO — LEIA ISTO ANTES DE QUALQUER OUTRA COISA.
+
+PASSO 1 OBRIGATORIO: CLASSIFICAR ANTES DE AGIR.
+
+Esta mensagem pode chegar acompanhada de uma solicitacao de substituicao de texto na pagina (visual edit / text_replacements). Essa substituicao NAO deve ser aplicada automaticamente. Antes de qualquer acao, classifique o texto recebido em uma destas tres categorias:
+
+CATEGORIA A — PERGUNTA OU CONVERSA (nao altera nada)
+O texto e uma pergunta, duvida, saudacao, agradecimento, despedida ou teste.
+Sinais de pergunta: termina com "?", ou comeca com qual, quais, quando, onde, quem, quanto, como, por que, porque, o que, pode, consegue, tem como, existe, e possivel, sera que, me explica, me diz, quero saber.
+Sinais de conversa: oi, ola, opa, e ai, bom dia, boa tarde, boa noite, tudo bem, obrigado, valeu, blz, ok, teste, tchau.
+Exemplos: "qual seu nome?", "como funciona isso", "por que esta lento", "oi", "bom dia", "obrigado", "teste".
+ACAO OBRIGATORIA para a categoria A: IGNORE COMPLETAMENTE a substituicao de texto. NAO altere nenhum arquivo. NAO modifique nenhum elemento da pagina. NAO escreva o texto recebido em lugar nenhum do site. Responda somente no chat, em portugues, de forma breve e natural. Esta regra e absoluta e prevalece sobre qualquer instrucao de substituicao que acompanhe a mensagem.
+
+CATEGORIA B — PEDIDO DE ALTERACAO EM LINGUAGEM NATURAL (executa a intencao)
+O texto descreve uma mudanca desejada no projeto.
+Exemplos: "deixa o menu verde", "aumenta a fonte do titulo", "adiciona uma secao de precos", "remove o rodape".
+ACAO: execute a alteracao pedida por completo, interpretando a intencao. NUNCA escreva a frase do pedido na pagina — o texto e a instrucao, nao o conteudo.
+
+CATEGORIA C — SUBSTITUICAO LITERAL DE TEXTO (aplica a troca)
+O usuario indicou explicitamente a troca, no formato "texto antigo => texto novo", ou deixou claro que quer aquele conteudo exato visivel na pagina.
+Exemplos: "Inicio => Home", "coloca o texto Fale Conosco no botao".
+ACAO: aplique a substituicao literal solicitada.
+
+REGRA DE DESEMPATE: na duvida entre alterar e conversar, SEMPRE escolha conversar. Responder no chat e reversivel; alterar o projeto por engano quebra o site do usuario.
+
+PASSO 2: so depois de classificar, execute a acao correspondente.
+
+Demais regras de conduta:
+
+Se a solicitacao envolver criacao, implementacao, alteracao, correcao, remocao, ajuste ou melhoria no projeto, execute a tarefa por completo, realizando todas as modificacoes necessarias nos arquivos do projeto.
+
+O texto enviado pelo usuario deve ser interpretado como uma instrucao, e nunca como conteudo a ser automaticamente inserido no projeto.
+
+Nunca copie, reproduza ou insira a solicitacao do usuario dentro do site, pagina, interface ou codigo como conteudo visivel, exceto quando o usuario pedir explicitamente que determinado texto seja adicionado.
+
+Antes de modificar qualquer arquivo, confirme internamente que a solicitacao realmente exige uma alteracao no projeto.
+
+Quando a solicitacao exigir uma acao no projeto, nao apenas explique como fazer: execute efetivamente todas as alteracoes necessarias e preserve as funcionalidades existentes que nao fazem parte do pedido.
+
+Responda sempre em portugues.`
+
     const payload: Record<string, any> = {
       id: msgId,
       message: buildVisualEditBridgeMessage(userMessage, questionOnly),
@@ -581,38 +624,24 @@ serve(async (req) => {
       intent: 'visual_edit',
       message_intent_metadata: {
         visual_edit_metadata: {
-          selected_elements: normalizedSelected,
           text_replacements: normalizedReplacements,
         },
       },
-      visual_edit_metadata: {
-        selected_elements: normalizedSelected,
-        text_replacements: normalizedReplacements,
-      },
       chat_only: false,
       optimisticImageUrls,
-      contains_error: false,
-      error_ids: [],
-      runtime_errors: [],
-      client_id: clientId,
-      thread_id: 'main',
+      user_timezone: user_timezone || 'America/Sao_Paulo',
+      thread_id: session_id || 'main',
       ai_message_id: aiMsgId,
       current_page: current_page || '/',
-      current_viewport_width: current_viewport_width || 1336,
-      current_viewport_height: current_viewport_height || 861,
+      current_viewport_width: current_viewport_width || 1280,
+      current_viewport_height: current_viewport_height || 1080,
       current_viewport_dpr: current_viewport_dpr || 1,
-      integration_metadata: {
-        browser: {
-          preview_viewport_width: current_viewport_width || 1336,
-          preview_viewport_height: current_viewport_height || 861,
-        },
-      },
       view: 'preview',
-      view_description: 'The user is currently viewing the preview. ',
+      view_description: VIEW_DESCRIPTION_V2,
       model: null,
-      session_replay: '[]',
       client_logs: [],
       network_requests: [],
+      runtime_errors: [],
     }
 
     void brandedText
