@@ -630,7 +630,7 @@ Responda sempre em portugues.`
       chat_only: false,
       optimisticImageUrls,
       user_timezone: user_timezone || 'America/Sao_Paulo',
-      thread_id: session_id || 'main',
+      thread_id: 'main',
       ai_message_id: aiMsgId,
       current_page: current_page || '/',
       current_viewport_width: current_viewport_width || 1280,
