@@ -144,20 +144,23 @@ export function useResellerCreateLicense() {
       const licenseKey = isTestLicense ? `TESTE-${shortTestKey}` : rawKey;
 
       // Chaves pagas: usa validade customizada do admin se definida, senão 30 dias. Vitalícia/Wildcard: 100 anos.
+      // Planos curtos (1 dia ou 7 dias) sempre honram o durationDays passado diretamente.
       const isLifetimeKey = isLifetime || isWildcard;
       const defaultPaidDays = adminCustomDays && adminCustomDays > 0 ? adminCustomDays : 30;
+      const isShortPlan = !isLifetimeKey && !isTestLicense && durationDays >= 1 && durationDays <= 7;
       const effectiveDurationDays = isTestLicense
         ? durationDays
-        : (isLifetimeKey ? 36500 : defaultPaidDays);
+        : (isLifetimeKey ? 36500 : (isShortPlan ? durationDays : defaultPaidDays));
       const expiresAt = new Date();
       if (isTestLicense) {
         // Test: placeholder de 24h. Se não ativada nesse prazo, é purgada.
         // Na 1ª ativação cai para 10min.
         expiresAt.setTime(expiresAt.getTime() + 24 * 60 * 60 * 1000);
-      } else if (!isLifetimeKey) {
-        // Pagas: placeholder de 100 anos. Expiração real setada na 1ª ativação.
+      } else if (!isLifetimeKey && !isShortPlan) {
+        // Pagas padrão: placeholder de 100 anos. Expiração real setada na 1ª ativação.
         expiresAt.setFullYear(expiresAt.getFullYear() + 100);
       } else {
+        // Planos curtos e vitalícios: validade calculada imediatamente.
         expiresAt.setTime(expiresAt.getTime() + effectiveDurationDays * 24 * 60 * 60 * 1000);
       }
 

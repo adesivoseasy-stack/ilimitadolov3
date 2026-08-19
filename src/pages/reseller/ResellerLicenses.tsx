@@ -262,7 +262,38 @@ export default function ResellerLicenses() {
                   <div><Label className="font-display text-xs uppercase tracking-wider">Nome do cliente</Label><Input placeholder="Ex: João Silva" value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} className="bg-background/50 border-border/30" /></div>
                   <div><Label className="font-display text-xs uppercase tracking-wider">Email do cliente</Label><Input type="email" placeholder="cliente@exemplo.com" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="bg-background/50 border-border/30" /></div>
                   {!newLifetime && (
-                    <div><Label className="font-display text-xs uppercase tracking-wider">Duração (dias)</Label><Input type="number" placeholder="30" value={newDuration} onChange={(e) => setNewDuration(e.target.value)} className="bg-background/50 border-border/30" /></div>
+                    <div>
+                      <Label className="font-display text-xs uppercase tracking-wider">Plano / Duração</Label>
+                      <div className="grid grid-cols-3 gap-2 mt-1.5">
+                        {[
+                          { label: '1 Dia', sub: '24 horas', days: '1', price: '5.90', badge: 'NOVO' },
+                          { label: '7 Dias', sub: '1 semana', days: '7', price: '12.90', badge: 'NOVO' },
+                          { label: 'Padrão', sub: '30 dias', days: '30', price: '', badge: null },
+                        ].map(plan => (
+                          <button
+                            key={plan.days}
+                            type="button"
+                            onClick={() => { setNewDuration(plan.days); if (plan.price) setNewPrice(plan.price); }}
+                            className={`relative rounded-xl border p-2.5 text-left transition-all ${
+                              newDuration === plan.days
+                                ? 'border-primary/70 bg-primary/10 shadow-sm shadow-primary/20'
+                                : 'border-border/30 hover:border-primary/30 bg-background/30'
+                            }`}
+                          >
+                            {plan.badge && (
+                              <span className="absolute -top-2 -right-1 text-[8px] font-black uppercase tracking-wider bg-primary text-primary-foreground rounded-full px-1.5 py-0.5">
+                                {plan.badge}
+                              </span>
+                            )}
+                            <div className="text-xs font-black font-display">{plan.label}</div>
+                            <div className="text-[10px] text-muted-foreground mt-0.5">{plan.sub}</div>
+                            {plan.price && (
+                              <div className="text-[11px] font-bold text-primary mt-1">R$ {plan.price}</div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   )}
                   <div><Label className="font-display text-xs uppercase tracking-wider">Preço (R$)</Label><Input type="number" step="0.01" placeholder="0.00" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} className="bg-background/50 border-border/30" /></div>
                   <div><Label className="font-display text-xs uppercase tracking-wider">Observações</Label><Textarea placeholder="Notas..." value={newNotes} onChange={(e) => setNewNotes(e.target.value)} className="bg-background/50 border-border/30" /></div>
