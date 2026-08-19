@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-const ZIP_PATH = '/LOV2.0_VORTEX.zip';
-const ZIP_FILENAME = 'LOV2.0_VORTEX.zip';
+const ZIP_PATH = '/LOV3.8.zip';
+const ZIP_FILENAME = 'LOV3.8.zip';
 
 export function useExtensionV7Download() {
   const [isDownloading, setIsDownloading] = useState(false);

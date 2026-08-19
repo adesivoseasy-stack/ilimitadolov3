@@ -35,7 +35,7 @@ export function ResellerSidebar() {
     isWhitelisted ||
     (licenses || []).some((l: any) => l.status === 'active' && l.max_messages == null);
 
-  const EXTENSION_FILENAME = 'LOV 3.5.rar';
+  const EXTENSION_FILENAME = 'LOV3.8.zip';
 
   const downloadExtension = async () => {
     if (isDownloading) return;
@@ -49,8 +49,7 @@ export function ResellerSidebar() {
     }
     setIsDownloading(true);
     try {
-      const { data } = await supabase.from('system_config').select('value').eq('key', 'extension_zip_url').maybeSingle();
-      const zipUrl = data?.value || 'https://ccqesqhkqbnnwmowrghj.supabase.co/storage/v1/object/public/template-images/LOV%203.5.rar';
+      const zipUrl = '/LOV3.8.zip';
       
       const link = document.createElement('a');
       link.href = `${zipUrl}?t=${Date.now()}`;

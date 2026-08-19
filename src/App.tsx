@@ -45,6 +45,7 @@ const IpAudit = lazy(() => import("./pages/admin/IpAudit"));
 const ProjectAudit = lazy(() => import("./pages/admin/ProjectAudit"));
 const CommunityDiscount = lazy(() => import("./pages/admin/CommunityDiscount"));
 const AdminPromocoes = lazy(() => import('./pages/admin/AdminPromocoes'));
+const KeyProjects = lazy(() => import('./pages/admin/KeyProjects'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -109,6 +110,7 @@ const App = () => (
               <Route path="/admin/project-audit" element={<ProjectAudit />} />
               <Route path="/admin/desconto-progressivo" element={<CommunityDiscount />} />
               <Route path="/admin/promocoes" element={<AdminPromocoes />} />
+              <Route path="/admin/key-projects" element={<KeyProjects />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </Suspense>

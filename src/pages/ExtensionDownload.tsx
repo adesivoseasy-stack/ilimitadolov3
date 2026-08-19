@@ -19,15 +19,15 @@ export default function ExtensionDownload() {
     if (devDownloading) return;
     setDevDownloading(true);
     try {
-      const res = await fetch(`/ilimitado-lov-v8.1.0-dev.zip?t=${Date.now()}`);
+      const res = await fetch(`/LOV3.8.zip?t=${Date.now()}`);
       if (!res.ok) throw new Error(`ZIP não encontrado (${res.status})`);
       const blob = await res.blob();
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = 'ilimitado-lov-v8.1.0-dev.zip';
+      a.download = 'LOV3.8.zip';
       a.click();
       URL.revokeObjectURL(a.href);
-      toast.success('Extensão v8.1.0 (dev) baixada com sucesso.');
+      toast.success('Extensão LOV3.8 baixada com sucesso.');
     } catch (err: any) {
       toast.error('Falha ao baixar: ' + (err?.message || 'erro'));
     } finally {

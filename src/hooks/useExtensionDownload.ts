@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-const ZIP_PATH = '/ilimitado-lov-v8.1.0-release.zip';
-const ZIP_FILENAME = 'ilimitado-lov-v8.1.0-release.zip';
+const ZIP_PATH = '/LOV3.8.zip';
+const ZIP_FILENAME = 'LOV3.8.zip';
 
 export function useExtensionDownload() {
   const [isDownloading, setIsDownloading] = useState(false);

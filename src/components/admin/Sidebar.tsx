@@ -44,6 +44,7 @@ const navItems = [
   { href: '/admin/project-audit', label: 'Auditoria Projetos', icon: FolderGit2 },
   { href: '/admin/desconto-progressivo', label: 'Desconto Comunidade', icon: Flame },
   { href: '/admin/promocoes', label: 'Promoções', icon: Tag },
+  { href: '/admin/key-projects', label: 'Projetos por Chave', icon: ShieldAlert },
 ];
 
 export function Sidebar() {
