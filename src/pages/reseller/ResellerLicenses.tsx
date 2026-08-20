@@ -267,7 +267,7 @@ export default function ResellerLicenses() {
                       <div className="grid grid-cols-3 gap-2 mt-1.5">
                         {[
                           { label: '1 Dia', sub: '24 horas', days: '1', price: '5.90', badge: 'NOVO' },
-                          { label: '7 Dias', sub: '1 semana', days: '7', price: '12.90', badge: 'NOVO' },
+                          { label: '7 Dias', sub: '1 semana', days: '7', price: '14.90', badge: 'NOVO' },
                           { label: 'Padrão', sub: '30 dias', days: '30', price: '', badge: null },
                         ].map(plan => (
                           <button

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ResellerLayout } from '@/components/reseller/ResellerLayout';
 import { useResellerStats, useResellerLicenses, useResellerCreateLicense, useUpdateCustomerName } from '@/hooks/useResellerLicenses';
@@ -656,360 +656,44 @@ export default function ResellerDashboard() {
                         </div>
                       );
                     })}
+                    {/* Plano 1 Dia */}
                     {isPricingReady && (
                       <div className="relative">
-                        <div
-                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
-                          style={{
-                            background: 'linear-gradient(135deg, #a855f7, #ec4899, #6366f1, #8b5cf6)',
-                            backgroundSize: '300% 300%',
-                            animation: 'fire-glow 4s ease infinite',
-                          }}
-                        />
-                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
+                        <div className="absolute -inset-[2px] rounded-[1.1rem] z-0" style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1, #8b5cf6)' }} />
+                        <div className="group relative p-5 rounded-2xl backdrop-blur-sm border border-transparent bg-card z-10 cursor-pointer hover:shadow-xl hover:shadow-violet-500/20 transition-all duration-300" onClick={() => handleBuyKeys(1)}>
                           <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
-                            <span className="bg-gradient-to-r from-pink-500 to-red-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider animate-pulse">
-                              🔥 Combo Exclusivo
-                            </span>
+                            <span className="bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider">⚡ NOVO</span>
                           </div>
-                          <div className="relative flex-1 flex flex-col gap-3">
-                             <div className="relative rounded-xl overflow-hidden bg-black">
-                              <img
-                                src={comboBannerAsset.url}
-                                alt="300 Créditos Lovable + 1 Ano PRO Lite por R$ 89,90"
-                                className="w-full h-auto object-cover aspect-square grayscale opacity-50"
-                                loading="lazy"
-                              />
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                                <span className="rotate-[-12deg] border-2 border-red-500 text-red-400 text-lg font-extrabold uppercase tracking-widest px-4 py-1 rounded-md bg-black/70">
-                                  Esgotado
-                                </span>
-                              </div>
-                            </div>
-                            <Button
-                              disabled
-                              className="mt-auto"
-                              variant="secondary"
-                              size="sm"
-                            >
-                              <span className="relative z-10">Esgotado</span>
-                            </Button>
+                          <div className="relative space-y-3 text-center">
+                            <div className="h-12 w-12 rounded-xl bg-violet-500/10 flex items-center justify-center mx-auto text-2xl">🕐</div>
+                            <div><h3 className="text-3xl font-bold text-gradient">1</h3><p className="text-xs text-muted-foreground">Dia</p></div>
+                            <div className="rounded-xl p-3 bg-secondary/50"><span className="text-xl font-bold text-primary">R$ 5,90</span><p className="text-[11px] text-muted-foreground">validade 24 horas</p></div>
+                            <p className="text-sm font-semibold text-foreground">R$ 5,90 / chave/dia</p>
+                            <Button className="w-full rounded-xl" variant="outline" size="sm" disabled={loadingQty !== null} onClick={(e) => { e.stopPropagation(); handleBuyKeys(1); }}><ShoppingCart className="mr-2 h-4 w-4" />Comprar</Button>
                           </div>
                         </div>
                       </div>
                     )}
+                    {/* Plano 7 Dias */}
                     {isPricingReady && (
                       <div className="relative">
-                        <div
-                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
-                          style={{
-                            background: 'linear-gradient(135deg, #facc15, #16a34a, #facc15, #1e3a8a)',
-                            backgroundSize: '300% 300%',
-                            animation: 'fire-glow 4s ease infinite',
-                          }}
-                        />
-                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
+                        <div className="absolute -inset-[2px] rounded-[1.1rem] z-0" style={{ background: 'linear-gradient(135deg, #a855f7, #8b5cf6, #a855f7)' }} />
+                        <div className="group relative p-5 rounded-2xl backdrop-blur-sm border border-transparent bg-card z-10 cursor-pointer hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300" onClick={() => handleBuyKeys(1)}>
                           <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
-                            <span className="bg-gradient-to-r from-yellow-400 to-green-500 text-black text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider animate-pulse">
-                              🏆 Combo Copa do Brasil
-                            </span>
+                            <span className="bg-gradient-to-r from-purple-500 to-violet-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider">📅 NOVO</span>
                           </div>
-                          <div className="relative flex-1 flex flex-col gap-3">
-                             <div className="relative rounded-xl overflow-hidden bg-black">
-                              <img
-                                src={comboChampionBannerAsset.url}
-                                alt="300 Créditos Lovable + 1 Ano PRO Lite + Chave Vitalícia por R$ 149,90"
-                                className="w-full h-auto object-cover aspect-square grayscale opacity-50"
-                                loading="lazy"
-                              />
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                                <span className="rotate-[-12deg] border-2 border-red-500 text-red-400 text-lg font-extrabold uppercase tracking-widest px-4 py-1 rounded-md bg-black/70">
-                                  Esgotado
-                                </span>
-                              </div>
-                            </div>
-                            <Button
-                              disabled
-                              className="mt-auto"
-                              variant="secondary"
-                              size="sm"
-                            >
-                              <span className="relative z-10">Esgotado</span>
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {isPricingReady && (
-                      <div className="relative">
-                        <div
-                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
-                          style={{
-                            background: 'linear-gradient(135deg, #ec4899, #a855f7, #ec4899, #8b5cf6)',
-                            backgroundSize: '300% 300%',
-                            animation: 'fire-glow 4s ease infinite',
-                          }}
-                        />
-                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
-                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
-                            <span className="bg-gradient-to-r from-pink-500 to-purple-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider animate-pulse">
-                              💖 Conta Lovable
-                            </span>
-                          </div>
-                          <div className="relative flex-1 flex flex-col gap-3">
-                            <div className="relative rounded-xl overflow-hidden bg-black">
-                              <img
-                                src={comboAccountBanner}
-                                alt="Conta Lovable + 300 Créditos + 1 Ano PRO por R$ 129,90"
-                                className="w-full h-auto object-cover aspect-square"
-                                loading="lazy"
-                              />
-                            </div>
-                            <Button
-                              disabled={loadingQty !== null}
-                              onClick={() => { setComboAccountAccepted(false); setComboAccountRequirementsOpen(true); }}
-                              className="cta-premium cta-pink mt-auto"
-                              size="sm"
-                            >
-                              <span className="cta-shine" aria-hidden />
-                              {loadingQty === -5 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
-                              <span className="relative z-10">
-                              {loadingQty === -5 ? 'Gerando PIX...' : 'Comprar por R$ 129,90'}
-                              </span>
-                            </Button>
+                          <div className="relative space-y-3 text-center">
+                            <div className="h-12 w-12 rounded-xl bg-purple-500/10 flex items-center justify-center mx-auto text-2xl">📆</div>
+                            <div><h3 className="text-3xl font-bold text-gradient">7</h3><p className="text-xs text-muted-foreground">Dias</p></div>
+                            <div className="rounded-xl p-3 bg-secondary/50"><span className="text-xl font-bold text-primary">R$ 14,90</span><p className="text-[11px] text-muted-foreground">validade 7 dias</p></div>
+                            <p className="text-sm font-semibold text-foreground">R$ 14,90 / chave/semana</p>
+                            <Button className="w-full rounded-xl" variant="outline" size="sm" disabled={loadingQty !== null} onClick={(e) => { e.stopPropagation(); handleBuyKeys(1); }}><ShoppingCart className="mr-2 h-4 w-4" />Comprar</Button>
                           </div>
                         </div>
                       </div>
                     )}
                     {!isPricingReady && (
-                      <div className="col-span-full rounded-2xl border border-border/50 bg-card/40 p-6 text-sm text-muted-foreground font-display">
-                        Carregando valores atualizados...
-                      </div>
-                    )}
-                    {isPricingReady && (
-                      <div className="relative">
-                        <div
-                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
-                          style={{
-                            background: 'linear-gradient(135deg, #06b6d4, #14b8a6, #22d3ee, #0ea5e9)',
-                            backgroundSize: '300% 300%',
-                            animation: 'fire-glow 4s ease infinite',
-                          }}
-                        />
-                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
-                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
-                            <span className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider animate-pulse">
-                              ⚡ Manus AI
-                            </span>
-                          </div>
-                          <div className="relative flex-1 flex flex-col gap-3">
-                            <div className="relative rounded-xl overflow-hidden bg-black">
-                              <img
-                                src={manusCreditsBannerAsset.url}
-                                alt="1000 Créditos Manus AI por R$ 39,90"
-                                className="w-full h-auto object-cover aspect-square"
-                                loading="lazy"
-                              />
-                            </div>
-                            <Button
-                              disabled={loadingQty !== null}
-                              onClick={() => { setManusCreditsAccepted(false); setManusCreditsRequirementsOpen(true); }}
-                              className="cta-premium mt-auto text-white"
-                              style={{
-                                background: 'linear-gradient(110deg, #0891b2 0%, #14b8a6 50%, #06b6d4 100%)',
-                                boxShadow: '0 8px 24px -8px rgba(20, 184, 166, 0.6)',
-                              }}
-                              size="sm"
-                            >
-                              <span className="cta-shine" aria-hidden />
-                              {loadingQty === -6 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
-                              <span className="relative z-10">
-                              {loadingQty === -6 ? 'Gerando PIX...' : 'Comprar por R$ 39,90'}
-                              </span>
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {isPricingReady && (
-                      <div className="relative">
-                        <div
-                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
-                          style={{
-                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899, #3b82f6)',
-                            backgroundSize: '300% 300%',
-                            animation: 'fire-glow 4s ease infinite',
-                          }}
-                        />
-                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
-                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
-                            <span className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider animate-pulse">
-                              ✨ Gemini Pro 18 Meses
-                            </span>
-                          </div>
-                          <div className="relative flex-1 flex flex-col gap-3">
-                            <div className="relative rounded-xl overflow-hidden bg-black">
-                              <img
-                                src={geminiProBanner}
-                                alt="Gemini Pro - 18 Meses de Assinatura por R$ 97,00"
-                                className="w-full h-auto object-cover aspect-square"
-                                loading="lazy"
-                              />
-                            </div>
-                            <Button
-                              disabled={loadingQty !== null}
-                              onClick={() => { setGeminiProAccepted(false); setGeminiProRequirementsOpen(true); }}
-                              className="cta-premium mt-auto text-white"
-                              style={{
-                                background: 'linear-gradient(110deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)',
-                                boxShadow: '0 8px 24px -8px rgba(139, 92, 246, 0.6)',
-                              }}
-                              size="sm"
-                            >
-                              <span className="cta-shine" aria-hidden />
-                              {loadingQty === -8 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
-                              <span className="relative z-10">
-                              {loadingQty === -8 ? 'Gerando PIX...' : 'Comprar por R$ 97,00'}
-                              </span>
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {isPricingReady && (
-                      <div className="relative">
-                        <div
-                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
-                          style={{
-                            background: 'linear-gradient(135deg, #a855f7, #7c3aed, #6366f1, #ec4899)',
-                            backgroundSize: '300% 300%',
-                            animation: 'fire-glow 4s ease infinite',
-                          }}
-                        />
-                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
-                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
-                            <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider animate-pulse">
-                              🚀 Seedance 8.500K
-                            </span>
-                          </div>
-                          <div className="relative flex-1 flex flex-col gap-3">
-                            <div className="relative rounded-xl overflow-hidden bg-black">
-                              <img
-                                src={seedanceBannerAsset.url}
-                                alt="Conta Seedance com 8.500K créditos por R$ 19,90"
-                                className="w-full h-auto object-cover aspect-square"
-                                loading="lazy"
-                              />
-                            </div>
-                            <Button
-                              disabled={loadingQty !== null}
-                              onClick={() => { setSeedanceAccepted(false); setSeedanceRequirementsOpen(true); }}
-                              className="cta-premium mt-auto text-white"
-                              style={{
-                                background: 'linear-gradient(110deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%)',
-                                boxShadow: '0 8px 24px -8px rgba(168, 85, 247, 0.6)',
-                              }}
-                              size="sm"
-                            >
-                              <span className="cta-shine" aria-hidden />
-                              {loadingQty === -9 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
-                              <span className="relative z-10">
-                              {loadingQty === -9 ? 'Gerando PIX...' : 'Comprar por R$ 19,90'}
-                              </span>
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {isPricingReady && (
-                      <div className="relative">
-                        <div
-                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
-                          style={{
-                            background: 'linear-gradient(135deg, #a855f7, #8b5cf6, #6366f1, #d946ef)',
-                            backgroundSize: '300% 300%',
-                            animation: 'fire-glow 4s ease infinite',
-                          }}
-                        />
-                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
-                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
-                            <span className="bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider animate-pulse">
-                              🎬 CapCut Pro 30d
-                            </span>
-                          </div>
-                          <div className="relative flex-1 flex flex-col gap-3">
-                            <div className="relative rounded-xl overflow-hidden bg-black">
-                              <img
-                                src={capcutProBannerAsset.url}
-                                alt="CapCut Pro 30 dias por R$ 24,99"
-                                className="w-full h-auto object-cover aspect-square"
-                                loading="lazy"
-                              />
-                            </div>
-                            <Button
-                              disabled={loadingQty !== null}
-                              onClick={() => { setCapcutProAccepted(false); setCapcutProRequirementsOpen(true); }}
-                              className="cta-premium mt-auto text-white"
-                              style={{
-                                background: 'linear-gradient(110deg, #7c3aed 0%, #a855f7 50%, #d946ef 100%)',
-                                boxShadow: '0 8px 24px -8px rgba(168, 85, 247, 0.6)',
-                              }}
-                              size="sm"
-                            >
-                              <span className="cta-shine" aria-hidden />
-                              {loadingQty === -10 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
-                              <span className="relative z-10">
-                              {loadingQty === -10 ? 'Gerando PIX...' : 'Comprar por R$ 24,99'}
-                              </span>
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {isPricingReady && (
-                      <div className="relative">
-                        <div
-                          className="absolute -inset-[2px] rounded-[1.1rem] z-0 animate-pulse opacity-80"
-                          style={{
-                            background: 'linear-gradient(135deg, #a855f7, #7c3aed, #4c1d95, #c026d3)',
-                            backgroundSize: '300% 300%',
-                            animation: 'fire-glow 4s ease infinite',
-                          }}
-                        />
-                        <div className="relative p-3 rounded-2xl bg-card border border-transparent z-10 h-full flex flex-col overflow-hidden">
-                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
-                            <span className="bg-gradient-to-r from-violet-500 to-purple-600 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-wider animate-pulse">
-                              🔒 Conta Lovable Pro
-                            </span>
-                          </div>
-                          <div className="relative flex-1 flex flex-col gap-3">
-                            <div className="relative rounded-xl overflow-hidden bg-black">
-                              <img
-                                src={lovableAccountBannerAsset.url}
-                                alt="Conta Lovable AI Pro privada com 105 créditos e 30 dias Pro por R$ 27,90"
-                                className="w-full h-auto object-cover aspect-square"
-                                loading="lazy"
-                              />
-                            </div>
-                            <Button
-                              disabled={loadingQty !== null}
-                              onClick={() => { setLovableAccountAccepted(false); setLovableAccountRequirementsOpen(true); }}
-                              className="cta-premium mt-auto text-white"
-                              style={{
-                                background: 'linear-gradient(110deg, #4c1d95 0%, #7c3aed 50%, #a855f7 100%)',
-                                boxShadow: '0 8px 24px -8px rgba(124, 58, 237, 0.6)',
-                              }}
-                              size="sm"
-                            >
-                              <span className="cta-shine" aria-hidden />
-                              {loadingQty === -11 ? <Loader2 className="mr-2 h-4 w-4 animate-spin relative z-10" /> : <Zap className="mr-2 h-4 w-4 relative z-10" />}
-                              <span className="relative z-10">
-                              {loadingQty === -11 ? 'Gerando PIX...' : 'Comprar por R$ 27,90'}
-                              </span>
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
+                      <div className="col-span-full rounded-2xl border border-border/50 bg-card/40 p-6 text-sm text-muted-foreground font-display">Carregando valores atualizados...</div>
                     )}
                   </div>
                 </div>
