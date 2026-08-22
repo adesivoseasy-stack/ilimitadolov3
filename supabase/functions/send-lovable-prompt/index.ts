@@ -1,4 +1,4 @@
-﻿import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders, json } from "../_shared/cors.ts"
 
 function generateLovableId(prefix: string): string {
@@ -517,30 +517,30 @@ async function uploadZipToLovable(token: string, projectId: string, file: Extens
 const SUPABASE_URL    = Deno.env.get('SUPABASE_URL')    || ''
 const SUPABASE_SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 
-// ── Upload do documento como arquivo PROMPT ─────────────────────────
+// -- Upload do PROMPT.txt -- mesmo padrao do uploadZipToLovable (funciona) ---
 async function uploadPromptFile(
   token: string,
   projectId: string,
   document: string,
-): Promise<{ fileId: string; fileName: string } | null> {
+): Promise<{ fileId: string; fileName: string; downloadUrl: string; contentType: string; sizeBytes: number } | null> {
   try {
     const bytes = new TextEncoder().encode(document)
-    const localId = generateLovableId('file_')
+    const contentType = 'text/plain; charset=utf-8'
     const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
       'origin': 'https://lovable.dev',
       'referer': 'https://lovable.dev/',
     }
-    const urlResp = await fetch(
+
+    // Passo 1: generate-upload-url
+    const uploadUrlResp = await fetch(
       `https://api.lovable.dev/projects/${encodeURIComponent(projectId)}/files/generate-upload-url`,
       {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          project_id: projectId,
-          file_name: localId,
-          content_type: 'text/plain; charset=utf-8',
+          content_type: contentType,
           original_file_name: 'PROMPT.txt',
           file_size_bytes: bytes.byteLength,
           original_file_size_bytes: bytes.byteLength,
@@ -548,30 +548,50 @@ async function uploadPromptFile(
         signal: AbortSignal.timeout(10_000),
       }
     )
-    if (!urlResp.ok) {
-      console.error('[prompt-upload] generate-upload-url failed', urlResp.status)
+    if (!uploadUrlResp.ok) {
+      console.error('[v1-doc] generate-upload-url failed', uploadUrlResp.status, await uploadUrlResp.text())
       return null
     }
-    const uploadData = await urlResp.json()
-    let putUrl = uploadData.url || uploadData.signedUrl || uploadData.uploadUrl || uploadData.upload_url
-    if (!putUrl) {
-      for (const v of Object.values(uploadData)) {
-        if (typeof v === 'string' && (v as string).startsWith('http')) { putUrl = v as string; break }
-      }
-    }
-    if (!putUrl) { console.error('[prompt-upload] no upload URL', JSON.stringify(uploadData)); return null }
-    const fileId = uploadData.file_id || uploadData.file_name || uploadData.path || uploadData.key || localId
+    const uploadData = await uploadUrlResp.json()
+    const fileId = uploadData.file_id || uploadData.file_name || uploadData.path || uploadData.key
     const extraHeaders: Record<string, string> = uploadData.headers || {}
-    const putResp = await fetch(putUrl, {
+
+    // Passo 2: PUT na URL assinada com os headers extras do passo 1
+    const putResp = await fetch(uploadData.url, {
       method: 'PUT',
-      headers: { 'Content-Type': 'text/plain; charset=utf-8', ...extraHeaders },
+      headers: { 'Content-Type': contentType, ...extraHeaders },
       body: bytes,
       signal: AbortSignal.timeout(20_000),
     })
-    if (!putResp.ok) { console.error('[prompt-upload] PUT failed', putResp.status); return null }
-    return { fileId, fileName: 'PROMPT.txt' }
+    if (!putResp.ok) {
+      console.error('[v1-doc] PUT failed', putResp.status, await putResp.text())
+      return null
+    }
+
+    // Passo 3: generate-download-url -- SEM isso o arquivo nao aparece no chat
+    let downloadUrl = ''
+    try {
+      const dirName = String(fileId || '').split('/')[0]
+      const dlResp = await fetch('https://api.lovable.dev/files/generate-download-url', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ dir_name: dirName, file_name: fileId }),
+        signal: AbortSignal.timeout(10_000),
+      })
+      if (dlResp.ok) {
+        const dlData = await dlResp.json()
+        downloadUrl = dlData.url || ''
+        console.log('[v1-doc] PROMPT.txt OK; file_id=', fileId)
+      } else {
+        console.error('[v1-doc] generate-download-url failed', dlResp.status)
+      }
+    } catch (e) {
+      console.error('[v1-doc] generate-download-url exception:', e)
+    }
+
+    return { fileId, fileName: 'PROMPT.txt', downloadUrl, contentType, sizeBytes: bytes.byteLength }
   } catch (e) {
-    console.error('[prompt-upload] exception:', e)
+    console.error('[v1-doc] exception:', e)
     return null
   }
 }
@@ -966,12 +986,14 @@ serve(async (req) => {
       if (uploaded) {
         filesWithPrompt.push({
           file_id: uploaded.fileId,
-          file_name: 'PROMPT.txt',
-          original_file_name: 'PROMPT.txt',
-          content_type: 'text/plain; charset=utf-8',
+          file_name: uploaded.fileName,
+          original_file_name: uploaded.fileName,
+          content_type: uploaded.contentType,
+          file_size_bytes: uploaded.sizeBytes,
+          original_file_size_bytes: uploaded.sizeBytes,
           type: 'user_upload',
         })
-        console.log(`[send-lovable-prompt] PROMPT uploaded; mode=${mode} confidence=${confidence}`)
+        console.log(`[send-lovable-prompt] PROMPT.txt uploaded OK; mode=${mode} file_id=${uploaded.fileId}`)
       } else {
         console.warn(`[send-lovable-prompt] PROMPT upload failed; mode=${mode} — fallback: instrucoes no message`)
       }
