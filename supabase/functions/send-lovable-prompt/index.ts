@@ -1,4 +1,4 @@
-﻿import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders, json } from "../_shared/cors.ts"
 
 function generateLovableId(prefix: string): string {
@@ -541,7 +541,7 @@ async function uploadPromptFile(
           project_id: projectId,
           file_name: localId,
           content_type: 'text/plain; charset=utf-8',
-          original_file_name: 'PROMPT',
+          original_file_name: 'PROMPT.txt',
           file_size_bytes: bytes.byteLength,
           original_file_size_bytes: bytes.byteLength,
         }),
@@ -569,7 +569,7 @@ async function uploadPromptFile(
       signal: AbortSignal.timeout(20_000),
     })
     if (!putResp.ok) { console.error('[prompt-upload] PUT failed', putResp.status); return null }
-    return { fileId, fileName: 'PROMPT' }
+    return { fileId, fileName: 'PROMPT.txt' }
   } catch (e) {
     console.error('[prompt-upload] exception:', e)
     return null
@@ -966,8 +966,8 @@ serve(async (req) => {
       if (uploaded) {
         filesWithPrompt.push({
           file_id: uploaded.fileId,
-          file_name: 'PROMPT',
-          original_file_name: 'PROMPT',
+          file_name: 'PROMPT.txt',
+          original_file_name: 'PROMPT.txt',
           content_type: 'text/plain; charset=utf-8',
           type: 'user_upload',
         })
