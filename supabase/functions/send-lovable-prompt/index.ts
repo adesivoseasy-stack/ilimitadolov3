@@ -957,42 +957,16 @@ serve(async (req) => {
     const { mode, confidence } = routeMode(userMessage)
     const document = buildDocument(mode, confidence, userMessage)
 
-    // ── Upload do documento como arquivo PROMPT ──────────────────────────
-    // kill-switch: system_config key='prompt_as_file_enabled' (default: true)
-    let promptFileEnabled = true
-    try {
-      const ksUrl = `${SUPABASE_URL}/rest/v1/system_config?key=eq.prompt_as_file_enabled&select=value&limit=1`
-      const ksResp = await fetch(ksUrl, {
-        headers: { 'apikey': SUPABASE_SERVICE, 'Authorization': `Bearer ${SUPABASE_SERVICE}` },
-        signal: AbortSignal.timeout(3_000),
-      })
-      if (ksResp.ok) {
-        const ksRows: any[] = await ksResp.json().catch(() => [])
-        if (Array.isArray(ksRows) && ksRows.length > 0 && ksRows[0].value === 'false') {
-          promptFileEnabled = false
-        }
-      }
-    } catch (_) { /* fail-open: usa arquivo */ }
-
-    let promptFile: { file_id: string; file_name: string; type: string } | null = null
-    if (promptFileEnabled) {
-      const uploaded = await uploadPromptFile(cleanToken, projectId, document)
-      if (uploaded) {
-        promptFile = { file_id: uploaded.fileId, file_name: 'PROMPT', type: 'user_upload' }
-        console.log(`[send-lovable-prompt] prompt uploaded as file; mode=${mode} confidence=${confidence}`)
-      } else {
-        console.warn(`[send-lovable-prompt] upload falhou – fallback para campo message; mode=${mode}`)
-      }
-    }
-
-    // Se arquivo subiu: mensagem vazia + arquivo; senão: documento no campo message
-    const messageField   = promptFile ? '' : document
-    const filesWithPrompt = promptFile ? [...files, promptFile] : files
+    // ── Documento vai direto no campo message ──────────────────────────
+    // Upload como arquivo desativado por ora — Lovable rejeita message vazio.
+    // O documento do modo (conversa/analise/execucao/ambiguo) vai no campo message.
+    const messageField = document
+    const filesWithPrompt = files
     // text_replacements sempre preenchido — Lovable rejeita visual_edit sem eles.
     // As substituicoes sao no-op (old_text === new_text), nao alteram nada.
     // A instrucao de nao-editar vem do documento PROMPT enviado como arquivo.
     const payloadReplacements = normalizedReplacements
-
+    console.log(`[send-lovable-prompt] mode=${mode} confidence=${confidence} fileUpload=disabled`)
     console.log(`[send-lovable-prompt] mode=${mode} confidence=${confidence} fileUploaded=${!!promptFile} chatOnly=false`)
 
     const payload: Record<string, any> = {
