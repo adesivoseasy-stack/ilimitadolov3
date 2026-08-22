@@ -1,4 +1,4 @@
-﻿import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders, json } from "../_shared/cors.ts"
 
 function generateLovableId(prefix: string): string {
@@ -953,20 +953,36 @@ serve(async (req) => {
     const normalizedSelected = normalizeSelectedElements(selected_elements, userMessage)
     const normalizedReplacements = normalizeVisualEditReplacements(text_replacements, userMessage, normalizedSelected)
 
-    // ── Roteamento de modos ──────────────────────────────────────────────
+    // -- Roteamento de modos -----------------------------------------------
     const { mode, confidence } = routeMode(userMessage)
     const document = buildDocument(mode, confidence, userMessage)
 
-    // ── Documento vai direto no campo message ──────────────────────────
-    // Upload como arquivo desativado por ora — Lovable rejeita message vazio.
-    // O documento do modo (conversa/analise/execucao/ambiguo) vai no campo message.
-    const messageField = document
-    const filesWithPrompt = files
-    // text_replacements sempre preenchido — Lovable rejeita visual_edit sem eles.
-    // As substituicoes sao no-op (old_text === new_text), nao alteram nada.
-    // A instrucao de nao-editar vem do documento PROMPT enviado como arquivo.
+    // -- Upload: instrucoes + mensagem como arquivo .txt PROMPT -------------
+    // message = mensagem original do usuario (nao vazia — nao quebra visual_edit)
+    // arquivo .txt = instrucoes completas + mensagem (Lovable le como contexto)
+    let filesWithPrompt = [...files]
+    try {
+      const uploaded = await uploadPromptFile(cleanToken, projectId, document)
+      if (uploaded) {
+        filesWithPrompt.push({
+          file_id: uploaded.fileId,
+          file_name: 'PROMPT',
+          original_file_name: 'PROMPT',
+          content_type: 'text/plain; charset=utf-8',
+          type: 'user_upload',
+        })
+        console.log(`[send-lovable-prompt] PROMPT uploaded; mode=${mode} confidence=${confidence}`)
+      } else {
+        console.warn(`[send-lovable-prompt] PROMPT upload failed; mode=${mode} — fallback: instrucoes no message`)
+      }
+    } catch (e) {
+      console.warn('[send-lovable-prompt] PROMPT upload exception:', e)
+    }
+
+    // message = mensagem original do usuario (mesma logica do codigo antigo)
+    const messageField = buildVisualEditBridgeMessage(userMessage, false)
     const payloadReplacements = normalizedReplacements
-    console.log(`[send-lovable-prompt] mode=${mode} confidence=${confidence} fileUpload=disabled`)
+    console.log(`[send-lovable-prompt] mode=${mode} confidence=${confidence} files=${filesWithPrompt.length}`)
 
     const payload: Record<string, any> = {
       id: msgId,
@@ -990,6 +1006,7 @@ serve(async (req) => {
       current_viewport_height: current_viewport_height || 1080,
       current_viewport_dpr: current_viewport_dpr || 1,
       view: 'preview',
+      view_description: document,
       model: null,
       client_logs: [],
       network_requests: [],
