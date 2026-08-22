@@ -988,10 +988,10 @@ serve(async (req) => {
     // Se arquivo subiu: mensagem vazia + arquivo; senão: documento no campo message
     const messageField   = promptFile ? '' : document
     const filesWithPrompt = promptFile ? [...files, promptFile] : files
-    // chat_only: sempre false (igual ao comportamento anterior)
-    // A instrucao de nao-editar vem do DOCUMENTO (arquivo PROMPT), nao desse flag
+    // Para modos nao-execucao: text_replacements vazia evita visual edit indesejado.
+    // chat_only permanece false — nao quebra o envio. selected_elements preservado.
     const payloadSelected     = normalizedSelected
-    const payloadReplacements = normalizedReplacements
+    const payloadReplacements = mode === 'execucao' ? normalizedReplacements : []
 
     console.log(`[send-lovable-prompt] mode=${mode} confidence=${confidence} fileUploaded=${!!promptFile} chatOnly=false`)
 
