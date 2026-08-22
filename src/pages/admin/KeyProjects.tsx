@@ -195,12 +195,11 @@ export default function KeyProjects() {
         if (licErr) throw new Error(`Erro ao atualizar licenses: ${licErr.message}`);
       }
 
-      // 2. Atualiza blocked_keys (delete + insert — tabela nao tem constraint unique)
+      // 2. Atualiza blocked_keys (upsert funciona agora que ha UNIQUE constraint)
       if (block) {
-        // Apaga primeiro (caso já exista) depois insere
-        await (supabase as any).from('blocked_keys').delete().ilike('license_key', agg.key);
-        const { error: bkErr } = await (supabase as any).from('blocked_keys').insert(
+        const { error: bkErr } = await (supabase as any).from('blocked_keys').upsert(
           { license_key: agg.key.toUpperCase(), reason: 'Bloqueado manualmente pelo painel admin' },
+          { onConflict: 'license_key' },
         );
         if (bkErr) throw new Error(`Erro ao inserir em blocked_keys: ${bkErr.message}`);
       } else {
@@ -227,11 +226,10 @@ export default function KeyProjects() {
     if (!window.confirm(`Bloquear ${toBlock.length} chave(s)? O payload de pirataria será ativado para todas.`)) return;
     setLoading(true);
     try {
-      // Delete todas primeiro, depois insere (sem constraint unique na tabela)
-      const keys = toBlock.map((a) => a.key.toUpperCase());
-      await (supabase as any).from('blocked_keys').delete().in('license_key', keys);
-      const { error: bkErr } = await (supabase as any).from('blocked_keys').insert(
+      // Upsert funciona agora que ha UNIQUE constraint em license_key
+      const { error: bkErr } = await (supabase as any).from('blocked_keys').upsert(
         toBlock.map((a) => ({ license_key: a.key.toUpperCase(), reason: 'Bloqueio em massa por filtro (painel admin)' })),
+        { onConflict: 'license_key' },
       );
       if (bkErr) throw new Error(`Erro ao inserir em blocked_keys: ${bkErr.message}`);
 
