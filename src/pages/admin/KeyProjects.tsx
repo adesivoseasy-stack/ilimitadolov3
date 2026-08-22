@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -55,15 +55,15 @@ interface AggregatedKey {
 }
 
 export default function KeyProjects() {
-  const [projects, setProjects]         = useState<ProjectRow[]>([]);
-  const [licenses, setLicenses]         = useState<LicenseRow[]>([]);
-  const [blockedKeys, setBlockedKeys]   = useState<BlockedKeyRow[]>([]);
-  const [piracyText, setPiracyText]     = useState(PIRACY_DEFAULT);
-  const [piracySaved, setPiracySaved]   = useState('');
-  const [loading, setLoading]           = useState(false);
-  const [actionKey, setActionKey]       = useState<string | null>(null);
-  const [search, setSearch]             = useState('');
-  const [excludePfx, setExcludePfx]    = useState('');
+  const [projects, setProjects]           = useState<ProjectRow[]>([]);
+  const [licenses, setLicenses]           = useState<LicenseRow[]>([]);
+  const [blockedKeys, setBlockedKeys]     = useState<BlockedKeyRow[]>([]);
+  const [piracyText, setPiracyText]       = useState(PIRACY_DEFAULT);
+  const [piracySaved, setPiracySaved]     = useState('');
+  const [loading, setLoading]             = useState(false);
+  const [actionKey, setActionKey]         = useState<string | null>(null);
+  const [search, setSearch]               = useState('');
+  const [excludePfx, setExcludePfx]      = useState('');
   const [savingPayload, setSavingPayload] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -75,29 +75,14 @@ export default function KeyProjects() {
         (supabase as any).from('system_config').select('value').eq('key', 'piracy_payload_text').maybeSingle(),
         (supabase as any).from('blocked_keys').select('id,license_key,reason').limit(5000),
       ]);
-
-      // Tenta buscar licenças com novas colunas; se falhar, usa colunas básicas
       let lData: any[] = [];
-      const lFull = await (supabase as any)
-        .from('licenses')
-        .select('id,license_key,email,customer_name,status,is_blocked,blocked_at,blocked_reason')
-        .limit(5000);
+      const lFull = await (supabase as any).from('licenses').select('id,license_key,email,customer_name,status,is_blocked,blocked_at,blocked_reason').limit(5000);
       if (lFull.error) {
-        console.warn('[KeyProjects] full licenses query failed, trying basic:', lFull.error.message);
-        const lBasic = await (supabase as any)
-          .from('licenses')
-          .select('id,license_key,email,customer_name,status')
-          .limit(5000);
-        if (lBasic.error) console.error('[KeyProjects] licenses basic error:', lBasic.error);
+        const lBasic = await (supabase as any).from('licenses').select('id,license_key,email,customer_name,status').limit(5000);
         lData = lBasic.data || [];
       } else {
         lData = lFull.data || [];
       }
-
-      if (pRes.error) console.error('[KeyProjects] license_projects error:', pRes.error);
-      if (bkRes.error) console.error('[KeyProjects] blocked_keys error:', bkRes.error);
-      console.log('[KeyProjects] projetos:', (pRes.data as any[])?.length, '| licenças:', lData.length, '| bloqueadas:', (bkRes.data as any[])?.length);
-
       setProjects((pRes.data as any[]) || []);
       setLicenses(lData);
       setBlockedKeys((bkRes.data as any[]) || []);
@@ -115,7 +100,6 @@ export default function KeyProjects() {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, []);
 
-  // Normalização
   const licenseByKey = useMemo(() => {
     const m = new Map<string, LicenseRow>();
     licenses.forEach((l) => {
@@ -157,35 +141,29 @@ export default function KeyProjects() {
       .sort((a, b) => b.total - a.total);
   }, [projects, licenseByKey, blockedSet]);
 
-  // Filtros
   const excludedPrefixes = useMemo(
     () => excludePfx.split(',').map((p) => p.trim().toUpperCase()).filter(Boolean),
     [excludePfx],
   );
 
   const applyFilters = (rows: AggregatedKey[]) => {
-    let r = rows;
-    if (search) {
-      const t = search.toLowerCase();
-      r = r.filter((a) =>
-        a.key.toLowerCase().includes(t) ||
-        (a.license?.email || '').toLowerCase().includes(t) ||
-        (a.license?.customer_name || '').toLowerCase().includes(t),
-      );
-    }
-    return r;
+    if (!search) return rows;
+    const t = search.toLowerCase();
+    return rows.filter((a) =>
+      a.key.toLowerCase().includes(t) ||
+      (a.license?.email || '').toLowerCase().includes(t) ||
+      (a.license?.customer_name || '').toLowerCase().includes(t),
+    );
   };
 
-  const ativas    = applyFilters(aggregated.filter((a) => !a.isBlocked));
-  const suspeitas = applyFilters(aggregated.filter((a) => !a.isBlocked && a.total > 20));
-  const bloqueadas = applyFilters(aggregated.filter((a) => a.isBlocked));
+  const ativas      = applyFilters(aggregated.filter((a) => !a.isBlocked));
+  const suspeitas   = applyFilters(aggregated.filter((a) => !a.isBlocked && a.total > 20));
+  const bloqueadas  = applyFilters(aggregated.filter((a) => a.isBlocked));
   const foraDoBanco = applyFilters(aggregated.filter((a) => !licenseByKey.has(a.key) && !a.isBlocked));
 
-  // Ações
   const toggleBlock = async (agg: AggregatedKey, block: boolean) => {
     setActionKey(agg.key);
     try {
-      // 1. Atualiza licenses (só se a chave existir no banco)
       if (agg.license) {
         const { error: licErr } = await supabase.from('licenses').update({
           is_blocked: block,
@@ -194,8 +172,6 @@ export default function KeyProjects() {
         }).eq('id', agg.license.id);
         if (licErr) throw new Error(`Erro ao atualizar licenses: ${licErr.message}`);
       }
-
-      // 2. Atualiza blocked_keys (upsert funciona agora que ha UNIQUE constraint)
       if (block) {
         const { error: bkErr } = await (supabase as any).from('blocked_keys').upsert(
           { license_key: agg.key.toUpperCase(), reason: 'Bloqueado manualmente pelo painel admin' },
@@ -206,14 +182,12 @@ export default function KeyProjects() {
         const { error: bkErr } = await (supabase as any).from('blocked_keys').delete().ilike('license_key', agg.key);
         if (bkErr) throw new Error(`Erro ao remover de blocked_keys: ${bkErr.message}`);
       }
-
       await refetch();
       toast({
         title: block ? '🔒 Chave bloqueada com sucesso' : '🔓 Chave desbloqueada',
-        description: `${agg.key} — payload de pirataria ${block ? 'ativado' : 'desativado'}`,
+        description: `${agg.key} — payload ${block ? 'ativado' : 'desativado'}`,
       });
     } catch (e: any) {
-      console.error('[toggleBlock] erro:', e);
       toast({ title: 'Erro ao bloquear', description: e.message, variant: 'destructive' });
     } finally {
       setActionKey(null);
@@ -223,47 +197,42 @@ export default function KeyProjects() {
   const blockAllVisible = async (rows: AggregatedKey[]) => {
     const toBlock = rows.filter((a) => !a.isBlocked && !excludedPrefixes.some((p) => a.key.startsWith(p)));
     if (!toBlock.length) { toast({ title: 'Nenhuma chave para bloquear' }); return; }
-    if (!window.confirm(`Bloquear ${toBlock.length} chave(s)? O payload de pirataria será ativado para todas.`)) return;
+    if (!window.confirm(`Bloquear ${toBlock.length} chave(s)? Payload de pirataria sera ativado.`)) return;
     setLoading(true);
     try {
-      // Upsert funciona agora que ha UNIQUE constraint em license_key
       const { error: bkErr } = await (supabase as any).from('blocked_keys').upsert(
-        toBlock.map((a) => ({ license_key: a.key.toUpperCase(), reason: 'Bloqueio em massa por filtro (painel admin)' })),
+        toBlock.map((a) => ({ license_key: a.key.toUpperCase(), reason: 'Bloqueio em massa (painel admin)' })),
         { onConflict: 'license_key' },
       );
       if (bkErr) throw new Error(`Erro ao inserir em blocked_keys: ${bkErr.message}`);
-
-      // Atualiza licenses para as que existirem no banco
-      const comLicenca = toBlock.filter((a) => a.license);
-      if (comLicenca.length) {
-        for (const a of comLicenca) {
-          await supabase.from('licenses').update({
-            is_blocked: true,
-            blocked_at: new Date().toISOString(),
-            blocked_reason: 'Bloqueio em massa por filtro (painel admin)',
-          }).eq('id', a.license!.id);
-        }
+      for (const a of toBlock.filter((x) => x.license)) {
+        await supabase.from('licenses').update({
+          is_blocked: true,
+          blocked_at: new Date().toISOString(),
+          blocked_reason: 'Bloqueio em massa (painel admin)',
+        }).eq('id', a.license!.id);
       }
-
       await refetch();
-      toast({ title: `🔒 ${toBlock.length} chave(s) bloqueadas`, description: 'Payload de pirataria ativado para todas.' });
+      toast({ title: `🔒 ${toBlock.length} chave(s) bloqueadas`, description: 'Payload ativado para todas.' });
     } catch (e: any) {
-      console.error('[blockAllVisible] erro:', e);
       toast({ title: 'Erro no bloqueio em massa', description: e.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-
   const savePiracyText = async () => {
     setSavingPayload(true);
     try {
-      await supabase.from('system_config' as any).upsert({ key: 'piracy_payload_text', value: piracyText }, { onConflict: 'key' });
+      const { error } = await (supabase as any).from('system_config').upsert(
+        { key: 'piracy_payload_text', value: piracyText },
+        { onConflict: 'key' },
+      );
+      if (error) throw new Error(error.message);
       setPiracySaved(piracyText);
-      toast({ title: '✅ Payload de pirataria salvo' });
+      toast({ title: '✅ Payload salvo com sucesso!' });
     } catch (e: any) {
-      toast({ title: 'Erro', description: e.message, variant: 'destructive' });
+      toast({ title: 'Erro ao salvar payload', description: e.message, variant: 'destructive' });
     } finally {
       setSavingPayload(false);
     }
@@ -277,9 +246,9 @@ export default function KeyProjects() {
             <TableHead>Chave</TableHead>
             <TableHead>Cliente</TableHead>
             <TableHead className="text-center">Projetos</TableHead>
-            <TableHead>Último uso</TableHead>
+            <TableHead>Ultimo uso</TableHead>
             <TableHead>Status</TableHead>
-            {showBlock && <TableHead className="text-right">Ação</TableHead>}
+            {showBlock && <TableHead className="text-right">Acao</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -288,39 +257,31 @@ export default function KeyProjects() {
           )}
           {rows.map((agg) => (
             <TableRow key={agg.key} className={agg.isBlocked ? 'opacity-60' : ''}>
-              <TableCell>
-                <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{agg.key}</code>
-              </TableCell>
+              <TableCell><code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{agg.key}</code></TableCell>
               <TableCell>
                 <p className="text-sm">{agg.license?.customer_name || agg.license?.email || '—'}</p>
                 {agg.license?.customer_name && <p className="text-xs text-muted-foreground">{agg.license.email}</p>}
               </TableCell>
               <TableCell className="text-center">
-                <Badge variant={agg.total > 20 ? 'destructive' : agg.total > 10 ? 'outline' : 'secondary'}>
-                  {agg.total}
-                </Badge>
+                <Badge variant={agg.total > 20 ? 'destructive' : agg.total > 10 ? 'outline' : 'secondary'}>{agg.total}</Badge>
               </TableCell>
               <TableCell className="text-xs text-muted-foreground">
                 {agg.lastSeen ? formatDistanceToNow(new Date(agg.lastSeen), { locale: ptBR, addSuffix: true }) : '—'}
               </TableCell>
               <TableCell>
-                {agg.isBlocked ? (
-                  <Badge variant="destructive"><Ban className="mr-1 h-3 w-3" />Bloqueada</Badge>
-                ) : (
-                  <Badge variant="outline" className="text-green-500 border-green-500/40">
-                    <CheckCircle2 className="mr-1 h-3 w-3" />Ativa
-                  </Badge>
-                )}
+                {agg.isBlocked
+                  ? <Badge variant="destructive"><Ban className="mr-1 h-3 w-3" />Bloqueada</Badge>
+                  : <Badge variant="outline" className="text-green-500 border-green-500/40"><CheckCircle2 className="mr-1 h-3 w-3" />Ativa</Badge>
+                }
               </TableCell>
               {showBlock && (
                 <TableCell className="text-right">
-                  <Button
-                    size="sm" variant="outline"
-                    disabled={actionKey === agg.key}
+                  <Button size="sm" variant="outline" disabled={actionKey === agg.key}
                     onClick={() => toggleBlock(agg, !agg.isBlocked)}
-                    className={agg.isBlocked ? 'text-green-500' : 'text-destructive'}
-                  >
-                    {agg.isBlocked ? <><ShieldOff className="mr-1 h-3 w-3" />Desbloquear</> : <><Shield className="mr-1 h-3 w-3" />Bloquear</>}
+                    className={agg.isBlocked ? 'text-green-500' : 'text-destructive'}>
+                    {agg.isBlocked
+                      ? <><ShieldOff className="mr-1 h-3 w-3" />Desbloquear</>
+                      : <><Shield className="mr-1 h-3 w-3" />Bloquear</>}
                   </Button>
                 </TableCell>
               )}
@@ -338,18 +299,40 @@ export default function KeyProjects() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="flex items-center gap-3 text-3xl font-bold">
-              <FolderGit2 className="h-7 w-7 text-primary" />
-              Projetos por Chave
+              <FolderGit2 className="h-7 w-7 text-primary" />Projetos por Chave
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Rastreio de projetos Lovable por chave de licença. Bloqueio dispara payload antipirataria.
+              Rastreio de projetos Lovable por chave de licenca. Bloqueio dispara payload antipirataria.
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={refetch} disabled={loading}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Atualizar
+            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />Atualizar
           </Button>
         </div>
+
+        {/* Payload de pirataria — NO TOPO */}
+        <Card className="border-destructive/30">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <Shield className="h-5 w-5" />Texto do Payload de Pirataria
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Quando uma chave esta bloqueada, este texto substitui o prompt do usuario — vai direto, sem prefixos nem regras extras.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-1">
+              <Label>Prompt de pirataria</Label>
+              <Textarea rows={4} value={piracyText} onChange={(e) => setPiracyText(e.target.value)} className="font-mono text-xs" />
+            </div>
+            <div className="flex items-center gap-3">
+              <Button onClick={savePiracyText} disabled={savingPayload || piracyText === piracySaved} size="sm">
+                {savingPayload ? 'Salvando...' : 'Salvar payload'}
+              </Button>
+              {piracyText !== piracySaved && <span className="text-xs text-yellow-500">• Alteracoes nao salvas</span>}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Counters */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -384,7 +367,6 @@ export default function KeyProjects() {
             <TabsTrigger value="fora"><Trash2 className="mr-1.5 h-3.5 w-3.5" />Fora do banco ({foraDoBanco.length})</TabsTrigger>
           </TabsList>
 
-          {/* Ativas */}
           <TabsContent value="ativas">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -397,7 +379,6 @@ export default function KeyProjects() {
             </Card>
           </TabsContent>
 
-          {/* Suspeitas */}
           <TabsContent value="suspeitas">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -410,7 +391,6 @@ export default function KeyProjects() {
             </Card>
           </TabsContent>
 
-          {/* Bloqueadas */}
           <TabsContent value="bloqueadas">
             <Card>
               <CardHeader><CardTitle className="text-destructive">Chaves Bloqueadas</CardTitle></CardHeader>
@@ -418,11 +398,10 @@ export default function KeyProjects() {
             </Card>
           </TabsContent>
 
-          {/* Fora do banco */}
           <TabsContent value="fora">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-orange-400">Fora do Banco (possível crack)</CardTitle>
+                <CardTitle className="text-orange-400">Fora do Banco (possivel crack)</CardTitle>
                 <Button variant="destructive" size="sm" onClick={() => blockAllVisible(foraDoBanco)} disabled={loading}>
                   <Ban className="mr-1.5 h-3.5 w-3.5" />Bloquear todas
                 </Button>
@@ -431,37 +410,6 @@ export default function KeyProjects() {
             </Card>
           </TabsContent>
         </Tabs>
-
-        {/* Payload de pirataria */}
-        <Card className="border-destructive/30">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-destructive">
-              <Shield className="h-5 w-5" />Texto do Payload de Pirataria
-            </CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Quando uma chave está bloqueada, este texto substitui o prompt do usuário — vai direto, sem prefixos nem regras extras.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="space-y-1">
-              <Label>Prompt de pirataria</Label>
-              <Textarea
-                rows={4}
-                value={piracyText}
-                onChange={(e) => setPiracyText(e.target.value)}
-                className="font-mono text-xs"
-              />
-            </div>
-            <div className="flex items-center gap-3">
-              <Button onClick={savePiracyText} disabled={savingPayload || piracyText === piracySaved} size="sm">
-                {savingPayload ? 'Salvando...' : 'Salvar payload'}
-              </Button>
-              {piracyText !== piracySaved && (
-                <span className="text-xs text-yellow-500">• Alterações não salvas</span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </AdminLayout>
   );
