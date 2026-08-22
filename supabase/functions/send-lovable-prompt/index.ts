@@ -517,7 +517,7 @@ async function uploadZipToLovable(token: string, projectId: string, file: Extens
 const SUPABASE_URL    = Deno.env.get('SUPABASE_URL')    || ''
 const SUPABASE_SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 
-// -- Upload do PROMPT.txt -- mesmo padrao do uploadZipToLovable (funciona) ---
+// -- Upload do instrucoes.md — conforme METODO-ENVIO-COMPLETO.md -----------
 async function uploadPromptFile(
   token: string,
   projectId: string,
@@ -525,12 +525,17 @@ async function uploadPromptFile(
 ): Promise<{ fileId: string; fileName: string; downloadUrl: string; contentType: string; sizeBytes: number } | null> {
   try {
     const bytes = new TextEncoder().encode(document)
-    const contentType = 'text/plain; charset=utf-8'
-    const headers = {
+    // CRITICO: content_type DEVE ser identico no generate-upload-url E no PUT
+    // Qualquer diferenca (ex: adicionar charset) causa 403 do GCS
+    const contentType = 'text/markdown'
+    const fileName = 'instrucoes.md'
+    const apiHeaders = {
       'Content-Type': 'application/json',
+      'Accept': '*/*',
       'Authorization': `Bearer ${token}`,
-      'origin': 'https://lovable.dev',
-      'referer': 'https://lovable.dev/',
+      'Origin': 'https://lovable.dev',
+      'Referer': 'https://lovable.dev/',
+      'x-lovable-project-id': projectId,
     }
 
     // Passo 1: generate-upload-url
@@ -538,10 +543,10 @@ async function uploadPromptFile(
       `https://api.lovable.dev/projects/${encodeURIComponent(projectId)}/files/generate-upload-url`,
       {
         method: 'POST',
-        headers,
+        headers: apiHeaders,
         body: JSON.stringify({
           content_type: contentType,
-          original_file_name: 'PROMPT.txt',
+          original_file_name: fileName,
           file_size_bytes: bytes.byteLength,
           original_file_size_bytes: bytes.byteLength,
         }),
@@ -553,13 +558,18 @@ async function uploadPromptFile(
       return null
     }
     const uploadData = await uploadUrlResp.json()
-    const fileId = uploadData.file_id || uploadData.file_name || uploadData.path || uploadData.key
-    const extraHeaders: Record<string, string> = uploadData.headers || {}
+    const fileId = String(uploadData.file_id || uploadData.file_name || uploadData.path || uploadData.key || '')
+    if (!fileId) { console.error('[v1-doc] no file_id in response', JSON.stringify(uploadData)); return null }
+    const signedUrl = String(uploadData.url || uploadData.signed_url || '')
+    if (!signedUrl) { console.error('[v1-doc] no signed url in response'); return null }
+    const gcsHeaders: Record<string, string> = (uploadData.headers && typeof uploadData.headers === 'object') ? uploadData.headers : {}
 
-    // Passo 2: PUT na URL assinada com os headers extras do passo 1
-    const putResp = await fetch(uploadData.url, {
+    // Passo 2: PUT no GCS — Content-Type IDENTICO ao do passo 1 (sem charset)
+    const putHeaders: Record<string, string> = { 'Content-Type': contentType }
+    for (const [k, v] of Object.entries(gcsHeaders)) putHeaders[k] = String(v)
+    const putResp = await fetch(signedUrl, {
       method: 'PUT',
-      headers: { 'Content-Type': contentType, ...extraHeaders },
+      headers: putHeaders,
       body: bytes,
       signal: AbortSignal.timeout(20_000),
     })
@@ -568,28 +578,33 @@ async function uploadPromptFile(
       return null
     }
 
-    // Passo 3: generate-download-url -- SEM isso o arquivo nao aparece no chat
+    // Passo 3: generate-download-url (3 tentativas, delay crescente)
+    // dir_name = projectId conforme o MD
+    const uuid = fileId.split('/').pop() || fileId
     let downloadUrl = ''
-    try {
-      const dirName = String(fileId || '').split('/')[0]
-      const dlResp = await fetch('https://api.lovable.dev/files/generate-download-url', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ dir_name: dirName, file_name: fileId }),
-        signal: AbortSignal.timeout(10_000),
-      })
-      if (dlResp.ok) {
-        const dlData = await dlResp.json()
-        downloadUrl = dlData.url || ''
-        console.log('[v1-doc] PROMPT.txt OK; file_id=', fileId)
-      } else {
-        console.error('[v1-doc] generate-download-url failed', dlResp.status)
+    for (let attempt = 0; attempt < 3 && !downloadUrl; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, 1200 * attempt))
+      try {
+        const dlResp = await fetch('https://api.lovable.dev/files/generate-download-url', {
+          method: 'POST',
+          headers: apiHeaders,
+          body: JSON.stringify({ dir_name: projectId, file_name: uuid }),
+          signal: AbortSignal.timeout(10_000),
+        })
+        if (dlResp.ok) {
+          const dlData = await dlResp.json()
+          downloadUrl = String(dlData.url || dlData.download_url || dlData.signed_url || '') || ''
+        } else {
+          console.error('[v1-doc] generate-download-url failed attempt', attempt, dlResp.status)
+        }
+      } catch (e) {
+        console.error('[v1-doc] generate-download-url exception attempt', attempt, e)
       }
-    } catch (e) {
-      console.error('[v1-doc] generate-download-url exception:', e)
     }
 
-    return { fileId, fileName: 'PROMPT.txt', downloadUrl, contentType, sizeBytes: bytes.byteLength }
+    if (!downloadUrl) { console.error('[v1-doc] all download-url attempts failed'); return null }
+    console.log('[v1-doc] instrucoes.md uploaded OK; file_id=', fileId)
+    return { fileId, fileName, downloadUrl, contentType, sizeBytes: bytes.byteLength }
   } catch (e) {
     console.error('[v1-doc] exception:', e)
     return null
@@ -1001,11 +1016,10 @@ serve(async (req) => {
       console.warn('[send-lovable-prompt] PROMPT upload exception:', e)
     }
 
-    // Conforme o MD (secao 6.2): message vazia quando arquivo sobe, documento como fallback
-    // anchor = texto cru do cliente (max 200 chars), identidade: old_text === new_text
+    // Conforme o MD: anchor = espaco quando arquivo subiu, userMessage como fallback
     const promptUploaded = filesWithPrompt.length > files.length
     const messageField = promptUploaded ? '' : document
-    const anchor = userMessage.slice(0, 200) || 'x'
+    const anchor = promptUploaded ? ' ' : (userMessage.slice(0, 200) || ' ')
     const anchorReplacement = [{ old_text: anchor, new_text: anchor, selected_element_index: 0 }]
     // chat_only: true para conversa/analise/ambiguo; false para execucao
     const chatOnly = mode !== 'execucao'
@@ -1020,11 +1034,19 @@ serve(async (req) => {
       intent: 'visual_edit',
       message_intent_metadata: {
         visual_edit_metadata: {
+          selected_elements: normalizedSelected,
           text_replacements: anchorReplacement,
         },
       },
+      // visual_edit_metadata tambem na raiz (conforme o MD)
+      visual_edit_metadata: {
+        selected_elements: normalizedSelected,
+        text_replacements: anchorReplacement,
+      },
       chat_only: chatOnly,
       optimisticImageUrls,
+      contains_error: false,
+      error_ids: [],
       user_timezone: user_timezone || 'America/Sao_Paulo',
       thread_id: 'main',
       ai_message_id: aiMsgId,
@@ -1048,7 +1070,11 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': '*/*',
         'Authorization': `Bearer ${cleanToken}`,
+        'Origin': 'https://lovable.dev',
+        'Referer': 'https://lovable.dev/',
+        'x-lovable-project-id': projectId,
       },
       body: JSON.stringify(payload),
     })
