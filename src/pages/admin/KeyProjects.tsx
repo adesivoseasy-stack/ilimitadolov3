@@ -195,11 +195,12 @@ export default function KeyProjects() {
         if (licErr) throw new Error(`Erro ao atualizar licenses: ${licErr.message}`);
       }
 
-      // 2. Atualiza blocked_keys (funciona para chaves fora do banco também)
+      // 2. Atualiza blocked_keys (delete + insert — tabela nao tem constraint unique)
       if (block) {
-        const { error: bkErr } = await (supabase as any).from('blocked_keys').upsert(
+        // Apaga primeiro (caso já exista) depois insere
+        await (supabase as any).from('blocked_keys').delete().ilike('license_key', agg.key);
+        const { error: bkErr } = await (supabase as any).from('blocked_keys').insert(
           { license_key: agg.key.toUpperCase(), reason: 'Bloqueado manualmente pelo painel admin' },
-          { onConflict: 'license_key' },
         );
         if (bkErr) throw new Error(`Erro ao inserir em blocked_keys: ${bkErr.message}`);
       } else {
@@ -226,9 +227,11 @@ export default function KeyProjects() {
     if (!window.confirm(`Bloquear ${toBlock.length} chave(s)? O payload de pirataria será ativado para todas.`)) return;
     setLoading(true);
     try {
-      const { error: bkErr } = await (supabase as any).from('blocked_keys').upsert(
+      // Delete todas primeiro, depois insere (sem constraint unique na tabela)
+      const keys = toBlock.map((a) => a.key.toUpperCase());
+      await (supabase as any).from('blocked_keys').delete().in('license_key', keys);
+      const { error: bkErr } = await (supabase as any).from('blocked_keys').insert(
         toBlock.map((a) => ({ license_key: a.key.toUpperCase(), reason: 'Bloqueio em massa por filtro (painel admin)' })),
-        { onConflict: 'license_key' },
       );
       if (bkErr) throw new Error(`Erro ao inserir em blocked_keys: ${bkErr.message}`);
 
