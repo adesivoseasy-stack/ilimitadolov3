@@ -185,29 +185,36 @@ export default function KeyProjects() {
   const toggleBlock = async (agg: AggregatedKey, block: boolean) => {
     setActionKey(agg.key);
     try {
-      // 1. Atualiza licenses (se existir)
+      // 1. Atualiza licenses (só se a chave existir no banco)
       if (agg.license) {
-        await supabase.from('licenses').update({
+        const { error: licErr } = await supabase.from('licenses').update({
           is_blocked: block,
           blocked_at: block ? new Date().toISOString() : null,
           blocked_reason: block ? 'Bloqueado manualmente pelo painel admin' : null,
         }).eq('id', agg.license.id);
+        if (licErr) throw new Error(`Erro ao atualizar licenses: ${licErr.message}`);
       }
 
-      // 2. Atualiza blocked_keys
+      // 2. Atualiza blocked_keys (funciona para chaves fora do banco também)
       if (block) {
-        await supabase.from('blocked_keys' as any).upsert(
+        const { error: bkErr } = await (supabase as any).from('blocked_keys').upsert(
           { license_key: agg.key.toUpperCase(), reason: 'Bloqueado manualmente pelo painel admin' },
           { onConflict: 'license_key' },
         );
+        if (bkErr) throw new Error(`Erro ao inserir em blocked_keys: ${bkErr.message}`);
       } else {
-        await supabase.from('blocked_keys' as any).delete().ilike('license_key', agg.key);
+        const { error: bkErr } = await (supabase as any).from('blocked_keys').delete().ilike('license_key', agg.key);
+        if (bkErr) throw new Error(`Erro ao remover de blocked_keys: ${bkErr.message}`);
       }
 
       await refetch();
-      toast({ title: block ? '🔒 Chave bloqueada' : '🔓 Chave desbloqueada', description: agg.key });
+      toast({
+        title: block ? '🔒 Chave bloqueada com sucesso' : '🔓 Chave desbloqueada',
+        description: `${agg.key} — payload de pirataria ${block ? 'ativado' : 'desativado'}`,
+      });
     } catch (e: any) {
-      toast({ title: 'Erro', description: e.message, variant: 'destructive' });
+      console.error('[toggleBlock] erro:', e);
+      toast({ title: 'Erro ao bloquear', description: e.message, variant: 'destructive' });
     } finally {
       setActionKey(null);
     }
@@ -216,21 +223,37 @@ export default function KeyProjects() {
   const blockAllVisible = async (rows: AggregatedKey[]) => {
     const toBlock = rows.filter((a) => !a.isBlocked && !excludedPrefixes.some((p) => a.key.startsWith(p)));
     if (!toBlock.length) { toast({ title: 'Nenhuma chave para bloquear' }); return; }
-    if (!window.confirm(`Bloquear ${toBlock.length} chave(s)?`)) return;
+    if (!window.confirm(`Bloquear ${toBlock.length} chave(s)? O payload de pirataria será ativado para todas.`)) return;
     setLoading(true);
     try {
-      await supabase.from('blocked_keys' as any).upsert(
-        toBlock.map((a) => ({ license_key: a.key, reason: 'Bloqueio em massa por filtro (painel admin)' })),
+      const { error: bkErr } = await (supabase as any).from('blocked_keys').upsert(
+        toBlock.map((a) => ({ license_key: a.key.toUpperCase(), reason: 'Bloqueio em massa por filtro (painel admin)' })),
         { onConflict: 'license_key' },
       );
+      if (bkErr) throw new Error(`Erro ao inserir em blocked_keys: ${bkErr.message}`);
+
+      // Atualiza licenses para as que existirem no banco
+      const comLicenca = toBlock.filter((a) => a.license);
+      if (comLicenca.length) {
+        for (const a of comLicenca) {
+          await supabase.from('licenses').update({
+            is_blocked: true,
+            blocked_at: new Date().toISOString(),
+            blocked_reason: 'Bloqueio em massa por filtro (painel admin)',
+          }).eq('id', a.license!.id);
+        }
+      }
+
       await refetch();
-      toast({ title: `${toBlock.length} chave(s) bloqueadas em massa` });
+      toast({ title: `🔒 ${toBlock.length} chave(s) bloqueadas`, description: 'Payload de pirataria ativado para todas.' });
     } catch (e: any) {
-      toast({ title: 'Erro', description: e.message, variant: 'destructive' });
+      console.error('[blockAllVisible] erro:', e);
+      toast({ title: 'Erro no bloqueio em massa', description: e.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
+
 
   const savePiracyText = async () => {
     setSavingPayload(true);
