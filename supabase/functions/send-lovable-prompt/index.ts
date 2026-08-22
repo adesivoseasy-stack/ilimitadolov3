@@ -967,13 +967,12 @@ serve(async (req) => {
     // A instrucao de nao-editar vem do documento PROMPT enviado como arquivo.
     const payloadReplacements = normalizedReplacements
     console.log(`[send-lovable-prompt] mode=${mode} confidence=${confidence} fileUpload=disabled`)
-    console.log(`[send-lovable-prompt] mode=${mode} confidence=${confidence} fileUploaded=${!!promptFile} chatOnly=false`)
 
     const payload: Record<string, any> = {
       id: msgId,
       message: messageField,
       files: filesWithPrompt,
-      selected_elements: payloadSelected,
+      selected_elements: normalizedSelected,
       text_replacements: payloadReplacements,
       intent: 'visual_edit',
       message_intent_metadata: {
@@ -999,7 +998,7 @@ serve(async (req) => {
 
     void brandedText
 
-    console.log(`[send-lovable-prompt] Sending to Lovable project: ${projectId}; mode=${mode}/${confidence}; fileUploaded=${!!promptFile}; images=${uploadedImages.length}; files=${filesWithPrompt.length}`)
+    console.log(`[send-lovable-prompt] Sending to Lovable project: ${projectId}; mode=${mode}/${confidence}; images=${uploadedImages.length}; files=${filesWithPrompt.length}`)
 
     const response = await fetch(`https://api.lovable.dev/projects/${encodeURIComponent(projectId)}/chat`, {
       method: 'POST',
