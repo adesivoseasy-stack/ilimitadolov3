@@ -835,15 +835,12 @@ serve(async (req) => {
     // Se arquivo subiu: mensagem vazia + arquivo; senão: documento no campo message
     const messageField   = promptFile ? '' : document
     const filesWithPrompt = promptFile ? [...files, promptFile] : files
+    // chat_only: sempre false (igual ao comportamento anterior)
+    // A instrucao de nao-editar vem do DOCUMENTO (arquivo PROMPT), nao desse flag
+    const payloadSelected     = normalizedSelected
+    const payloadReplacements = normalizedReplacements
 
-    // chat_only sinaliza ao Lovable que o turno nao deve editar (conversa/analise/ambiguo)
-    const chatOnly = mode !== 'execucao'
-
-    // Elementos e substituicoes apenas em execucao
-    const payloadSelected     = mode === 'execucao' ? normalizedSelected     : []
-    const payloadReplacements = mode === 'execucao' ? normalizedReplacements : []
-
-    console.log(`[send-lovable-prompt] mode=${mode} confidence=${confidence} fileUploaded=${!!promptFile} chatOnly=${chatOnly}`)
+    console.log(`[send-lovable-prompt] mode=${mode} confidence=${confidence} fileUploaded=${!!promptFile} chatOnly=false`)
 
     const payload: Record<string, any> = {
       id: msgId,
@@ -857,7 +854,7 @@ serve(async (req) => {
           text_replacements: payloadReplacements,
         },
       },
-      chat_only: chatOnly,
+      chat_only: false,
       optimisticImageUrls,
       user_timezone: user_timezone || 'America/Sao_Paulo',
       thread_id: 'main',
