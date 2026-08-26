@@ -1013,7 +1013,7 @@ serve(async (req) => {
 
     // Conforme o MD: anchor = espaco quando arquivo subiu, userMessage como fallback
     const promptUploaded = filesWithPrompt.length > files.length
-    const messageField = userMessage
+    const messageField = document
 
     // Elemento sintetico + ancora minima — conforme MD do amigo
     // Evita que Lovable trate a mensagem do usuario como texto a substituir
