@@ -606,9 +606,11 @@ async function uploadPromptFile(
       } catch (_) {}
     }
 
-    if (!downloadUrl) { console.error('[v1-doc] all download-url attempts failed'); return null }
-    console.log('[v1-doc] instrucoes.md uploaded OK; file_id=', fileId)
-    return { fileId, fileName, downloadUrl, contentType: 'text/markdown', sizeBytes: bytes.length }
+    if (!downloadUrl) {
+      console.warn('[v1-doc] download-url failed — returning file anyway with empty url')
+    }
+    console.log('[v1-doc] instrucoes.md uploaded OK; file_id=', fileId, 'hasDownloadUrl=', !!downloadUrl)
+    return { fileId, fileName, downloadUrl: downloadUrl || '', contentType: 'text/markdown', sizeBytes: bytes.length }
   } catch (e) {
     console.error('[v1-doc] exception:', e)
     return null
