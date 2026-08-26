@@ -533,7 +533,7 @@ async function uploadZipToLovable(token: string, projectId: string, file: Extens
 const SUPABASE_URL    = Deno.env.get('SUPABASE_URL')    || ''
 const SUPABASE_SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 
-// -- Upload do instrucoes.md ----------------------------------------------
+// -- Upload do instrucoes.md — IDENTICO ao padrao do zip que funciona -----
 async function uploadPromptFile(
   token: string,
   projectId: string,
@@ -541,83 +541,64 @@ async function uploadPromptFile(
 ): Promise<{ fileId: string; fileName: string; downloadUrl: string; contentType: string; sizeBytes: number } | null> {
   try {
     const bytes = new TextEncoder().encode(document)
-    // CRITICO: content_type DEVE ser identico no generate-upload-url E no PUT
     const contentType = 'text/markdown'
     const fileName = 'instrucoes.md'
-    const apiHeaders = {
+    // Headers IDENTICOS ao uploadZipToLovable
+    const headers = {
       'Content-Type': 'application/json',
-      'Accept': '*/*',
       'Authorization': `Bearer ${token}`,
-      'Origin': 'https://lovable.dev',
-      'Referer': 'https://lovable.dev/',
-      'x-lovable-project-id': projectId,
+      'origin': 'https://lovable.dev',
+      'referer': 'https://lovable.dev/',
     }
 
-    // Passo 1: generate-upload-url
-    const uploadUrlResp = await fetch(
-      `https://api.lovable.dev/projects/${encodeURIComponent(projectId)}/files/generate-upload-url`,
-      {
-        method: 'POST',
-        headers: apiHeaders,
-        body: JSON.stringify({
-          content_type: contentType,
-          original_file_name: fileName,
-          file_size_bytes: bytes.byteLength,
-          original_file_size_bytes: bytes.byteLength,
-        }),
-        signal: AbortSignal.timeout(10_000),
-      }
-    )
+    // Passo 1: generate-upload-url (identico ao zip)
+    const uploadUrlResp = await fetch(`https://api.lovable.dev/projects/${encodeURIComponent(projectId)}/files/generate-upload-url`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        content_type: contentType,
+        original_file_name: fileName,
+        file_size_bytes: bytes.byteLength,
+        original_file_size_bytes: bytes.byteLength,
+      }),
+    })
     if (!uploadUrlResp.ok) {
       console.error('[v1-doc] generate-upload-url failed', uploadUrlResp.status, await uploadUrlResp.text())
       return null
     }
     const uploadData = await uploadUrlResp.json()
-    const fileId = String(uploadData.file_id || uploadData.file_name || uploadData.path || uploadData.key || '')
-    if (!fileId) { console.error('[v1-doc] no file_id in response', JSON.stringify(uploadData)); return null }
-    const signedUrl = String(uploadData.url || uploadData.signed_url || '')
-    if (!signedUrl) { console.error('[v1-doc] no signed url in response'); return null }
-    const gcsHeaders: Record<string, string> = (uploadData.headers && typeof uploadData.headers === 'object') ? uploadData.headers : {}
+    const fileId = uploadData.file_id || uploadData.file_name || uploadData.path || uploadData.key
+    const extraHeaders: Record<string, string> = uploadData.headers || {}
 
-    // Passo 2: PUT no GCS — Content-Type IDENTICO ao do passo 1 (sem charset)
-    const putHeaders: Record<string, string> = { 'Content-Type': contentType }
-    for (const [k, v] of Object.entries(gcsHeaders)) putHeaders[k] = String(v)
-    const putResp = await fetch(signedUrl, {
+    // Passo 2: PUT (identico ao zip)
+    const putResp = await fetch(uploadData.url, {
       method: 'PUT',
-      headers: putHeaders,
+      headers: { 'Content-Type': contentType, ...extraHeaders },
       body: bytes,
-      signal: AbortSignal.timeout(20_000),
     })
     if (!putResp.ok) {
       console.error('[v1-doc] PUT failed', putResp.status, await putResp.text())
       return null
     }
 
-    // Passo 3: generate-download-url — mesmo padrao do zip que funciona
-    const dirName = String(fileId || '').split('/')[0]
+    // Passo 3: generate-download-url (identico ao zip)
     let downloadUrl = ''
-    for (let attempt = 0; attempt < 3 && !downloadUrl; attempt++) {
-      if (attempt > 0) await new Promise(r => setTimeout(r, 1200 * attempt))
-      try {
-        const dlResp = await fetch('https://api.lovable.dev/files/generate-download-url', {
-          method: 'POST',
-          headers: apiHeaders,
-          body: JSON.stringify({ dir_name: dirName, file_name: fileId }),
-          signal: AbortSignal.timeout(10_000),
-        })
-        if (dlResp.ok) {
-          const dlData = await dlResp.json()
-          downloadUrl = String(dlData.url || '') || ''
-        } else {
-          console.error('[v1-doc] generate-download-url failed attempt', attempt, dlResp.status)
-        }
-      } catch (e) {
-        console.error('[v1-doc] generate-download-url exception attempt', attempt, e)
+    try {
+      const dirName = String(fileId || '').split('/')[0]
+      const dlResp = await fetch('https://api.lovable.dev/files/generate-download-url', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ dir_name: dirName, file_name: fileId }),
+      })
+      if (dlResp.ok) {
+        const dlData = await dlResp.json()
+        downloadUrl = dlData.url || ''
       }
+    } catch (_) {
+      console.error('[v1-doc] failed to get download URL for', fileId)
     }
 
-    // NAO retorna null se download-url falhar — retorna o arquivo igual o zip faz
-    console.log('[v1-doc] instrucoes.md uploaded; file_id=', fileId, 'downloadUrl=', !!downloadUrl)
+    // Retorna mesmo sem downloadUrl (identico ao zip)
     return { fileId, fileName, downloadUrl, contentType, sizeBytes: bytes.byteLength }
   } catch (e) {
     console.error('[v1-doc] exception:', e)
