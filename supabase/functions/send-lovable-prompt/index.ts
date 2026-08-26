@@ -1060,30 +1060,29 @@ serve(async (req) => {
       selected_element_index: 0,
     }]
 
-    // message = "" quando md sobe, userMessage quando fallback (conforme MD)
-    const messageField = promptUploaded ? '' : userMessage
+    // message = documento completo sempre
+    const messageField = document
 
-    // chat_only conforme modo
-    const chatOnly = mode !== 'execucao'
+    // chat_only: true sempre — evita o no-op de text_replacement
+    const chatOnly = true
     console.log(`[v1-doc] mode=${mode} confidence=${confidence} fileUploaded=${promptUploaded} chatOnly=${chatOnly}`)
 
     const payload: Record<string, any> = {
       id: msgId,
       message: messageField,
       files: filesWithPrompt,
-      selected_elements: noopElements,
-      text_replacements: noopReplacements,
+      selected_elements: [],
+      text_replacements: [],
       intent: 'visual_edit',
-      // Metadata duplicada nos dois lugares conforme MD
       message_intent_metadata: {
         visual_edit_metadata: {
-          selected_elements: noopElements,
-          text_replacements: noopReplacements,
+          selected_elements: [],
+          text_replacements: [],
         },
       },
       visual_edit_metadata: {
-        selected_elements: noopElements,
-        text_replacements: noopReplacements,
+        selected_elements: [],
+        text_replacements: [],
       },
       contains_error: false,
       error_ids: [],
