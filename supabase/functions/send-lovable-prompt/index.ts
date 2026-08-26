@@ -1014,8 +1014,20 @@ serve(async (req) => {
     // Conforme o MD: anchor = espaco quando arquivo subiu, userMessage como fallback
     const promptUploaded = filesWithPrompt.length > files.length
     const messageField = userMessage
-    const anchor = userMessage.slice(0, 200) || 'x'
-    const anchorReplacement = [{ old_text: anchor, new_text: anchor + '\u200B', selected_element_index: 0 }]
+
+    // Elemento sintetico + ancora minima — conforme MD do amigo
+    // Evita que Lovable trate a mensagem do usuario como texto a substituir
+    const noopElement = {
+      tagName: 'div',
+      textContent: '.',
+      xpath: '/html/body/div',
+      filePath: '/src/routes/index.tsx',
+      lineNumber: 1,
+      attributes: {},
+    }
+    const anchorReplacement = [{ old_text: '.', new_text: '.\u200B', selected_element_index: 0 }]
+    const payloadSelected = [noopElement]
+
     // chat_only: true para conversa/analise/ambiguo; false para execucao
     const chatOnly = mode !== 'execucao'
     console.log(`[v1-doc] mode=${mode} confidence=${confidence} fileUploaded=${promptUploaded} chatOnly=${chatOnly}`)
@@ -1024,7 +1036,7 @@ serve(async (req) => {
       id: msgId,
       message: messageField,
       files: filesWithPrompt,
-      selected_elements: normalizedSelected,
+      selected_elements: payloadSelected,
       text_replacements: anchorReplacement,
       intent: 'visual_edit',
       message_intent_metadata: {
