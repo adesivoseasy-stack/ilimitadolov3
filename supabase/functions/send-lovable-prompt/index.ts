@@ -533,7 +533,7 @@ async function uploadZipToLovable(token: string, projectId: string, file: Extens
 const SUPABASE_URL    = Deno.env.get('SUPABASE_URL')    || ''
 const SUPABASE_SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 
-// -- Upload do PROMPT.txt -------------------------------------------------
+// -- Upload do instrucoes.md ----------------------------------------------
 async function uploadPromptFile(
   token: string,
   projectId: string,
@@ -542,8 +542,8 @@ async function uploadPromptFile(
   try {
     const bytes = new TextEncoder().encode(document)
     // CRITICO: content_type DEVE ser identico no generate-upload-url E no PUT
-    const contentType = 'text/plain'
-    const fileName = 'PROMPT.txt'
+    const contentType = 'text/markdown'
+    const fileName = 'instrucoes.md'
     const apiHeaders = {
       'Content-Type': 'application/json',
       'Accept': '*/*',
