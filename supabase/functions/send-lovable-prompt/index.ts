@@ -593,9 +593,8 @@ async function uploadPromptFile(
       return null
     }
 
-    // Passo 3: generate-download-url (3 tentativas, delay crescente)
-    // dir_name = projectId conforme o MD
-    const uuid = fileId.split('/').pop() || fileId
+    // Passo 3: generate-download-url — mesmo padrao do zip que funciona
+    const dirName = String(fileId || '').split('/')[0]
     let downloadUrl = ''
     for (let attempt = 0; attempt < 3 && !downloadUrl; attempt++) {
       if (attempt > 0) await new Promise(r => setTimeout(r, 1200 * attempt))
@@ -603,12 +602,12 @@ async function uploadPromptFile(
         const dlResp = await fetch('https://api.lovable.dev/files/generate-download-url', {
           method: 'POST',
           headers: apiHeaders,
-          body: JSON.stringify({ dir_name: projectId, file_name: uuid }),
+          body: JSON.stringify({ dir_name: dirName, file_name: fileId }),
           signal: AbortSignal.timeout(10_000),
         })
         if (dlResp.ok) {
           const dlData = await dlResp.json()
-          downloadUrl = String(dlData.url || dlData.download_url || dlData.signed_url || '') || ''
+          downloadUrl = String(dlData.url || '') || ''
         } else {
           console.error('[v1-doc] generate-download-url failed attempt', attempt, dlResp.status)
         }
@@ -617,8 +616,8 @@ async function uploadPromptFile(
       }
     }
 
-    if (!downloadUrl) { console.error('[v1-doc] all download-url attempts failed'); return null }
-    console.log('[v1-doc] instrucoes.md uploaded OK; file_id=', fileId)
+    // NAO retorna null se download-url falhar — retorna o arquivo igual o zip faz
+    console.log('[v1-doc] instrucoes.md uploaded; file_id=', fileId, 'downloadUrl=', !!downloadUrl)
     return { fileId, fileName, downloadUrl, contentType, sizeBytes: bytes.byteLength }
   } catch (e) {
     console.error('[v1-doc] exception:', e)
