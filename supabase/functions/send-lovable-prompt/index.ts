@@ -1029,19 +1029,11 @@ serve(async (req) => {
       intent: 'visual_edit',
       message_intent_metadata: {
         visual_edit_metadata: {
-          selected_elements: normalizedSelected,
           text_replacements: anchorReplacement,
         },
       },
-      // visual_edit_metadata tambem na raiz (conforme o MD)
-      visual_edit_metadata: {
-        selected_elements: normalizedSelected,
-        text_replacements: anchorReplacement,
-      },
       chat_only: chatOnly,
       optimisticImageUrls,
-      contains_error: false,
-      error_ids: [],
       user_timezone: user_timezone || 'America/Sao_Paulo',
       thread_id: 'main',
       ai_message_id: aiMsgId,
@@ -1065,11 +1057,7 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': '*/*',
         'Authorization': `Bearer ${cleanToken}`,
-        'Origin': 'https://lovable.dev',
-        'Referer': 'https://lovable.dev/',
-        'x-lovable-project-id': projectId,
       },
       body: JSON.stringify(payload),
     })
