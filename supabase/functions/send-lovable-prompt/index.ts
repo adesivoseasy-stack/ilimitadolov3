@@ -1034,7 +1034,7 @@ serve(async (req) => {
     // Conforme o MD: anchor = espaco quando arquivo subiu, userMessage como fallback
     const promptUploaded = filesWithPrompt.length > files.length
     const messageField = promptUploaded ? '' : document
-    const anchor = (userMessage.slice(0, 200) || 'x')
+    const anchor = promptUploaded ? ' ' : (userMessage.slice(0, 200) || ' ')
     const anchorReplacement = [{ old_text: anchor, new_text: anchor, selected_element_index: 0 }]
     // chat_only: true para conversa/analise/ambiguo; false para execucao
     const chatOnly = mode !== 'execucao'
