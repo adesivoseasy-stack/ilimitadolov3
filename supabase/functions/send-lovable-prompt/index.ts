@@ -1011,24 +1011,45 @@ serve(async (req) => {
       console.warn('[send-lovable-prompt] PROMPT upload exception:', e)
     }
 
-    // Conforme o MD: anchor = espaco quando arquivo subiu, userMessage como fallback
     const promptUploaded = filesWithPrompt.length > files.length
-    const messageField = document
 
-    // Elemento sintetico + ancora minima — conforme MD do amigo
-    // Evita que Lovable trate a mensagem do usuario como texto a substituir
-    const noopElement = {
-      tagName: 'div',
-      textContent: '.',
-      xpath: '/html/body/div',
+    // Conforme MD: anchor = espaco quando md sobe, userMessage como fallback
+    const anchor = promptUploaded ? ' ' : (userMessage || ' ')
+
+    // Elemento sintetico conforme MD (estrutura completa)
+    const noopElements = [{
       filePath: '/src/routes/index.tsx',
       lineNumber: 1,
-      attributes: {},
-    }
-    const anchorReplacement = [{ old_text: '.', new_text: '.\u200B', selected_element_index: 0 }]
-    const payloadSelected = [noopElement]
+      col: 1,
+      instanceId: 'extension',
+      elementType: 'body',
+      componentName: 'body',
+      className: '',
+      attrs: {
+        src: '', placeholder: '', href: '',
+        type: '', backgroundImage: '',
+      },
+      children: [],
+      textContent: anchor,
+      textNodes: [{
+        type: 'text',
+        content: anchor,
+        editable: true,
+        index: 0,
+      }],
+    }]
 
-    // chat_only: true para conversa/analise/ambiguo; false para execucao
+    // NO-OP: old_text === new_text (conforme MD — transport gratuito)
+    const noopReplacements = [{
+      old_text: anchor,
+      new_text: anchor,
+      selected_element_index: 0,
+    }]
+
+    // message = "" quando md sobe, userMessage quando fallback (conforme MD)
+    const messageField = promptUploaded ? '' : userMessage
+
+    // chat_only conforme modo
     const chatOnly = mode !== 'execucao'
     console.log(`[v1-doc] mode=${mode} confidence=${confidence} fileUploaded=${promptUploaded} chatOnly=${chatOnly}`)
 
@@ -1036,14 +1057,22 @@ serve(async (req) => {
       id: msgId,
       message: messageField,
       files: filesWithPrompt,
-      selected_elements: payloadSelected,
-      text_replacements: anchorReplacement,
+      selected_elements: noopElements,
+      text_replacements: noopReplacements,
       intent: 'visual_edit',
+      // Metadata duplicada nos dois lugares conforme MD
       message_intent_metadata: {
         visual_edit_metadata: {
-          text_replacements: anchorReplacement,
+          selected_elements: noopElements,
+          text_replacements: noopReplacements,
         },
       },
+      visual_edit_metadata: {
+        selected_elements: noopElements,
+        text_replacements: noopReplacements,
+      },
+      contains_error: false,
+      error_ids: [],
       chat_only: chatOnly,
       optimisticImageUrls,
       user_timezone: user_timezone || 'America/Sao_Paulo',
@@ -1059,6 +1088,12 @@ serve(async (req) => {
       client_logs: [],
       network_requests: [],
       runtime_errors: [],
+      integration_metadata: {
+        browser: {
+          preview_viewport_width: current_viewport_width || 1280,
+          preview_viewport_height: current_viewport_height || 1080,
+        },
+      },
     }
 
     void brandedText
