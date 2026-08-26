@@ -533,7 +533,7 @@ async function uploadZipToLovable(token: string, projectId: string, file: Extens
 const SUPABASE_URL    = Deno.env.get('SUPABASE_URL')    || ''
 const SUPABASE_SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 
-// -- Upload do instrucoes.md — conforme METODO-ENVIO-COMPLETO.md -----------
+// -- Upload do PROMPT.txt -------------------------------------------------
 async function uploadPromptFile(
   token: string,
   projectId: string,
@@ -542,9 +542,8 @@ async function uploadPromptFile(
   try {
     const bytes = new TextEncoder().encode(document)
     // CRITICO: content_type DEVE ser identico no generate-upload-url E no PUT
-    // Qualquer diferenca (ex: adicionar charset) causa 403 do GCS
-    const contentType = 'text/markdown'
-    const fileName = 'instrucoes.md'
+    const contentType = 'text/plain'
+    const fileName = 'PROMPT.txt'
     const apiHeaders = {
       'Content-Type': 'application/json',
       'Accept': '*/*',
@@ -1035,7 +1034,7 @@ serve(async (req) => {
     // Conforme o MD: anchor = espaco quando arquivo subiu, userMessage como fallback
     const promptUploaded = filesWithPrompt.length > files.length
     const messageField = promptUploaded ? '' : document
-    const anchor = promptUploaded ? ' ' : (userMessage.slice(0, 200) || ' ')
+    const anchor = (userMessage.slice(0, 200) || 'x')
     const anchorReplacement = [{ old_text: anchor, new_text: anchor, selected_element_index: 0 }]
     // chat_only: true para conversa/analise/ambiguo; false para execucao
     const chatOnly = mode !== 'execucao'
