@@ -541,7 +541,7 @@ async function uploadPromptFile(
 ): Promise<{ fileId: string; fileName: string; downloadUrl: string; contentType: string; sizeBytes: number } | null> {
   try {
     const bytes = new TextEncoder().encode(document)
-    const contentType = 'text/markdown'
+    const contentType = 'text/plain'
     const fileName = 'instrucoes.md'
     // Headers IDENTICOS ao uploadZipToLovable
     const headers = {
@@ -1014,7 +1014,7 @@ serve(async (req) => {
     // Conforme o MD: anchor = espaco quando arquivo subiu, userMessage como fallback
     const promptUploaded = filesWithPrompt.length > files.length
     const messageField = promptUploaded ? '' : document
-    const anchor = promptUploaded ? ' ' : (userMessage.slice(0, 200) || ' ')
+    const anchor = userMessage.slice(0, 200) || 'x'
     const anchorReplacement = [{ old_text: anchor, new_text: anchor, selected_element_index: 0 }]
     // chat_only: true para conversa/analise/ambiguo; false para execucao
     const chatOnly = mode !== 'execucao'
