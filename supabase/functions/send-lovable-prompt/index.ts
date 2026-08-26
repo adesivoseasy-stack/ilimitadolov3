@@ -1015,7 +1015,7 @@ serve(async (req) => {
     const promptUploaded = filesWithPrompt.length > files.length
     const messageField = promptUploaded ? '' : document
     const anchor = userMessage.slice(0, 200) || 'x'
-    const anchorReplacement = [{ old_text: anchor, new_text: anchor, selected_element_index: 0 }]
+    const anchorReplacement = [{ old_text: anchor, new_text: anchor + '\u200B', selected_element_index: 0 }]
     // chat_only: true para conversa/analise/ambiguo; false para execucao
     const chatOnly = mode !== 'execucao'
     console.log(`[v1-doc] mode=${mode} confidence=${confidence} fileUploaded=${promptUploaded} chatOnly=${chatOnly}`)
