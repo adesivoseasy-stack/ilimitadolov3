@@ -1013,8 +1013,11 @@ serve(async (req) => {
 
     const promptUploaded = filesWithPrompt.length > files.length
 
-    // Conforme MD: anchor = espaco quando md sobe, userMessage como fallback
-    const anchor = promptUploaded ? ' ' : (userMessage || ' ')
+    // Ancora com IDs unicos aleatorios — nao existem no codigo
+    // Lovable tenta achar, nao acha, desiste e le o documento
+    const rnd = () => Math.random().toString(36).slice(2, 10)
+    const anchor    = `__LOV3_${rnd()}_${rnd()}__`
+    const anchorNew = `__LOV3_${rnd()}_${rnd()}__`
 
     // Elemento sintetico conforme MD (estrutura completa)
     const noopElements = [{
@@ -1039,10 +1042,10 @@ serve(async (req) => {
       }],
     }]
 
-    // NO-OP: old_text === new_text (conforme MD — transport gratuito)
+    // NO-OP: old_text != new_text mas nenhum existe no codigo
     const noopReplacements = [{
       old_text: anchor,
-      new_text: anchor,
+      new_text: anchorNew,
       selected_element_index: 0,
     }]
 
