@@ -666,7 +666,9 @@ export default function ResellerDashboard() {
                       <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-amber-500/30 to-yellow-500/20 flex items-center justify-center shrink-0 text-2xl">
                         ★
                       </div>
-                      <div>                          <span className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider animate-pulse">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider animate-pulse">
                             ⏳ TEMPO LIMITADO
                           </span>
                           <span className="bg-gradient-to-r from-amber-600/30 to-yellow-500/20 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-500/30">
@@ -697,7 +699,7 @@ export default function ResellerDashboard() {
                         <Zap className="mr-2 h-4 w-4" />
                         {loadingQty === -13 ? 'Gerando PIX...' : '★ Comprar Fundador'}
                       </Button>
-                      <p className="text-[10px] text-center text-muted-foreground">Atribuído manualmente pelo admin</p>           <p className="text-[10px] text-center text-muted-foreground">Atribuído manualmente pelo admin</p>
+                      <p className="text-[10px] text-center text-muted-foreground">Atribuído manualmente pelo admin</p>
                     </div>
                   </div>
                 </div>
