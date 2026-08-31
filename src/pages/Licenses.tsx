@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
-import { useLicenses, useRevokeLicense, useDeleteLicense, useResetDevice, useCreateLicense, useRenewLicense, useSetLicenseExpiry } from '@/hooks/useLicenses';
+import { useLicenses, useRevokeLicense, useDeleteLicense, useResetDevice, useCreateLicense, useRenewLicense, useSetLicenseExpiry, useArchiveLicense, useReactivateLicense, useSetLicensePlan } from '@/hooks/useLicenses';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,9 +10,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
-import { Key, MoreHorizontal, Ban, Trash2, RotateCcw, Copy, RefreshCw, Plus, Calendar, Infinity, Search, Wifi } from 'lucide-react';
+import { Key, MoreHorizontal, Ban, Trash2, RotateCcw, Copy, RefreshCw, Plus, Calendar, Infinity, Search, Wifi, Archive, ArchiveRestore } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -26,26 +27,35 @@ export default function Licenses() {
   const renewMutation = useRenewLicense();
   const createMutation = useCreateLicense();
   const setExpiryMutation = useSetLicenseExpiry();
+  const archiveMutation = useArchiveLicense();
+  const reactivateMutation = useReactivateLicense();
+  const setPlanMutation = useSetLicensePlan();
 
   const [search, setSearch] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
   const [onlineDialog, setOnlineDialog] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{ type: 'revoke' | 'delete' | 'reset'; licenseId: string; licenseKey: string } | null>(null);
   const [createDialog, setCreateDialog] = useState(false);
   const [renewDialog, setRenewDialog] = useState<{ licenseId: string; licenseKey: string } | null>(null);
   const [expiryDialog, setExpiryDialog] = useState<{ licenseId: string; licenseKey: string; currentExpiry: string } | null>(null);
+  const [planDialog, setPlanDialog] = useState<{ licenseId: string; licenseKey: string; currentPlan: string } | null>(null);
 
   const [newEmail, setNewEmail] = useState('');
   const [newDuration, setNewDuration] = useState('30');
   const [newPrice, setNewPrice] = useState('');
   const [newNotes, setNewNotes] = useState('');
   const [newIsWildcard, setNewIsWildcard] = useState(false);
-  const [newIsLifetime, setNewIsLifetime] = useState(false);
+  const [newPlan, setNewPlan] = useState<'basico' | 'plus' | 'pro' | 'fundador'>('basico');
   const [newExpiryDate, setNewExpiryDate] = useState('');
+  const [changePlan, setChangePlan] = useState<'basico' | 'plus' | 'pro' | 'fundador'>('basico');
 
-  const filteredLicenses = (licenses || []).filter((license) =>
-    license.license_key.toLowerCase().includes(search.toLowerCase()) ||
-    license.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredLicenses = (licenses || []).filter((license) => {
+    if (!showArchived && license.status === 'archived') return false;
+    return (
+      license.license_key.toLowerCase().includes(search.toLowerCase()) ||
+      license.email.toLowerCase().includes(search.toLowerCase())
+    );
+  });
 
   const handleConfirmAction = async () => {
     if (!confirmDialog) return;
@@ -63,14 +73,14 @@ export default function Licenses() {
     try {
       await createMutation.mutateAsync({
         email: newEmail,
-        durationDays: (newIsWildcard || newIsLifetime) ? 36500 : (parseInt(newDuration) || 30),
+        durationDays: newIsWildcard ? 36500 : 30,
         price: parseFloat(newPrice) || 0,
         notes: newNotes || undefined,
         isWildcard: newIsWildcard,
-        isLifetime: newIsLifetime,
+        plan: newPlan,
       });
       setCreateDialog(false);
-      setNewEmail(''); setNewDuration('30'); setNewPrice(''); setNewNotes(''); setNewIsWildcard(false); setNewIsLifetime(false);
+      setNewEmail(''); setNewDuration('30'); setNewPrice(''); setNewNotes(''); setNewIsWildcard(false); setNewPlan('basico');
     } catch (e) {}
   };
 
@@ -147,6 +157,15 @@ export default function Licenses() {
                 className="pl-9 w-full sm:w-[250px] bg-card/40 border-border/30 focus:border-primary/30"
               />
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowArchived(v => !v)}
+              className={`border-border/30 font-display shrink-0 text-xs ${showArchived ? 'bg-orange-500/10 border-orange-500/30 text-orange-400' : ''}`}
+            >
+              <Archive className="h-3.5 w-3.5 mr-1.5" />
+              {showArchived ? 'Ocultar' : 'Arquivadas'}
+            </Button>
             <Button variant="outline" onClick={() => setOnlineDialog(true)} className="border-border/30 hover:bg-success/10 hover:border-success/30 font-display shrink-0 relative">
               <Wifi className="h-4 w-4 mr-2 text-success" />
               <span className="hidden sm:inline">Online</span>
@@ -171,8 +190,9 @@ export default function Licenses() {
                   <TableHead className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground font-display">Email</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground font-display">Chave</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground font-display text-center">Status</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground font-display text-center">Plano</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground font-display text-center">Uso/dia</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground font-display text-center">Devices</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground font-display text-center">Msgs</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground font-display">Expira</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground font-display">Criador</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground font-display text-right">Ações</TableHead>
@@ -180,12 +200,12 @@ export default function Licenses() {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={8} className="h-24 text-center text-muted-foreground font-display">Carregando...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={9} className="h-24 text-center text-muted-foreground font-display">Carregando...</TableCell></TableRow>
                 ) : filteredLicenses.length === 0 ? (
-                  <TableRow><TableCell colSpan={8} className="h-24 text-center text-muted-foreground font-display">Nenhuma licença encontrada.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={9} className="h-24 text-center text-muted-foreground font-display">Nenhuma licença encontrada.</TableCell></TableRow>
                 ) : (
                   filteredLicenses.map((license) => (
-                    <TableRow key={license.id} className="border-border/10 hover:bg-primary/[0.03] transition-colors">
+                    <TableRow key={license.id} className={`border-border/10 hover:bg-primary/[0.03] transition-colors ${license.status === 'archived' ? 'opacity-50' : ''}`}>
                       <TableCell className="font-medium text-[13px] font-display">{license.email}</TableCell>
                       <TableCell>
                         <button onClick={() => copyKey(license.license_key)} className="font-mono text-xs hover:text-primary transition-colors cursor-pointer text-foreground/70">
@@ -193,8 +213,11 @@ export default function Licenses() {
                         </button>
                       </TableCell>
                       <TableCell className="text-center"><StatusBadge status={license.status} notes={license.notes} /></TableCell>
+                      <TableCell className="text-center"><PlanBadge plan={license.plan} /></TableCell>
+                      <TableCell className="text-center text-xs font-mono font-bold font-display text-foreground/80">
+                        {license.is_wildcard ? '∞' : `${license.daily_used ?? 0}/${license.daily_limit ?? 50}`}
+                      </TableCell>
                       <TableCell className="text-center text-sm font-bold font-display text-foreground/80">{license.devices.length}</TableCell>
-                      <TableCell className="text-center text-sm font-display text-foreground/80">{license.messages_used}/{license.max_messages ?? '∞'}</TableCell>
                       <TableCell className="text-sm font-display text-foreground/70">
                         {license.duration_hours && !license.first_activated_at && !license.is_wildcard ? (
                           <span className="text-xs text-muted-foreground">⏳ {Math.round(license.duration_hours / 24)}d (aguardando)</span>
@@ -216,8 +239,17 @@ export default function Licenses() {
                             <DropdownMenuItem onClick={() => copyKey(license.license_key)}><Copy className="h-4 w-4 mr-2" /> Copiar Chave</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setRenewDialog({ licenseId: license.id, licenseKey: license.license_key })}><RefreshCw className="h-4 w-4 mr-2" /> Renovar</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => { setExpiryDialog({ licenseId: license.id, licenseKey: license.license_key, currentExpiry: license.expires_at }); setNewExpiryDate(license.expires_at.slice(0, 10)); }}><Calendar className="h-4 w-4 mr-2" /> Alterar Expiração</DropdownMenuItem>
+                            {!license.is_wildcard && (
+                              <DropdownMenuItem onClick={() => { setPlanDialog({ licenseId: license.id, licenseKey: license.license_key, currentPlan: license.plan }); setChangePlan(license.plan as any); }}><Key className="h-4 w-4 mr-2" /> Alterar Plano</DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator className="bg-border/20" />
                             <DropdownMenuItem onClick={() => setConfirmDialog({ type: 'reset', licenseId: license.id, licenseKey: license.license_key })}><RotateCcw className="h-4 w-4 mr-2" /> Resetar Dispositivo</DropdownMenuItem>
+                            {license.status === 'active' && (
+                              <DropdownMenuItem onClick={() => archiveMutation.mutate(license.id)} className="text-orange-400 focus:text-orange-400"><Archive className="h-4 w-4 mr-2" /> Arquivar</DropdownMenuItem>
+                            )}
+                            {license.status === 'archived' && (
+                              <DropdownMenuItem onClick={() => reactivateMutation.mutate(license.id)} className="text-success focus:text-success"><ArchiveRestore className="h-4 w-4 mr-2" /> Reativar</DropdownMenuItem>
+                            )}
                             {license.status === 'active' && (
                               <DropdownMenuItem onClick={() => setConfirmDialog({ type: 'revoke', licenseId: license.id, licenseKey: license.license_key })} className="text-destructive focus:text-destructive"><Ban className="h-4 w-4 mr-2" /> Revogar</DropdownMenuItem>
                             )}
@@ -234,7 +266,7 @@ export default function Licenses() {
           </ScrollArea>
         </div>
 
-        <p className="text-xs text-muted-foreground font-display">Total: <span className="font-bold text-foreground">{licenses?.length || 0}</span> licenças</p>
+        <p className="text-xs text-muted-foreground font-display">Total: <span className="font-bold text-foreground">{filteredLicenses.length}</span> licenças{showArchived ? ' (incluindo arquivadas)' : ''}</p>
       </div>
 
       {/* Confirm Dialog */}
@@ -265,7 +297,7 @@ export default function Licenses() {
           <DialogHeader><DialogTitle className="font-display">Nova Licença</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div><Label className="font-display text-xs uppercase tracking-wider">Email</Label><Input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="email@exemplo.com" className="bg-background/50 border-border/30" /></div>
-            {!newIsWildcard && !newIsLifetime && (
+            {!newIsWildcard && (
               <div>
                 <Label className="font-display text-xs uppercase tracking-wider">Duração</Label>
                 <div className="mt-2 rounded-xl border border-border/20 bg-background/20 px-4 py-3 text-sm font-display">
@@ -273,26 +305,67 @@ export default function Licenses() {
                 </div>
               </div>
             )}
+            <div>
+              <Label className="font-display text-xs uppercase tracking-wider">Plano</Label>
+              <Select value={newPlan} onValueChange={(v) => setNewPlan(v as any)}>
+                <SelectTrigger className="mt-2 bg-background/50 border-border/30">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="basico">Básico — 50 envios/dia</SelectItem>
+                  <SelectItem value="plus">Plus — 100 envios/dia</SelectItem>
+                  <SelectItem value="pro">Pro — 200 envios/dia</SelectItem>
+                  <SelectItem value="fundador">LOV3 Fundador — 120 envios/dia</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label className="font-display text-xs uppercase tracking-wider">Preço (R$)</Label><Input type="number" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} placeholder="0" className="bg-background/50 border-border/30" /></div>
             <div><Label className="font-display text-xs uppercase tracking-wider">Notas</Label><Input value={newNotes} onChange={(e) => setNewNotes(e.target.value)} placeholder="Opcional" className="bg-background/50 border-border/30" /></div>
             <div className="flex items-center justify-between rounded-xl border border-border/20 bg-background/20 p-4">
               <div className="space-y-0.5">
                 <Label className="text-sm font-bold flex items-center gap-2 font-display"><Infinity className="h-4 w-4 text-primary" /> Chave Coringa</Label>
-                <p className="text-xs text-muted-foreground">Sem limite de dispositivo, mensagens ou validade</p>
+                <p className="text-xs text-muted-foreground">Sem limite de dispositivo ou validade</p>
               </div>
-              <Switch checked={newIsWildcard} onCheckedChange={(v) => { setNewIsWildcard(v); if (v) setNewIsLifetime(false); }} />
-            </div>
-            <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary/5 p-4">
-              <div className="space-y-0.5">
-                <Label className="text-sm font-bold flex items-center gap-2 font-display"><Infinity className="h-4 w-4 text-primary" /> Chave Vitalícia</Label>
-                <p className="text-xs text-muted-foreground">1 dispositivo, validade ilimitada (100 anos)</p>
-              </div>
-              <Switch checked={newIsLifetime} onCheckedChange={(v) => { setNewIsLifetime(v); if (v) setNewIsWildcard(false); }} />
+              <Switch checked={newIsWildcard} onCheckedChange={setNewIsWildcard} />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateDialog(false)} className="border-border/30">Cancelar</Button>
             <Button onClick={handleCreate} disabled={createMutation.isPending || !newEmail} className="bg-gradient shadow-lg shadow-primary/20 font-display">{createMutation.isPending ? 'Criando...' : 'Criar Licença'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Plan Dialog */}
+      <Dialog open={!!planDialog} onOpenChange={() => setPlanDialog(null)}>
+        <DialogContent className="bg-card/95 backdrop-blur-xl border-border/30">
+          <DialogHeader>
+            <DialogTitle className="font-display">Alterar Plano</DialogTitle>
+            <DialogDescription>Chave: {planDialog?.licenseKey}</DialogDescription>
+          </DialogHeader>
+          <div>
+            <Label className="font-display text-xs uppercase tracking-wider">Novo Plano</Label>
+            <Select value={changePlan} onValueChange={(v) => setChangePlan(v as any)}>
+              <SelectTrigger className="mt-2 bg-background/50 border-border/30">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="basico">Básico — 50 envios/dia (R$ 79,90/mês)</SelectItem>
+                <SelectItem value="plus">Plus — 100 envios/dia (R$ 99,99/mês)</SelectItem>
+                <SelectItem value="pro">Pro — 200 envios/dia (R$ 149,99/mês)</SelectItem>
+                <SelectItem value="fundador">LOV3 Fundador — 120 envios/dia (R$ 79,90/mês)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPlanDialog(null)} className="border-border/30">Cancelar</Button>
+            <Button
+              onClick={() => { if (planDialog) { setPlanMutation.mutate({ licenseId: planDialog.licenseId, plan: changePlan }); setPlanDialog(null); } }}
+              disabled={setPlanMutation.isPending}
+              className="bg-gradient font-display"
+            >
+              {setPlanMutation.isPending ? 'Salvando...' : 'Salvar'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -376,14 +449,30 @@ function StatusBadge({ status, notes }: { status: string; notes?: string | null 
   const config = isRenewed
     ? { label: 'RENOVADA', className: 'bg-blue-500/15 text-blue-400 border-blue-500/20' }
     : {
-        active: { label: 'ATIVA', className: 'bg-success/15 text-success border-success/20' },
-        expired: { label: 'EXPIRADA', className: 'bg-warning/15 text-warning border-warning/20' },
-        revoked: { label: 'REV', className: 'bg-destructive/15 text-destructive border-destructive/20' },
+        active:   { label: 'ATIVA',      className: 'bg-success/15 text-success border-success/20' },
+        expired:  { label: 'EXPIRADA',   className: 'bg-warning/15 text-warning border-warning/20' },
+        revoked:  { label: 'REV',        className: 'bg-destructive/15 text-destructive border-destructive/20' },
+        archived: { label: 'ARQUIVADA',  className: 'bg-orange-500/15 text-orange-400 border-orange-500/20' },
       }[status] || { label: status, className: 'bg-muted text-muted-foreground border-border' };
 
   return (
     <span className={`rounded-lg border px-2.5 py-1 text-[10px] font-black font-display ${config.className}`}>
       {config.label}
+    </span>
+  );
+}
+
+function PlanBadge({ plan }: { plan?: string }) {
+  const cfg: Record<string, { label: string; className: string }> = {
+    basico:   { label: 'BÁSICO',   className: 'bg-muted/60 text-muted-foreground border-border/40' },
+    plus:     { label: 'PLUS',     className: 'bg-blue-500/15 text-blue-400 border-blue-500/20' },
+    pro:      { label: 'PRO',      className: 'bg-primary/15 text-primary border-primary/20' },
+    fundador: { label: '★ FUNDADOR', className: 'bg-amber-500/15 text-amber-400 border-amber-500/20' },
+  };
+  const { label, className } = cfg[plan ?? 'basico'] ?? cfg.basico;
+  return (
+    <span className={`rounded-lg border px-2 py-0.5 text-[9px] font-black font-display whitespace-nowrap ${className}`}>
+      {label}
     </span>
   );
 }
