@@ -16,7 +16,7 @@ export interface LicenseWithDevice {
   id: string;
   license_key: string;
   email: string;
-  status: 'active' | 'expired' | 'revoked';
+  status: 'active' | 'expired' | 'revoked' | 'archived';
   created_at: string;
   expires_at: string;
   revoked_at: string | null;
@@ -31,6 +31,11 @@ export interface LicenseWithDevice {
   devices: Device[];
   customer_name: string | null;
   creator_name?: string;
+  // Plan & daily limits (migration 20260831)
+  plan: 'basico' | 'plus' | 'pro' | 'fundador';
+  daily_limit: number;
+  daily_used: number;
+  daily_reset_at: string | null;
 }
 
 function ensureArray<T>(value: T[] | null | undefined): T[] {
@@ -180,14 +185,14 @@ export function useCreateLicense() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ email, durationDays, price, notes, isTestLicense, isWildcard, isLifetime }: {
+    mutationFn: async ({ email, durationDays, price, notes, isTestLicense, isWildcard, plan }: {
       email: string;
       durationDays: number;
       price?: number;
       notes?: string;
       isTestLicense?: boolean;
       isWildcard?: boolean;
-      isLifetime?: boolean;
+      plan?: 'basico' | 'plus' | 'pro' | 'fundador';
     }) => {
       const { data: keyData, error: keyError } = await supabase.rpc('generate_license_key');
       if (keyError) throw keyError;
@@ -209,18 +214,24 @@ export function useCreateLicense() {
       }
 
       // Paid keys: 30 dias contados a partir da primeira ativação por dispositivo.
-      // Wildcard / Vitalícia: duração longa. Test: comportamento original.
+      // Wildcard: duração longa. Test: comportamento original.
       const effectiveDurationDays = isTestLicense
         ? durationDays
-        : ((isWildcard || isLifetime) ? Math.max(durationDays, 36500) : 30);
+        : (isWildcard ? Math.max(durationDays, 36500) : 30);
       const durationHours = effectiveDurationDays * 24;
       const expiresAt = new Date();
-      if (isTestLicense || (!isWildcard && !isLifetime)) {
+      if (isTestLicense || !isWildcard) {
         // Test e pagas: placeholder de 100 anos. A expiração real é definida na 1ª ativação.
         expiresAt.setFullYear(expiresAt.getFullYear() + 100);
       } else {
         expiresAt.setTime(expiresAt.getTime() + effectiveDurationDays * 24 * 60 * 60 * 1000);
       }
+
+      const dailyLimitMap: Record<string, number> = {
+        basico: 50, plus: 100, pro: 200, fundador: 120,
+      };
+      const resolvedPlan = plan ?? 'basico';
+      const dailyLimit = dailyLimitMap[resolvedPlan] ?? 50;
 
       const { data, error } = await supabase
         .from('licenses')
@@ -231,10 +242,12 @@ export function useCreateLicense() {
           price: price || 0,
           notes,
           duration_hours: isWildcard ? null : durationHours,
-          first_activated_at: (isWildcard || isLifetime) ? new Date().toISOString() : null,
+          first_activated_at: isWildcard ? new Date().toISOString() : null,
           is_wildcard: isWildcard || false,
           max_messages: isTestLicense ? testMessageLimit : null,
           created_by: user?.id || null,
+          plan: resolvedPlan,
+          daily_limit: dailyLimit,
         } as any)
         .select()
         .single();
@@ -485,5 +498,52 @@ export function useDeleteLicense() {
     onError: (error: Error) => {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' });
     },
+  });
+}
+
+// ── Archive license mutation (preserva dados, pode ser reativada) ──
+export function useArchiveLicense() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (licenseId: string) => {
+      const { error } = await supabase.from('licenses').update({ status: 'archived' as any }).eq('id', licenseId);
+      if (error) throw error;
+      await supabase.from('license_logs').insert({ license_id: licenseId, action: 'archived' });
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['licenses'] }); toast({ title: 'Arquivada', description: 'Licença arquivada. Pode ser reativada a qualquer momento.' }); },
+    onError: (error: Error) => { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); },
+  });
+}
+
+// ── Reactivate archived license mutation ──
+export function useReactivateLicense() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (licenseId: string) => {
+      const { error } = await supabase.from('licenses').update({ status: 'active' as any }).eq('id', licenseId);
+      if (error) throw error;
+      await supabase.from('license_logs').insert({ license_id: licenseId, action: 'reactivated' });
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['licenses'] }); toast({ title: 'Reativada', description: 'Licença está ativa novamente.' }); },
+    onError: (error: Error) => { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); },
+  });
+}
+
+// ── Set license plan mutation (admin) ──
+export function useSetLicensePlan() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async ({ licenseId, plan }: { licenseId: string; plan: 'basico' | 'plus' | 'pro' | 'fundador' }) => {
+      const dailyLimitMap: Record<string, number> = { basico: 50, plus: 100, pro: 200, fundador: 120 };
+      const daily_limit = dailyLimitMap[plan] ?? 50;
+      const { error } = await supabase.from('licenses').update({ plan, daily_limit } as any).eq('id', licenseId);
+      if (error) throw error;
+      await supabase.from('license_logs').insert({ license_id: licenseId, action: 'plan_changed', details: { plan, daily_limit } });
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['licenses'] }); toast({ title: 'Plano atualizado', description: 'Plano e limite diário atualizados.' }); },
+    onError: (error: Error) => { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); },
   });
 }
