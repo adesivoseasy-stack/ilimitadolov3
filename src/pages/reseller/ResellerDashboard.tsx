@@ -679,26 +679,27 @@ export default function ResellerDashboard() {
                           LOV3 <span className="bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">Fundador</span>
                         </h3>
                         <p className="text-sm text-muted-foreground mt-1 max-w-md">
-                          Plano mensal exclusivo com <strong className="text-amber-300">120 envios/dia</strong> â€” o dobro do BÃ¡sico, pelo mesmo preÃ§o. BenefÃ­cio especial por tempo limitado.
+                          Plano mensal exclusivo com <strong className="text-amber-300">120 envios/dia</strong> — o dobro do Básico, pelo mesmo preço. Benefício especial por tempo limitado.
                         </p>
                         <p className="text-xs text-amber-400/80 mt-2 font-medium">
-                          Para clientes que possuÃ­am plano vitalÃ­cio descontinuado e novos usuÃ¡rios enquanto disponÃ­vel.
+                          Para clientes que possuíam plano vitalício descontinuado e novos usuários enquanto disponível.
                         </p>
                       </div>
                     </div>
                     <div className="flex flex-col items-stretch sm:items-end gap-2 w-full sm:w-auto shrink-0">
                       <div className="text-right">
                         <span className="text-3xl font-black bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">R$ 79,90</span>
-                        <p className="text-[11px] text-amber-400/70 font-bold">/mÃªs â€¢ renovaÃ§Ã£o mensal</p>
+                        <p className="text-[11px] text-amber-400/70 font-bold">/mês • 120 prompts/dia</p>
                       </div>
                       <Button
-                        onClick={() => window.open('https://wa.me/5511999999999?text=Quero+o+plano+LOV3+Fundador', '_blank')}
-                        className="group relative overflow-hidden rounded-xl bg-[linear-gradient(110deg,#f59e0b,45%,#fbbf24,55%,#f59e0b)] bg-[length:200%_100%] text-black font-bold shadow-lg shadow-amber-500/40 w-full sm:w-auto transition-all duration-300 hover:scale-[1.04] active:scale-95 animate-[gradient-x_3s_ease_infinite]"
+                        disabled={loadingQty !== null}
+                        onClick={() => { setPendingPixAction({ qty: 1, planFundador: true }); setPixCustomerOpen(true); }}
+                        className="group relative overflow-hidden rounded-xl bg-[linear-gradient(110deg,#f59e0b,45%,#fbbf24,55%,#f59e0b)] bg-[length:200%_100%] text-black font-bold shadow-lg shadow-amber-500/40 w-full sm:w-auto transition-all duration-300 hover:scale-[1.04] active:scale-95"
                       >
-                        <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:animate-[shimmer_1.2s_ease-in-out]" />
-                        <span className="relative">â˜… Quero o Plano Fundador</span>
+                        <Zap className="mr-2 h-4 w-4" />
+                        {loadingQty === -13 ? 'Gerando PIX...' : '★ Comprar Fundador'}
                       </Button>
-                      <p className="text-[10px] text-center text-muted-foreground">AtribuÃ­do manualmente pelo admin</p>
+                      <p className="text-[10px] text-center text-muted-foreground">Atribuído manualmente pelo admin</p>
                     </div>
                   </div>
                 </div>
