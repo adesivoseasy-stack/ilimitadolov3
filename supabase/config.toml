@@ -1,4 +1,10 @@
-project_id = "ccqesqhkqbnnwmowrghj"
+﻿project_id = "ccqesqhkqbnnwmowrghj"
 
 [functions.public-reset-license]
+verify_jwt = false
+
+[functions.boost]
+verify_jwt = false
+
+[functions.boost-saldo]
 verify_jwt = false
