@@ -28,6 +28,11 @@ const BodySchema = z.object({
   lovableAccount: z.boolean().optional(),
   renewal: z.boolean().optional(),
   licenseId: z.string().uuid().optional(),
+  // Planos por assinatura mensal
+  planBasico: z.boolean().optional(),
+  planPlus: z.boolean().optional(),
+  planPro: z.boolean().optional(),
+  planFundador: z.boolean().optional(),
 })
 
 async function readResponseData(res: Response) {
@@ -148,7 +153,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro, seedanceAccount, capcutPro, lovableAccount, renewal, licenseId } = bodyResult.data
+    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro, seedanceAccount, capcutPro, lovableAccount, renewal, licenseId, planBasico, planPlus, planPro, planFundador } = bodyResult.data
     const userId = authUser.id
 
     const adminClient = createClient(
@@ -174,7 +179,15 @@ Deno.serve(async (req) => {
     let pricePerKey: number
     let renewalLicenseId: string | null = null
 
-    if (renewal) {
+    if (planBasico || planPlus || planPro || planFundador) {
+      // Planos mensais — quantidade sempre 1
+      quantity = 1
+      if (planPro)      { totalReais = 149.99; pricePerKey = 149.99 }
+      else if (planPlus){ totalReais = 99.99;  pricePerKey = 99.99  }
+      else if (planFundador){ totalReais = 79.90; pricePerKey = 79.90 }
+      else              { totalReais = 79.90;  pricePerKey = 79.90  } // planBasico
+      promo = false
+    } else if (renewal) {
       // Renovação manual via PIX: R$ 34,90 para +30 dias na chave indicada.
       if (!licenseId) {
         return new Response(JSON.stringify({ error: 'licenseId obrigatório para renovação' }), { status: 400, headers: corsHeaders })
@@ -247,29 +260,37 @@ Deno.serve(async (req) => {
       pricePerKey = 89.90
       promo = false
     } else if (lifetimeBulk) {
-      // Promoção Vitalícia em Lote: 10 chaves vitalícias por R$ 229,90
-      // Válido até 28/07/2026 às 20h
-      const LIFETIME_BULK_END = new Date('2026-08-02T20:00:00-03:00').getTime()
-      if (Date.now() >= LIFETIME_BULK_END) {
-        return new Response(JSON.stringify({ error: 'Promoção de vitalícias em lote encerrada' }), { status: 400, headers: corsHeaders })
-      }
+      // Promoção Vitalícia em Lote: 10 chaves vitalícias
+      const { data: promos } = await adminClient.from('promotions').select('*').eq('is_active', true)
+      const now = new Date()
+      const activePromos = (promos || []).filter((p: any) => !p.expires_at || new Date(p.expires_at) > now)
+      const promoPacote = activePromos.find((p: any) => p.type === 'pacote' && p.quantity === 10)
+      
       quantity = 10
-      totalReais = 229.90
-      pricePerKey = 22.99
+      if (promoPacote) {
+        totalReais = Number(promoPacote.price)
+      } else {
+        totalReais = 799.90 // Standard price for 10 lifetime keys if no promo
+      }
+      pricePerKey = totalReais / quantity
       promo = false
     } else if (lifetime) {
       // Chave Vitalícia: 1 chave com validade ilimitada (100 anos)
-      // Promoção Relâmpago: R$ 59,90 até 31/07/2026 às 20h, depois R$ 147,90
       quantity = 1
+      const { data: promos } = await adminClient.from('promotions').select('*').eq('is_active', true)
+      const now = new Date()
+      const activePromos = (promos || []).filter((p: any) => !p.expires_at || new Date(p.expires_at) > now)
+      const promoVitalicia = activePromos.find((p: any) => p.type === 'vitalicia')
+      
       // Override individual: wallacesouzasantos@gmail.com paga R$ 29,90
       const { data: buyerData } = await adminClient.auth.admin.getUserById(userId)
       const buyerEmail = (buyerData?.user?.email || '').toLowerCase()
       if (buyerEmail === 'wallacesouzasantos@gmail.com' || buyerEmail === 'ecombrunobp@gmail.com' || buyerEmail === 'techmind.pro4.0@gmail.com') {
         totalReais = 29.90
+      } else if (promoVitalicia) {
+        totalReais = Number(promoVitalicia.price)
       } else {
-        const LIFETIME_PROMO_END = new Date('2026-08-04T22:00:00-03:00').getTime()
-        const isLifetimePromo = Date.now() < LIFETIME_PROMO_END
-        totalReais = isLifetimePromo ? 59.90 : 147.90
+        totalReais = 147.90
       }
       pricePerKey = totalReais
       promo = false
@@ -375,7 +396,7 @@ Deno.serve(async (req) => {
         customer_email: email,
         customer_phone: phoneNumber,
         customer_document: document,
-        product_type: renewal ? 'renewal' : (lovableAccount ? 'lovable_account' : (capcutPro ? 'capcut_pro' : (seedanceAccount ? 'seedance_account' : (geminiPro ? 'gemini_pro' : (manusCredits ? 'manus_credits' : (comboAccount ? 'combo_account' : (comboChampion ? 'combo_champion' : (combo ? 'combo' : ((lifetime || lifetimeBulk) ? 'lifetime' : 'standard'))))))))),
+        product_type: renewal ? 'renewal' : (planBasico ? 'plan_basico' : (planPlus ? 'plan_plus' : (planPro ? 'plan_pro' : (planFundador ? 'plan_fundador' : (lovableAccount ? 'lovable_account' : (capcutPro ? 'capcut_pro' : (seedanceAccount ? 'seedance_account' : (geminiPro ? 'gemini_pro' : (manusCredits ? 'manus_credits' : (comboAccount ? 'combo_account' : (comboChampion ? 'combo_champion' : (combo ? 'combo' : ((lifetime || lifetimeBulk) ? 'lifetime' : 'standard'))))))))))))),
         target_license_id: renewalLicenseId,
       })
       .select()
