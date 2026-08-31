@@ -22,7 +22,7 @@ export function useCreatePixOrder() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createOrder = useCallback(async (quantity: number, customer: PixCustomerData, promo?: boolean, lifetime?: boolean, combo?: boolean, comboChampion?: boolean, renewal?: { licenseId: string }, comboAccount?: boolean, manusCredits?: boolean, lifetimeBulk?: boolean, geminiPro?: boolean, seedanceAccount?: boolean, capcutPro?: boolean, lovableAccount?: boolean): Promise<PixOrderData | null> => {
+  const createOrder = useCallback(async (quantity: number, customer: PixCustomerData, promo?: boolean, lifetime?: boolean, combo?: boolean, comboChampion?: boolean, renewal?: { licenseId: string }, comboAccount?: boolean, manusCredits?: boolean, lifetimeBulk?: boolean, geminiPro?: boolean, seedanceAccount?: boolean, capcutPro?: boolean, lovableAccount?: boolean, planBasico?: boolean, planPlus?: boolean, planPro?: boolean, planFundador?: boolean): Promise<PixOrderData | null> => {
     setIsLoading(true);
     setError(null);
     try {
@@ -38,7 +38,7 @@ export function useCreatePixOrder() {
 
       const { data, error: fnError } = await supabase.functions.invoke('create-pix-order', {
         headers: { Authorization: `Bearer ${accessToken}` },
-        body: { quantity, ...customer, ...(promo ? { promo: true } : {}), ...(lifetime ? { lifetime: true } : {}), ...(lifetimeBulk ? { lifetimeBulk: true } : {}), ...(combo ? { combo: true } : {}), ...(comboChampion ? { comboChampion: true } : {}), ...(comboAccount ? { comboAccount: true } : {}), ...(manusCredits ? { manusCredits: true } : {}), ...(geminiPro ? { geminiPro: true } : {}), ...(seedanceAccount ? { seedanceAccount: true } : {}), ...(capcutPro ? { capcutPro: true } : {}), ...(lovableAccount ? { lovableAccount: true } : {}), ...(renewal ? { renewal: true, licenseId: renewal.licenseId } : {}) },
+        body: { quantity, ...customer, ...(promo ? { promo: true } : {}), ...(lifetime ? { lifetime: true } : {}), ...(lifetimeBulk ? { lifetimeBulk: true } : {}), ...(combo ? { combo: true } : {}), ...(comboChampion ? { comboChampion: true } : {}), ...(comboAccount ? { comboAccount: true } : {}), ...(manusCredits ? { manusCredits: true } : {}), ...(geminiPro ? { geminiPro: true } : {}), ...(seedanceAccount ? { seedanceAccount: true } : {}), ...(capcutPro ? { capcutPro: true } : {}), ...(lovableAccount ? { lovableAccount: true } : {}), ...(renewal ? { renewal: true, licenseId: renewal.licenseId } : {}), ...(planBasico ? { planBasico: true } : {}), ...(planPlus ? { planPlus: true } : {}), ...(planPro ? { planPro: true } : {}), ...(planFundador ? { planFundador: true } : {}) },
       });
       if (fnError) {
         const ctx = (fnError as any)?.context;
