@@ -394,7 +394,7 @@ export default function ResellerDashboard() {
 
   const getEffectivePrice = (qty: number): number => {
     if (!isPricingReady) return 0;
-    // Promoção relâmpago mensal: 1 chave por R$ 34,90 até 04/06/2026 às 20h
+    // Promoção relâmpago mensal: 1 chave por R$ 34,90 até 04/06/2026 Ã s 20h
     const MONTHLY_PROMO_END = new Date('2026-06-04T20:00:00-03:00').getTime();
     if (qty === 1 && Date.now() < MONTHLY_PROMO_END) {
       return 34.90;
@@ -440,7 +440,7 @@ export default function ResellerDashboard() {
           <Alert className="border-destructive/30 bg-destructive/10 rounded-2xl backdrop-blur-sm">
             <AlertTriangle className="h-4 w-4 text-destructive" />
             <AlertDescription className="text-destructive font-medium flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 font-display text-xs sm:text-sm">
-              <span>�s�️ Você precisa ter pelo menos 1 chave ativa para manter seu acesso.</span>
+              <span>âš ï¸ Você precisa ter pelo menos 1 chave ativa para manter seu acesso.</span>
               <span className="font-mono text-xs sm:text-sm bg-destructive/20 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl whitespace-nowrap font-black">{deadlineCountdown}</span>
             </AlertDescription>
           </Alert>
@@ -449,7 +449,7 @@ export default function ResellerDashboard() {
           <Alert className="border-destructive/30 bg-destructive/10 rounded-2xl backdrop-blur-sm">
             <Lock className="h-4 w-4 text-destructive" />
             <AlertDescription className="text-destructive font-medium font-display">
-              �Ys� <strong>Atenção:</strong> Sua conta será bloqueada sem chaves ativas. Adquira pelo menos 1 licença.
+              ðŸš¨ <strong>Atenção:</strong> Sua conta será bloqueada sem chaves ativas. Adquira pelo menos 1 licença.
             </AlertDescription>
           </Alert>
         )}
@@ -473,26 +473,26 @@ export default function ResellerDashboard() {
             <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4 animate-fade-up-delay-2">
               <StatCard
                 label="Saldo Disponível"
-                value={statsLoading ? '�?"' : `R$ ${((stats?.revenue || 0)).toFixed(2)}`}
+                value={statsLoading ? 'â€”' : `R$ ${((stats?.revenue || 0)).toFixed(2)}`}
                 sub="Lucro acumulado"
                 icon={DollarSign}
               />
               <StatCard
                 label="Total Vendas"
-                value={statsLoading ? '�?"' : `R$ ${((stats?.revenue || 0)).toFixed(2)}`}
+                value={statsLoading ? 'â€”' : `R$ ${((stats?.revenue || 0)).toFixed(2)}`}
                 sub="Faturamento total registrado"
                 icon={DollarSign}
               />
               <StatCard
                 label="Clientes Ativos"
-                value={statsLoading ? '�?"' : stats?.active || 0}
+                value={statsLoading ? 'â€”' : stats?.active || 0}
                 sub="Licenças ativas"
                 icon={Users}
               />
               <StatCard
                 label="Chaves em Estoque"
-                value={isUnlimited ? '�^z' : `${credits?.credits_used || 0}`}
-                sub2={isUnlimited ? '�^z' : `${availableCredits}`}
+                value={isUnlimited ? 'âˆž' : `${credits?.credits_used || 0}`}
+                sub2={isUnlimited ? 'âˆž' : `${availableCredits}`}
                 sub={isUnlimited ? 'Plano Ilimitado' : 'Utilizadas'}
                 sub2Label={isUnlimited ? 'Sem limite' : 'Disponíveis para venda'}
                 icon={Key}
@@ -567,21 +567,21 @@ export default function ResellerDashboard() {
                     Comprar <span className="text-gradient">Planos</span>
                   </h2>
                   <p className="text-sm text-muted-foreground mb-5 font-display">
-                    Chaves mensais com limite de envios di�rio - renova automaticamente a cada 30 dias.
+                    Chaves mensais com limite de envios diário — renova automaticamente a cada 30 dias.
                   </p>
 
                   <div className="grid gap-4 sm:grid-cols-3">
-                    {/* B�sico */}
+                    {/* Básico */}
                     <div className="relative group">
                       <div className="p-6 rounded-2xl border border-border/50 bg-card/60 hover:border-primary/40 hover:bg-card/80 transition-all duration-300 flex flex-col gap-4">
                         <div className="space-y-1">
                           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground font-display">Mensal</p>
-                          <h3 className="text-xl font-black text-foreground font-display">B�sico</h3>
-                          <p className="text-sm text-muted-foreground">50 envios/dia . 1 dispositivo</p>
+                          <h3 className="text-xl font-black text-foreground font-display">Básico</h3>
+                          <p className="text-sm text-muted-foreground">50 envios/dia • 1 dispositivo</p>
                         </div>
                         <div>
                           <span className="text-3xl font-black text-gradient">R$ 79,90</span>
-                          <span className="text-sm text-muted-foreground font-display">/m�s</span>
+                          <span className="text-sm text-muted-foreground font-display">/mês</span>
                         </div>
                         <Button
                           className="w-full rounded-xl font-display font-bold"
@@ -590,12 +590,12 @@ export default function ResellerDashboard() {
                           onClick={() => { setPendingPixAction({ qty: 1, planBasico: true }); setPixCustomerOpen(true); }}
                         >
                           <ShoppingCart className="mr-2 h-4 w-4" />
-                          {loadingQty === -10 ? 'Gerando PIX...' : 'Comprar B�sico'}
+                          {loadingQty === -10 ? 'Gerando PIX...' : 'Comprar Básico'}
                         </Button>
                       </div>
                     </div>
 
-                    {/* Plus - MAIS VENDIDO */}
+                    {/* Plus — MAIS VENDIDO */}
                     <div className="relative">
                       <div className="absolute -inset-[2px] rounded-[1.1rem] z-0" style={{ background: 'linear-gradient(135deg, #f97316, #eab308, #f97316)', backgroundSize: '300% 300%', animation: 'fire-glow 3s ease infinite' }} />
                       <div className="relative p-6 rounded-2xl border border-transparent bg-card z-10 flex flex-col gap-4">
@@ -607,11 +607,11 @@ export default function ResellerDashboard() {
                         <div className="space-y-1">
                           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground font-display">Mensal</p>
                           <h3 className="text-xl font-black text-foreground font-display">Plus</h3>
-                          <p className="text-sm text-muted-foreground">100 envios/dia . 1 dispositivo</p>
+                          <p className="text-sm text-muted-foreground">100 envios/dia • 1 dispositivo</p>
                         </div>
                         <div>
                           <span className="text-3xl font-black bg-gradient-to-r from-orange-400 to-yellow-300 bg-clip-text text-transparent">R$ 99,99</span>
-                          <span className="text-sm text-muted-foreground font-display">/m�s</span>
+                          <span className="text-sm text-muted-foreground font-display">/mês</span>
                         </div>
                         <Button
                           className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-yellow-500 text-black font-bold hover:opacity-90 shadow-lg shadow-orange-500/20 font-display"
@@ -631,11 +631,11 @@ export default function ResellerDashboard() {
                         <div className="space-y-1">
                           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground font-display">Mensal</p>
                           <h3 className="text-xl font-black text-foreground font-display">Pro</h3>
-                          <p className="text-sm text-muted-foreground">200 envios/dia . 1 dispositivo</p>
+                          <p className="text-sm text-muted-foreground">200 envios/dia • 1 dispositivo</p>
                         </div>
                         <div>
                           <span className="text-3xl font-black bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">R$ 149,99</span>
-                          <span className="text-sm text-muted-foreground font-display">/m�s</span>
+                          <span className="text-sm text-muted-foreground font-display">/mês</span>
                         </div>
                         <Button
                           className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold hover:opacity-90 shadow-lg shadow-violet-500/20 font-display"
@@ -650,7 +650,7 @@ export default function ResellerDashboard() {
                   </div>
                 </div>
 
-                {/* LOV3 Fundador �?" TEMPO LIMITADO */}
+                {/* LOV3 Fundador â€” TEMPO LIMITADO */}
                 <div className="relative">
                   {/* Animated golden border */}
                   <div
@@ -664,12 +664,12 @@ export default function ResellerDashboard() {
                   <div className="relative p-6 sm:p-7 rounded-3xl bg-card border border-transparent z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
                     <div className="flex items-start gap-4">
                       <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-amber-500/30 to-yellow-500/20 flex items-center justify-center shrink-0 text-2xl">
-                        �~.
+                        ★
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <span className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider animate-pulse">
-                            ⏳ TEMPO LIMITADO
+                            â³ TEMPO LIMITADO
                           </span>
                           <span className="bg-gradient-to-r from-amber-600/30 to-yellow-500/20 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-500/30">
                             120 envios/dia
@@ -679,27 +679,26 @@ export default function ResellerDashboard() {
                           LOV3 <span className="bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">Fundador</span>
                         </h3>
                         <p className="text-sm text-muted-foreground mt-1 max-w-md">
-                          Plano mensal exclusivo com <strong className="text-amber-300">120 envios/dia</strong> - o dobro do B�sico, pelo mesmo pre�o. Benef�cio especial por tempo limitado.
+                          Plano mensal exclusivo com <strong className="text-amber-300">120 envios/dia</strong> â€” o dobro do Básico, pelo mesmo preço. Benefício especial por tempo limitado.
                         </p>
                         <p className="text-xs text-amber-400/80 mt-2 font-medium">
-                          Para clientes que possu�am plano vital�cio descontinuado e novos usu�rios enquanto dispon�vel.
+                          Para clientes que possuíam plano vitalício descontinuado e novos usuários enquanto disponível.
                         </p>
                       </div>
                     </div>
                     <div className="flex flex-col items-stretch sm:items-end gap-2 w-full sm:w-auto shrink-0">
                       <div className="text-right">
                         <span className="text-3xl font-black bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">R$ 79,90</span>
-                        <p className="text-[11px] text-amber-400/70 font-bold">/m�s . 120 prompts/dia</p>
+                        <p className="text-[11px] text-amber-400/70 font-bold">/mês â€¢ renovação mensal</p>
                       </div>
                       <Button
-                        disabled={loadingQty !== null}
-                        onClick={() => { setPendingPixAction({ qty: 1, planFundador: true }); setPixCustomerOpen(true); }}
-                        className="group relative overflow-hidden rounded-xl bg-[linear-gradient(110deg,#f59e0b,45%,#fbbf24,55%,#f59e0b)] bg-[length:200%_100%] text-black font-bold shadow-lg shadow-amber-500/40 w-full sm:w-auto transition-all duration-300 hover:scale-[1.04] active:scale-95"
+                        onClick={() => window.open('https://wa.me/5511999999999?text=Quero+o+plano+LOV3+Fundador', '_blank')}
+                        className="group relative overflow-hidden rounded-xl bg-[linear-gradient(110deg,#f59e0b,45%,#fbbf24,55%,#f59e0b)] bg-[length:200%_100%] text-black font-bold shadow-lg shadow-amber-500/40 w-full sm:w-auto transition-all duration-300 hover:scale-[1.04] active:scale-95 animate-[gradient-x_3s_ease_infinite]"
                       >
-                        <Zap className="mr-2 h-4 w-4" />
-                        {loadingQty === -13 ? 'Gerando PIX...' : '? Comprar Fundador'}
+                        <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:animate-[shimmer_1.2s_ease-in-out]" />
+                        <span className="relative">★ Quero o Plano Fundador</span>
                       </Button>
-                      <p className="text-[10px] text-center text-muted-foreground">Atribu�do manualmente pelo admin</p>
+                      <p className="text-[10px] text-center text-muted-foreground">Atribuído manualmente pelo admin</p>
                     </div>
                   </div>
                 </div>
@@ -845,7 +844,7 @@ export default function ResellerDashboard() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm">{license.customer_name || <span className="text-muted-foreground italic">�?"</span>}</span>
+                          <span className="text-sm">{license.customer_name || <span className="text-muted-foreground italic">â€”</span>}</span>
                         </TableCell>
                         <TableCell>{license.email}</TableCell>
                         <TableCell><StatusBadge status={license.status} /></TableCell>
@@ -922,7 +921,7 @@ export default function ResellerDashboard() {
                     <div className="grid grid-cols-2 gap-3 text-xs min-w-0">
                       <div className="min-w-0">
                         <p className="text-muted-foreground mb-1">Cliente</p>
-                        <p className="truncate text-foreground">{license.customer_name || '�?"'}</p>
+                        <p className="truncate text-foreground">{license.customer_name || 'â€”'}</p>
                       </div>
                       <div className="min-w-0">
                         <p className="text-muted-foreground mb-1">Status</p>
@@ -998,7 +997,7 @@ export default function ResellerDashboard() {
               <div className="space-y-2">
                 <Label>Duração</Label>
                 <div className="rounded-xl border border-border/20 bg-background/20 px-4 py-3 text-sm">
-                  30 dias <span className="text-xs text-muted-foreground">(fixo �?" teste continua separado e licença comum não usa mais 1 ano)</span>
+                  30 dias <span className="text-xs text-muted-foreground">(fixo â€” teste continua separado e licença comum não usa mais 1 ano)</span>
                 </div>
               </div>
               <div className="space-y-2">
@@ -1026,11 +1025,11 @@ export default function ResellerDashboard() {
             {selectedLicense && (
               <div className="space-y-4">
                 <div><Label className="text-muted-foreground">Chave</Label><p className="font-mono text-sm">{selectedLicense.license_key}</p></div>
-                <div><Label className="text-muted-foreground">Cliente</Label><p>{selectedLicense.customer_name || '�?"'}</p></div>
+                <div><Label className="text-muted-foreground">Cliente</Label><p>{selectedLicense.customer_name || 'â€”'}</p></div>
                 <div><Label className="text-muted-foreground">Email</Label><p>{selectedLicense.email}</p></div>
                 <div><Label className="text-muted-foreground">Status</Label><p><StatusBadge status={selectedLicense.status} /></p></div>
-                <div><Label className="text-muted-foreground">Criada em</Label><p className="text-sm">{format(parseISO(selectedLicense.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p></div>
-                <div><Label className="text-muted-foreground">Expira em</Label><p className="text-sm">{format(parseISO(selectedLicense.expires_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p></div>
+                <div><Label className="text-muted-foreground">Criada em</Label><p className="text-sm">{format(parseISO(selectedLicense.created_at), "dd/MM/yyyy 'Ã s' HH:mm", { locale: ptBR })}</p></div>
+                <div><Label className="text-muted-foreground">Expira em</Label><p className="text-sm">{format(parseISO(selectedLicense.expires_at), "dd/MM/yyyy 'Ã s' HH:mm", { locale: ptBR })}</p></div>
                 {selectedLicense.notes && <div><Label className="text-muted-foreground">Observações</Label><p className="text-sm">{selectedLicense.notes}</p></div>}
               </div>
             )}
@@ -1101,10 +1100,10 @@ export default function ResellerDashboard() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl">
                 <Flame className="h-6 w-6 text-orange-500" />
-                �YZ? Promoção de Inauguração
+                ðŸŽ‰ Promoção de Inauguração
               </DialogTitle>
               <p className="text-sm text-muted-foreground">
-                Pacote especial: <span className="font-bold text-orange-500">10 chaves por R$ 249,90</span> �?" só nas próximas 24h!
+                Pacote especial: <span className="font-bold text-orange-500">10 chaves por R$ 249,90</span> â€” só nas próximas 24h!
               </p>
             </DialogHeader>
             <div className="space-y-5 py-4">
@@ -1170,10 +1169,10 @@ export default function ResellerDashboard() {
                 <div className="space-y-3 text-sm text-muted-foreground">
                   <p className="font-semibold text-foreground">Antes de comprar, confirme que você atende aos requisitos:</p>
                   <ul className="space-y-2 list-none pl-0">
-                    <li className="flex gap-2"><span className="text-purple-400">�-�</span> A conta Lovable que receberá os créditos deve ser do plano <span className="font-bold text-foreground">FREE</span> (sem assinatura ativa).</li>
-                    <li className="flex gap-2"><span className="text-purple-400">�-�</span> Os 300 créditos + 1 Ano PRO Lite serão aplicados nessa conta FREE.</li>
-                    <li className="flex gap-2"><span className="text-purple-400">�-�</span> Após o pagamento, você receberá o link do grupo e deverá enviar o comprovante ao ADM para liberação.</li>
-                    <li className="flex gap-2"><span className="text-purple-400">�-�</span> Compra não reembolsável após ativação.</li>
+                    <li className="flex gap-2"><span className="text-purple-400">â—</span> A conta Lovable que receberá os créditos deve ser do plano <span className="font-bold text-foreground">FREE</span> (sem assinatura ativa).</li>
+                    <li className="flex gap-2"><span className="text-purple-400">â—</span> Os 300 créditos + 1 Ano PRO Lite serão aplicados nessa conta FREE.</li>
+                    <li className="flex gap-2"><span className="text-purple-400">â—</span> Após o pagamento, você receberá o link do grupo e deverá enviar o comprovante ao ADM para liberação.</li>
+                    <li className="flex gap-2"><span className="text-purple-400">â—</span> Compra não reembolsável após ativação.</li>
                   </ul>
                   <label className="flex items-start gap-2 pt-2 cursor-pointer">
                     <input
@@ -1224,11 +1223,11 @@ export default function ResellerDashboard() {
                     </p>
                   </div>
                   <ul className="space-y-2 list-none pl-0">
-                    <li className="flex gap-2"><span className="text-yellow-400">�-�</span> <span><span className="font-bold text-foreground">300 Créditos Lovable</span> aplicados em uma conta <span className="font-bold">FREE</span>.</span></li>
-                    <li className="flex gap-2"><span className="text-yellow-400">�-�</span> <span><span className="font-bold text-foreground">1 Ano de PRO Lite</span> na mesma conta FREE.</span></li>
-                    <li className="flex gap-2"><span className="text-yellow-400">�-�</span> <span><span className="font-bold text-foreground">1 Chave Vitalícia</span> (validade ilimitada) para revenda.</span></li>
-                    <li className="flex gap-2"><span className="text-yellow-400">�-�</span> Após o pagamento, envie o comprovante ao ADM no WhatsApp para liberação do combo e entrada no grupo.</li>
-                    <li className="flex gap-2"><span className="text-yellow-400">�-�</span> Compra não reembolsável após ativação.</li>
+                    <li className="flex gap-2"><span className="text-yellow-400">â—</span> <span><span className="font-bold text-foreground">300 Créditos Lovable</span> aplicados em uma conta <span className="font-bold">FREE</span>.</span></li>
+                    <li className="flex gap-2"><span className="text-yellow-400">â—</span> <span><span className="font-bold text-foreground">1 Ano de PRO Lite</span> na mesma conta FREE.</span></li>
+                    <li className="flex gap-2"><span className="text-yellow-400">â—</span> <span><span className="font-bold text-foreground">1 Chave Vitalícia</span> (validade ilimitada) para revenda.</span></li>
+                    <li className="flex gap-2"><span className="text-yellow-400">â—</span> Após o pagamento, envie o comprovante ao ADM no WhatsApp para liberação do combo e entrada no grupo.</li>
+                    <li className="flex gap-2"><span className="text-yellow-400">â—</span> Compra não reembolsável após ativação.</li>
                   </ul>
                   <label className="flex items-start gap-2 pt-2 cursor-pointer">
                     <input
@@ -1271,11 +1270,11 @@ export default function ResellerDashboard() {
                 <div className="space-y-3 text-sm text-muted-foreground">
                   <p className="font-semibold text-foreground">Você está adquirindo:</p>
                   <ul className="space-y-2 list-none pl-0">
-                    <li className="flex gap-2"><span className="text-pink-400">�-�</span> <span><span className="font-bold text-foreground">Conta Lovable</span> nova com login e senha enviados por e-mail.</span></li>
-                    <li className="flex gap-2"><span className="text-pink-400">�-�</span> <span><span className="font-bold text-foreground">300 Créditos Lovable</span> aplicados instantaneamente.</span></li>
-                    <li className="flex gap-2"><span className="text-pink-400">�-�</span> <span><span className="font-bold text-foreground">1 Ano de PRO</span> com recursos ilimitados.</span></li>
-                    <li className="flex gap-2"><span className="text-pink-400">�-�</span> Após o pagamento, envie o comprovante ao ADM no grupo para liberação da conta.</li>
-                    <li className="flex gap-2"><span className="text-pink-400">�-�</span> Compra não reembolsável após a entrega das credenciais.</li>
+                    <li className="flex gap-2"><span className="text-pink-400">â—</span> <span><span className="font-bold text-foreground">Conta Lovable</span> nova com login e senha enviados por e-mail.</span></li>
+                    <li className="flex gap-2"><span className="text-pink-400">â—</span> <span><span className="font-bold text-foreground">300 Créditos Lovable</span> aplicados instantaneamente.</span></li>
+                    <li className="flex gap-2"><span className="text-pink-400">â—</span> <span><span className="font-bold text-foreground">1 Ano de PRO</span> com recursos ilimitados.</span></li>
+                    <li className="flex gap-2"><span className="text-pink-400">â—</span> Após o pagamento, envie o comprovante ao ADM no grupo para liberação da conta.</li>
+                    <li className="flex gap-2"><span className="text-pink-400">â—</span> Compra não reembolsável após a entrega das credenciais.</li>
                   </ul>
                   <label className="flex items-start gap-2 pt-2 cursor-pointer">
                     <input
@@ -1312,16 +1311,16 @@ export default function ResellerDashboard() {
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-cyan-400" />
-                Requisitos �?" 1000 Créditos Manus AI
+                Requisitos â€” 1000 Créditos Manus AI
               </AlertDialogTitle>
               <AlertDialogDescription asChild>
                 <div className="space-y-3 text-sm text-muted-foreground">
                   <p className="font-semibold text-foreground">Você está adquirindo:</p>
                   <ul className="space-y-2 list-none pl-0">
-                    <li className="flex gap-2"><span className="text-cyan-400">�-�</span> <span><span className="font-bold text-foreground">1000 Créditos Manus AI</span> aplicados na sua conta Manus.</span></li>
-                    <li className="flex gap-2"><span className="text-cyan-400">�-�</span> Entrega imediata após confirmação manual.</li>
-                    <li className="flex gap-2"><span className="text-cyan-400">�-�</span> Após o pagamento, envie o comprovante ao ADM no grupo para liberação dos créditos.</li>
-                    <li className="flex gap-2"><span className="text-cyan-400">�-�</span> Compra não reembolsável após a entrega dos créditos.</li>
+                    <li className="flex gap-2"><span className="text-cyan-400">â—</span> <span><span className="font-bold text-foreground">1000 Créditos Manus AI</span> aplicados na sua conta Manus.</span></li>
+                    <li className="flex gap-2"><span className="text-cyan-400">â—</span> Entrega imediata após confirmação manual.</li>
+                    <li className="flex gap-2"><span className="text-cyan-400">â—</span> Após o pagamento, envie o comprovante ao ADM no grupo para liberação dos créditos.</li>
+                    <li className="flex gap-2"><span className="text-cyan-400">â—</span> Compra não reembolsável após a entrega dos créditos.</li>
                   </ul>
                   <label className="flex items-start gap-2 pt-2 cursor-pointer">
                     <input
@@ -1358,16 +1357,16 @@ export default function ResellerDashboard() {
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-indigo-400" />
-                Requisitos �?" Gemini Pro 18 Meses
+                Requisitos â€” Gemini Pro 18 Meses
               </AlertDialogTitle>
               <AlertDialogDescription asChild>
                 <div className="space-y-3 text-sm text-muted-foreground">
                   <p className="font-semibold text-foreground">Você está adquirindo:</p>
                   <ul className="space-y-2 list-none pl-0">
-                    <li className="flex gap-2"><span className="text-indigo-400">�-�</span> <span><span className="font-bold text-foreground">Gemini Pro �?" 18 meses de assinatura</span> ativados direto na sua conta Google.</span></li>
-                    <li className="flex gap-2"><span className="text-indigo-400">�-�</span> Inclui 5 TB no Google One, Gemini 3.1 Pro + Nano Banana Pro, Veo 3, Flow, Whisk, NotebookLM, Deep Research, Code Assist, Antigravity e CLI.</li>
-                    <li className="flex gap-2"><span className="text-indigo-400">�-�</span> Ativação manual pelo ADM após o pagamento �?" envie o comprovante no grupo com o email da sua conta Google.</li>
-                    <li className="flex gap-2"><span className="text-indigo-400">�-�</span> Compra não reembolsável após a ativação.</li>
+                    <li className="flex gap-2"><span className="text-indigo-400">â—</span> <span><span className="font-bold text-foreground">Gemini Pro â€” 18 meses de assinatura</span> ativados direto na sua conta Google.</span></li>
+                    <li className="flex gap-2"><span className="text-indigo-400">â—</span> Inclui 5 TB no Google One, Gemini 3.1 Pro + Nano Banana Pro, Veo 3, Flow, Whisk, NotebookLM, Deep Research, Code Assist, Antigravity e CLI.</li>
+                    <li className="flex gap-2"><span className="text-indigo-400">â—</span> Ativação manual pelo ADM após o pagamento â€” envie o comprovante no grupo com o email da sua conta Google.</li>
+                    <li className="flex gap-2"><span className="text-indigo-400">â—</span> Compra não reembolsável após a ativação.</li>
                   </ul>
                   <label className="flex items-start gap-2 pt-2 cursor-pointer">
                     <input
@@ -1404,17 +1403,17 @@ export default function ResellerDashboard() {
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-purple-400" />
-                Requisitos �?" Conta Seedance 8.500K
+                Requisitos â€” Conta Seedance 8.500K
               </AlertDialogTitle>
               <AlertDialogDescription asChild>
                 <div className="space-y-3 text-sm text-muted-foreground">
                   <p className="font-semibold text-foreground">Você está adquirindo:</p>
                   <ul className="space-y-2 list-none pl-0">
-                    <li className="flex gap-2"><span className="text-purple-400">�-�</span> <span><span className="font-bold text-foreground">1 Conta Seedance</span> com <span className="font-bold text-foreground">8.500K créditos</span> garantidos.</span></li>
-                    <li className="flex gap-2"><span className="text-purple-400">�-�</span> Geração ultrarrápida de vídeos profissionais em qualidade cinematográfica.</li>
-                    <li className="flex gap-2"><span className="text-purple-400">�-�</span> Acesso completo à conta premium (login + senha entregues pelo ADM).</li>
-                    <li className="flex gap-2"><span className="text-purple-400">�-�</span> Entrega manual pelo ADM após o pagamento �?" envie o comprovante no grupo do WhatsApp.</li>
-                    <li className="flex gap-2"><span className="text-purple-400">�-�</span> Compra não reembolsável após a entrega.</li>
+                    <li className="flex gap-2"><span className="text-purple-400">â—</span> <span><span className="font-bold text-foreground">1 Conta Seedance</span> com <span className="font-bold text-foreground">8.500K créditos</span> garantidos.</span></li>
+                    <li className="flex gap-2"><span className="text-purple-400">â—</span> Geração ultrarrápida de vídeos profissionais em qualidade cinematográfica.</li>
+                    <li className="flex gap-2"><span className="text-purple-400">â—</span> Acesso completo Ã  conta premium (login + senha entregues pelo ADM).</li>
+                    <li className="flex gap-2"><span className="text-purple-400">â—</span> Entrega manual pelo ADM após o pagamento â€” envie o comprovante no grupo do WhatsApp.</li>
+                    <li className="flex gap-2"><span className="text-purple-400">â—</span> Compra não reembolsável após a entrega.</li>
                   </ul>
                   <label className="flex items-start gap-2 pt-2 cursor-pointer">
                     <input
@@ -1451,17 +1450,17 @@ export default function ResellerDashboard() {
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-purple-400" />
-                Requisitos �?" CapCut Pro 30 dias
+                Requisitos â€” CapCut Pro 30 dias
               </AlertDialogTitle>
               <AlertDialogDescription asChild>
                 <div className="space-y-3 text-sm text-muted-foreground">
                   <p className="font-semibold text-foreground">Você está adquirindo:</p>
                   <ul className="space-y-2 list-none pl-0">
-                    <li className="flex gap-2"><span className="text-purple-400">�-�</span> <span><span className="font-bold text-foreground">Acesso CapCut Pro</span> por <span className="font-bold text-foreground">30 dias</span> (login e senha).</span></li>
-                    <li className="flex gap-2"><span className="text-purple-400">�-�</span> Todos os recursos PRO liberados, exportação em 4K e sem marca d'água.</li>
-                    <li className="flex gap-2"><span className="text-purple-400">�-�</span> Acesso completo à conta premium (login + senha entregues pelo ADM).</li>
-                    <li className="flex gap-2"><span className="text-purple-400">�-�</span> Entrega manual pelo ADM via WhatsApp após o pagamento �?" envie o comprovante no grupo.</li>
-                    <li className="flex gap-2"><span className="text-purple-400">�-�</span> Compra não reembolsável após a entrega.</li>
+                    <li className="flex gap-2"><span className="text-purple-400">â—</span> <span><span className="font-bold text-foreground">Acesso CapCut Pro</span> por <span className="font-bold text-foreground">30 dias</span> (login e senha).</span></li>
+                    <li className="flex gap-2"><span className="text-purple-400">â—</span> Todos os recursos PRO liberados, exportação em 4K e sem marca d'água.</li>
+                    <li className="flex gap-2"><span className="text-purple-400">â—</span> Acesso completo Ã  conta premium (login + senha entregues pelo ADM).</li>
+                    <li className="flex gap-2"><span className="text-purple-400">â—</span> Entrega manual pelo ADM via WhatsApp após o pagamento â€” envie o comprovante no grupo.</li>
+                    <li className="flex gap-2"><span className="text-purple-400">â—</span> Compra não reembolsável após a entrega.</li>
                   </ul>
                   <label className="flex items-start gap-2 pt-2 cursor-pointer">
                     <input
@@ -1498,23 +1497,23 @@ export default function ResellerDashboard() {
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-violet-400" />
-                Requisitos �?" Lovable AI Pro | Conta Privada
+                Requisitos â€” Lovable AI Pro | Conta Privada
               </AlertDialogTitle>
               <AlertDialogDescription asChild>
                 <div className="space-y-3 text-sm text-muted-foreground">
                   <p className="font-semibold text-foreground">O que está incluído:</p>
                   <ul className="space-y-2 list-none pl-0">
-                    <li className="flex gap-2"><span className="text-violet-400">�-�</span> <span>Plano <span className="font-bold text-foreground">Pro de 1 mês</span> (30 dias).</span></li>
-                    <li className="flex gap-2"><span className="text-violet-400">�-�</span> <span><span className="font-bold text-foreground">105 créditos</span> inclusos.</span></li>
-                    <li className="flex gap-2"><span className="text-violet-400">�-�</span> Conta segura e privada, com acesso total ao e-mail incluído.</li>
-                    <li className="flex gap-2"><span className="text-violet-400">�-�</span> Acesso imediato �?" entrega automática após a confirmação do pagamento.</li>
+                    <li className="flex gap-2"><span className="text-violet-400">â—</span> <span>Plano <span className="font-bold text-foreground">Pro de 1 mês</span> (30 dias).</span></li>
+                    <li className="flex gap-2"><span className="text-violet-400">â—</span> <span><span className="font-bold text-foreground">105 créditos</span> inclusos.</span></li>
+                    <li className="flex gap-2"><span className="text-violet-400">â—</span> Conta segura e privada, com acesso total ao e-mail incluído.</li>
+                    <li className="flex gap-2"><span className="text-violet-400">â—</span> Acesso imediato â€” entrega automática após a confirmação do pagamento.</li>
                   </ul>
                   <p className="font-semibold text-foreground pt-1">IMPORTANTE:</p>
                   <ul className="space-y-2 list-none pl-0">
-                    <li className="flex gap-2"><span className="text-amber-400">�-�</span> Transferências de workspace e de projetos não são garantidas. Não oferecemos garantia para problemas relacionados a transferências.</li>
-                    <li className="flex gap-2"><span className="text-amber-400">�-�</span> Se aparecer a mensagem de "Atividade Suspeita" ao fazer login, tente usar uma VPN e faça login novamente.</li>
-                    <li className="flex gap-2"><span className="text-amber-400">�-�</span> Transferências podem parar de funcionar devido a mudanças nas políticas e sistemas da Lovable.</li>
-                    <li className="flex gap-2"><span className="text-amber-400">�-�</span> Precisa de ajuda? Fale com o suporte a qualquer momento.</li>
+                    <li className="flex gap-2"><span className="text-amber-400">â—</span> Transferências de workspace e de projetos não são garantidas. Não oferecemos garantia para problemas relacionados a transferências.</li>
+                    <li className="flex gap-2"><span className="text-amber-400">â—</span> Se aparecer a mensagem de "Atividade Suspeita" ao fazer login, tente usar uma VPN e faça login novamente.</li>
+                    <li className="flex gap-2"><span className="text-amber-400">â—</span> Transferências podem parar de funcionar devido a mudanças nas políticas e sistemas da Lovable.</li>
+                    <li className="flex gap-2"><span className="text-amber-400">â—</span> Precisa de ajuda? Fale com o suporte a qualquer momento.</li>
                   </ul>
                   <label className="flex items-start gap-2 pt-2 cursor-pointer">
                     <input
@@ -1647,7 +1646,7 @@ export default function ResellerDashboard() {
                 ) : (
                   <>
                     <p className="text-sm text-muted-foreground text-center">
-                      {pixOrder?.quantity} crédito(s) foram adicionados à sua conta.
+                      {pixOrder?.quantity} crédito(s) foram adicionados Ã  sua conta.
                     </p>
                     <Button onClick={() => { setIsPixModalOpen(false); setPixOrder(null); }} className="bg-gradient text-primary-foreground">
                       Fechar
@@ -1659,7 +1658,7 @@ export default function ResellerDashboard() {
               <div className="space-y-4">
                 <div className="text-center space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    <span className="font-semibold text-foreground">{pixOrder.quantity}</span> chave(s) �- R$ {pixOrder.price_per_key.toFixed(2)}
+                    <span className="font-semibold text-foreground">{pixOrder.quantity}</span> chave(s) Ã— R$ {pixOrder.price_per_key.toFixed(2)}
                   </p>
                   <p className="text-2xl font-bold text-gradient">
                     R$ {(pixOrder.amount_cents / 100).toFixed(2)}
@@ -1749,14 +1748,14 @@ function StatusBadge({ status }: { status: string }) {
 function ExpiryInfo({ expiresAt, durationHours, firstActivatedAt }: { expiresAt: string; durationHours?: number | null; firstActivatedAt?: string | null }) {
   if (durationHours && !firstActivatedAt) {
     const totalMinutes = durationHours * 60;
-    if (totalMinutes < 60) return <span className="text-xs text-muted-foreground">⏳ {Math.round(totalMinutes)}min (aguardando)</span>;
-    return <span className="text-xs text-muted-foreground">⏳ {Math.round(durationHours)}h (aguardando)</span>;
+    if (totalMinutes < 60) return <span className="text-xs text-muted-foreground">â³ {Math.round(totalMinutes)}min (aguardando)</span>;
+    return <span className="text-xs text-muted-foreground">â³ {Math.round(durationHours)}h (aguardando)</span>;
   }
   const now = new Date();
   const expiry = parseISO(expiresAt);
   if (expiry < now) return <span className="text-xs text-destructive">Expirado</span>;
   const days = differenceInDays(expiry, now);
-  if (days > 365) return <span className="text-xs text-muted-foreground">�^z</span>;
+  if (days > 365) return <span className="text-xs text-muted-foreground">âˆž</span>;
   if (days > 0) return <span className="text-xs text-muted-foreground">{days}d</span>;
   const hours = differenceInHours(expiry, now);
   if (hours > 0) return <span className="text-xs text-warning">{hours}h</span>;
