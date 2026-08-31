@@ -35,7 +35,7 @@ export function ResellerSidebar() {
     isWhitelisted ||
     (licenses || []).some((l: any) => l.status === 'active' && l.max_messages == null);
 
-  const EXTENSION_FILENAME = 'LOV3.8.zip';
+  const EXTENSION_FILENAME = 'LOV3 Reborn.zip';
 
   const downloadExtension = async () => {
     if (isDownloading) return;
@@ -49,7 +49,7 @@ export function ResellerSidebar() {
     }
     setIsDownloading(true);
     try {
-      const zipUrl = '/LOV3.8.zip';
+      const zipUrl = '/LOV3.9.zip';
       
       const link = document.createElement('a');
       link.href = `${zipUrl}?t=${Date.now()}`;
