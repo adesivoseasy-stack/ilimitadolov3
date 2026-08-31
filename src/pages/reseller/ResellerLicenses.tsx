@@ -234,19 +234,17 @@ export default function ResellerLicenses() {
                   <span>
                     <Button
                       variant="outline"
-                      className="border-border/30 font-display"
-                      onClick={() => canCreateTest && setIsTestOpen(true)}
-                      disabled={!canCreateTest}
+                      className="border-border/30 font-display opacity-50"
+                      onClick={() => {}}
+                      disabled={true}
                     >
                       <FlaskConical className="mr-2 h-4 w-4" />Chave Teste
                     </Button>
                   </span>
                 </TooltipTrigger>
-                {!canCreateTest && (
-                  <TooltipContent>
-                    <p>Adquira sua primeira chave para liberar a geração de testes</p>
-                  </TooltipContent>
-                )}
+                <TooltipContent>
+                  <p>Geração de chaves teste temporariamente desativada pelo administrador</p>
+                </TooltipContent>
               </Tooltip>
             </TooltipProvider>
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
