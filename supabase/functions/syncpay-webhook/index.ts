@@ -238,10 +238,19 @@ Deno.serve(async (req) => {
     // combo_champion (Combo Copa do Brasil) inclui 1 chave VITALÍCIA no pacote
     const isLifetime = order.product_type === 'lifetime' || order.product_type === 'combo_champion'
 
+    // Determine plan from product_type
+    const PLAN_MAP: Record<string, { plan: string; daily_limit: number }> = {
+      plan_basico:  { plan: 'basico',   daily_limit: 50  },
+      plan_plus:    { plan: 'plus',     daily_limit: 100 },
+      plan_pro:     { plan: 'pro',      daily_limit: 200 },
+      plan_fundador:{ plan: 'fundador', daily_limit: 120 },
+    }
+    const planInfo = PLAN_MAP[order.product_type] ?? null
+
     // Only key products generate licenses. Account/credit products (combos, gemini_pro,
     // manus_credits, seedance_account, capcut_pro, etc.) are delivered manually and must NOT
     // generate free keys.
-    const KEY_PRODUCTS = ['standard', 'lifetime', 'combo_champion']
+    const KEY_PRODUCTS = ['standard', 'lifetime', 'combo_champion', 'plan_basico', 'plan_plus', 'plan_pro', 'plan_fundador']
     if (!KEY_PRODUCTS.includes(order.product_type)) {
       console.log('[syncpay-webhook] Non-key product paid, no license generated:', order.product_type, order.id)
       return new Response(
@@ -270,12 +279,15 @@ Deno.serve(async (req) => {
           price: 0,
           notes: isLifetime
             ? `Chave VITALÍCIA em estoque - Pedido PIX #${order.id.slice(0, 8)}`
-            : `Chave em estoque - Pedido PIX #${order.id.slice(0, 8)}`,
+            : planInfo
+              ? `Plano ${planInfo.plan.toUpperCase()} em estoque - Pedido PIX #${order.id.slice(0, 8)}`
+              : `Chave em estoque - Pedido PIX #${order.id.slice(0, 8)}`,
           created_by: order.reseller_id,
           status: 'active',
           is_wildcard: false,
           duration_hours: isLifetime ? lifetimeHours : 720,
           first_activated_at: null,
+          ...(planInfo ? { plan: planInfo.plan, daily_limit: planInfo.daily_limit } : {}),
         })
         .select('id')
         .single()
