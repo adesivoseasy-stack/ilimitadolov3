@@ -83,7 +83,7 @@ export function useResellerCreateLicense() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ email, durationDays, price, notes, isTestLicense, isWildcard, isLifetime, customerName }: {
+    mutationFn: async ({ email, durationDays, price, notes, isTestLicense, isWildcard, isLifetime, customerName, dailyLimit }: {
       email: string;
       durationDays: number;
       price?: number;
@@ -92,6 +92,7 @@ export function useResellerCreateLicense() {
       isWildcard?: boolean;
       isLifetime?: boolean;
       customerName?: string;
+      dailyLimit?: number;
     }) => {
       // Test licenses are FREE and unlimited - no credit consumption
       if (!isTestLicense) {
@@ -183,6 +184,7 @@ export function useResellerCreateLicense() {
           created_by: user?.id,
           max_messages: null,
           customer_name: customerName || null,
+          ...(dailyLimit ? { daily_limit: dailyLimit } : {}),
         } as any)
         .select()
         .single();

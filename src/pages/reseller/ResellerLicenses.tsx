@@ -48,7 +48,8 @@ export default function ResellerLicenses() {
   const [newNotes, setNewNotes] = useState('');
   const [newCustomerName, setNewCustomerName] = useState('');
   const [newLifetime, setNewLifetime] = useState(false);
-  
+  const [newPlan, setNewPlan] = useState<'starter' | 'basico' | 'plus' | 'pro'>('basico');
+
   const [editNameLicense, setEditNameLicense] = useState<{ id: string; currentName: string } | null>(null);
   const [editNameValue, setEditNameValue] = useState('');
   const [renewDialog, setRenewDialog] = useState<{ licenseId: string; licenseKey: string } | null>(null);
@@ -173,15 +174,17 @@ export default function ResellerLicenses() {
       toast({ title: 'Sem créditos', description: 'Você não possui créditos disponíveis para gerar licenças.', variant: 'destructive' });
       return;
     }
+    const planLimits = { starter: 25, basico: 50, plus: 100, pro: 200 };
     await createLicense.mutateAsync({
       email: newEmail, durationDays: durationValue,
       price: newPrice ? parseFloat(newPrice) : undefined,
       notes: newNotes || undefined, isTestLicense: false,
       isLifetime: newLifetime,
       customerName: newCustomerName || undefined,
+      dailyLimit: planLimits[newPlan],
     });
     setIsCreateOpen(false);
-    setNewEmail(''); setNewDuration('30'); setNewPrice(''); setNewNotes(''); setNewCustomerName(''); setNewLifetime(false);
+    setNewEmail(''); setNewDuration('30'); setNewPrice(''); setNewNotes(''); setNewCustomerName(''); setNewLifetime(false); setNewPlan('basico');
   };
 
   const handleCreateTest = async () => {
@@ -288,6 +291,41 @@ export default function ResellerLicenses() {
                             {plan.price && (
                               <div className="text-[11px] font-bold text-primary mt-1">R$ {plan.price}</div>
                             )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Seletor de Plano (prompts/dia) */}
+                  {!newLifetime && (
+                    <div>
+                      <Label className="font-display text-xs uppercase tracking-wider">Limites de Prompts / Dia</Label>
+                      <div className="grid grid-cols-2 gap-2 mt-1.5">
+                        {[
+                          { id: 'starter' as const, label: 'Starter', sub: '25 prompts/dia', price: '49.90', badge: 'NOVO' },
+                          { id: 'basico' as const,  label: 'Básico',  sub: '50 prompts/dia', price: '79.90', badge: null },
+                          { id: 'plus' as const,   label: 'Plus',   sub: '100 prompts/dia', price: '149.90', badge: null },
+                          { id: 'pro' as const,    label: 'Pro',    sub: '200 prompts/dia', price: '299.90', badge: null },
+                        ].map(p => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => { setNewPlan(p.id); setNewPrice(p.price); }}
+                            className={`relative rounded-xl border p-2.5 text-left transition-all ${
+                              newPlan === p.id
+                                ? 'border-primary/70 bg-primary/10 shadow-sm shadow-primary/20'
+                                : 'border-border/30 hover:border-primary/30 bg-background/30'
+                            }`}
+                          >
+                            {p.badge && (
+                              <span className="absolute -top-2 -right-1 text-[8px] font-black uppercase tracking-wider bg-green-500 text-white rounded-full px-1.5 py-0.5">
+                                {p.badge}
+                              </span>
+                            )}
+                            <div className="text-xs font-black font-display">{p.label}</div>
+                            <div className="text-[10px] text-muted-foreground mt-0.5">{p.sub}</div>
+                            <div className="text-[11px] font-bold text-primary mt-1">R$ {p.price}/mês</div>
                           </button>
                         ))}
                       </div>
