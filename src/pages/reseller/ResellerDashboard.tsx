@@ -114,7 +114,7 @@ export default function ResellerDashboard() {
   const [isPixModalOpen, setIsPixModalOpen] = useState(false);
   const pixStatus = usePixOrderPolling(pixOrder?.order_id || null);
   const [pixCustomerOpen, setPixCustomerOpen] = useState(false);
-  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; lifetimeBulk?: boolean; combo?: boolean; comboChampion?: boolean; comboAccount?: boolean; manusCredits?: boolean; geminiPro?: boolean; seedanceAccount?: boolean; capcutPro?: boolean; lovableAccount?: boolean; planBasico?: boolean; planPlus?: boolean; planPro?: boolean; planFundador?: boolean } | null>(null);
+  const [pendingPixAction, setPendingPixAction] = useState<{ qty: number; promo?: boolean; lifetime?: boolean; lifetimeBulk?: boolean; combo?: boolean; comboChampion?: boolean; comboAccount?: boolean; manusCredits?: boolean; geminiPro?: boolean; seedanceAccount?: boolean; capcutPro?: boolean; lovableAccount?: boolean; planBasico?: boolean; planPlus?: boolean; planPro?: boolean; planFundador?: boolean; planStarter?: boolean } | null>(null);
   const [comboRequirementsOpen, setComboRequirementsOpen] = useState(false);
   const [comboAccepted, setComboAccepted] = useState(false);
   const [lastOrderWasCombo, setLastOrderWasCombo] = useState(false);
@@ -282,10 +282,10 @@ export default function ResellerDashboard() {
 
   const handlePixCustomerConfirm = async (customerData: PixCustomerFormData) => {
     if (!pendingPixAction) return;
-    const { qty, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro, seedanceAccount, capcutPro, lovableAccount, planBasico, planPlus, planPro, planFundador } = pendingPixAction;
+    const { qty, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro, seedanceAccount, capcutPro, lovableAccount, planBasico, planPlus, planPro, planFundador, planStarter } = pendingPixAction;
     setPixCustomerOpen(false);
-    setLoadingQty(planPro ? -12 : planPlus ? -11 : planBasico ? -10 : lovableAccount ? -11 : capcutPro ? -10 : seedanceAccount ? -9 : geminiPro ? -8 : lifetimeBulk ? -7 : manusCredits ? -6 : comboAccount ? -5 : comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
-    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion, undefined, comboAccount, manusCredits, lifetimeBulk, geminiPro, seedanceAccount, capcutPro, lovableAccount, planBasico, planPlus, planPro, planFundador);
+    setLoadingQty(planPro ? -12 : planPlus ? -11 : planBasico ? -10 : planStarter ? -13 : lovableAccount ? -11 : capcutPro ? -10 : seedanceAccount ? -9 : geminiPro ? -8 : lifetimeBulk ? -7 : manusCredits ? -6 : comboAccount ? -5 : comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
+    const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion, undefined, comboAccount, manusCredits, lifetimeBulk, geminiPro, seedanceAccount, capcutPro, lovableAccount, planBasico, planPlus, planPro, planFundador, planStarter);
     setLoadingQty(null);
     if (order) {
       setPixOrder(order);
@@ -570,7 +570,34 @@ export default function ResellerDashboard() {
                     Chaves mensais com limite de envios diário — renova automaticamente a cada 30 dias.
                   </p>
 
-                  <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {/* Starter — NOVO */}
+                    <div className="relative group">
+                      <div className="p-6 rounded-2xl border border-green-500/30 bg-green-500/5 hover:border-green-500/50 hover:bg-green-500/10 transition-all duration-300 flex flex-col gap-4">
+                        <div className="absolute -top-2.5 left-4">
+                          <span className="bg-green-500 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">NOVO</span>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground font-display">Mensal</p>
+                          <h3 className="text-xl font-black text-foreground font-display">Starter</h3>
+                          <p className="text-sm text-muted-foreground">25 envios/dia • 1 dispositivo</p>
+                        </div>
+                        <div>
+                          <span className="text-3xl font-black text-green-400">R$ 49,90</span>
+                          <span className="text-sm text-muted-foreground font-display">/mês</span>
+                        </div>
+                        <Button
+                          className="w-full rounded-xl font-display font-bold border-green-500/40 text-green-400 hover:bg-green-500/10"
+                          variant="outline"
+                          disabled={loadingQty !== null}
+                          onClick={() => { setPendingPixAction({ qty: 1, planStarter: true }); setPixCustomerOpen(true); }}
+                        >
+                          <ShoppingCart className="mr-2 h-4 w-4" />
+                          {loadingQty === -11 ? 'Gerando PIX...' : 'Comprar Starter'}
+                        </Button>
+                      </div>
+                    </div>
+
                     {/* Básico */}
                     <div className="relative group">
                       <div className="p-6 rounded-2xl border border-border/50 bg-card/60 hover:border-primary/40 hover:bg-card/80 transition-all duration-300 flex flex-col gap-4">

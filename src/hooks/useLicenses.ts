@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+﻿import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -48,9 +48,9 @@ function normalizeDevices(devices: Device | Device[] | null | undefined): Device
   return [devices];
 }
 
-// ── Main hook: fetch all licenses with devices.
-// Admin/manager: RPC `admin_list_licenses` (uma query só, sem overhead de RLS por linha).
-// Fallback: paginação com nested select.
+// â”€â”€ Main hook: fetch all licenses with devices.
+// Admin/manager: RPC `admin_list_licenses` (uma query sÃ³, sem overhead de RLS por linha).
+// Fallback: paginaÃ§Ã£o com nested select.
 async function fetchAllLicensesPaginated() {
   const { data: rpcData, error: rpcError } = await supabase.rpc('admin_list_licenses' as any);
   if (!rpcError && Array.isArray(rpcData)) {
@@ -107,7 +107,7 @@ export function useLicenses() {
   });
 }
 
-// ── Stats hook ──
+// â”€â”€ Stats hook â”€â”€
 export function useLicenseStats() {
   const { user, isLoading: isAuthLoading, isAdmin, isManager } = useAuth();
 
@@ -147,7 +147,7 @@ export function useLicenseStats() {
   });
 }
 
-// ── Wildcard usage hook ──
+// â”€â”€ Wildcard usage hook â”€â”€
 export function useWildcardUsage() {
   return useQuery({
     queryKey: ['wildcard-usage'],
@@ -179,7 +179,7 @@ export function useWildcardStats() {
   });
 }
 
-// ── Create license mutation ──
+// â”€â”€ Create license mutation â”€â”€
 export function useCreateLicense() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -213,15 +213,15 @@ export function useCreateLicense() {
         if (configData?.value) testMessageLimit = parseInt(configData.value, 10) || 10;
       }
 
-      // Paid keys: 30 dias contados a partir da primeira ativação por dispositivo.
-      // Wildcard: duração longa. Test: comportamento original.
+      // Paid keys: 30 dias contados a partir da primeira ativaÃ§Ã£o por dispositivo.
+      // Wildcard: duraÃ§Ã£o longa. Test: comportamento original.
       const effectiveDurationDays = isTestLicense
         ? durationDays
         : (isWildcard ? Math.max(durationDays, 36500) : 30);
       const durationHours = effectiveDurationDays * 24;
       const expiresAt = new Date();
       if (isTestLicense || !isWildcard) {
-        // Test e pagas: placeholder de 100 anos. A expiração real é definida na 1ª ativação.
+        // Test e pagas: placeholder de 100 anos. A expiraÃ§Ã£o real Ã© definida na 1Âª ativaÃ§Ã£o.
         expiresAt.setFullYear(expiresAt.getFullYear() + 100);
       } else {
         expiresAt.setTime(expiresAt.getTime() + effectiveDurationDays * 24 * 60 * 60 * 1000);
@@ -264,7 +264,7 @@ export function useCreateLicense() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['licenses'] });
       queryClient.invalidateQueries({ queryKey: ['license-stats'] });
-      toast({ title: 'Licença criada', description: 'A licença foi criada com sucesso.' });
+      toast({ title: 'LicenÃ§a criada', description: 'A licenÃ§a foi criada com sucesso.' });
     },
     onError: (error: Error) => {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' });
@@ -272,7 +272,7 @@ export function useCreateLicense() {
   });
 }
 
-// ── Renew license mutation (expire old key, create new key) ──
+// â”€â”€ Renew license mutation (expire old key, create new key) â”€â”€
 export function useRenewLicense() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -287,7 +287,7 @@ export function useRenewLicense() {
         .single();
       if (fetchError) throw fetchError;
 
-      // Renovação cobra novamente: consome 1 crédito do revendedor (exceto wildcard)
+      // RenovaÃ§Ã£o cobra novamente: consome 1 crÃ©dito do revendedor (exceto wildcard)
       if (!oldLicense.is_wildcard) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
@@ -301,7 +301,7 @@ export function useRenewLicense() {
             const { data: hasCredit, error: creditError } = await supabase.rpc('use_reseller_credit', { _reseller_id: user.id });
             if (creditError) throw creditError;
             if (!hasCredit) {
-              throw new Error('Sem créditos disponíveis para renovar. Compre mais chaves no Dashboard.');
+              throw new Error('Sem crÃ©ditos disponÃ­veis para renovar. Compre mais chaves no Dashboard.');
             }
           }
         }
@@ -310,7 +310,7 @@ export function useRenewLicense() {
       // Expire old license
       const { error: expireError } = await supabase
         .from('licenses')
-        .update({ status: 'expired' as const, notes: `${oldLicense.notes || ''}\n[Renovada → nova chave gerada]`.trim() })
+        .update({ status: 'expired' as const, notes: `${oldLicense.notes || ''}\n[Renovada â†’ nova chave gerada]`.trim() })
         .eq('id', licenseId);
       if (expireError) throw expireError;
 
@@ -318,7 +318,7 @@ export function useRenewLicense() {
       const { data: newKey, error: keyError } = await supabase.rpc('generate_license_key');
       if (keyError) throw keyError;
 
-      // Renovação: 30 dias contados a partir da 1ª ativação da nova chave (exceto wildcard)
+      // RenovaÃ§Ã£o: 30 dias contados a partir da 1Âª ativaÃ§Ã£o da nova chave (exceto wildcard)
       const effectiveDurationDays = oldLicense.is_wildcard ? Math.max(durationDays, 36500) : 30;
       const newExpiry = new Date();
       if (oldLicense.is_wildcard) {
@@ -334,7 +334,7 @@ export function useRenewLicense() {
           email: oldLicense.email,
           expires_at: newExpiry.toISOString(),
           price: oldLicense.price,
-          notes: `Renovação da chave ${oldLicense.license_key}`,
+          notes: `RenovaÃ§Ã£o da chave ${oldLicense.license_key}`,
           duration_hours: oldLicense.is_wildcard ? null : effectiveDurationDays * 24,
           first_activated_at: oldLicense.is_wildcard ? new Date().toISOString() : null,
           is_wildcard: oldLicense.is_wildcard,
@@ -367,7 +367,6 @@ export function useRenewLicense() {
   });
 }
 
-// ── Revoke license mutation ──
 export function useRevokeLicense() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -388,7 +387,7 @@ export function useRevokeLicense() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['licenses'] });
       queryClient.invalidateQueries({ queryKey: ['license-stats'] });
-      toast({ title: 'Revogada', description: 'Licença revogada.' });
+      toast({ title: 'Revogada', description: 'LicenÃ§a revogada.' });
     },
     onError: (error: Error) => {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' });
@@ -396,7 +395,7 @@ export function useRevokeLicense() {
   });
 }
 
-// ── Reset device mutation ──
+// â”€â”€ Reset device mutation â”€â”€
 export function useResetDevice() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -411,30 +410,32 @@ export function useResetDevice() {
         .single();
       if (licenseError) throw licenseError;
 
-      const { error } = await supabase
+      const { error: deviceError } = await supabase
         .from('devices')
         .delete()
-        .eq('license_id', licenseId)
-        .select('id');
-      if (error) throw error;
-
-      // Also clear sessions
-      const { error: sessionError } = await supabase
-        .from('sessions')
-        .delete()
-        .eq('license_id', licenseId)
-        .select('id');
-      if (sessionError) console.warn('Failed to clear sessions:', sessionError);
+        .eq('license_id', licenseId);
+      if (deviceError) throw deviceError;
 
       await supabase.from('license_logs').insert({
         license_id: licenseId,
         action: 'device_reset',
       });
+
+      // Limpar tokenStore no servidor LOV3 (memÃ³ria)
+      try {
+        await fetch('https://lov3-server.fly.dev/api/licenca/reset-device', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ licenseId }),
+        });
+      } catch (e) {
+        console.warn('[reset-device] falha ao notificar servidor:', e);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['licenses'] });
       queryClient.invalidateQueries({ queryKey: ['reseller-licenses'] });
-      toast({ title: 'Dispositivo resetado', description: 'O dispositivo foi desvinculado.' });
+      toast({ title: 'Dispositivo resetado', description: 'O dispositivo foi desvinculado com sucesso.' });
     },
     onError: (error: Error) => {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' });
@@ -442,7 +443,7 @@ export function useResetDevice() {
   });
 }
 
-// ── Set license expiry mutation ──
+// â”€â”€ Set license expiry mutation â”€â”€
 export function useSetLicenseExpiry() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -464,7 +465,7 @@ export function useSetLicenseExpiry() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['licenses'] });
       queryClient.invalidateQueries({ queryKey: ['license-stats'] });
-      toast({ title: 'Atualizado', description: 'Data de expiração alterada.' });
+      toast({ title: 'Atualizado', description: 'Data de expiraÃ§Ã£o alterada.' });
     },
     onError: (error: Error) => {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' });
@@ -472,14 +473,13 @@ export function useSetLicenseExpiry() {
   });
 }
 
-// ── Delete license mutation ──
+// â”€â”€ Delete license mutation â”€â”€
 export function useDeleteLicense() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (licenseId: string) => {
-      // Delete related records first
       await supabase.from('devices').delete().eq('license_id', licenseId);
       await supabase.from('sessions').delete().eq('license_id', licenseId);
       await supabase.from('license_logs').delete().eq('license_id', licenseId);
@@ -493,7 +493,7 @@ export function useDeleteLicense() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['licenses'] });
       queryClient.invalidateQueries({ queryKey: ['license-stats'] });
-      toast({ title: 'Excluída', description: 'Licença excluída permanentemente.' });
+      toast({ title: 'ExcluÃ­da', description: 'LicenÃ§a excluÃ­da permanentemente.' });
     },
     onError: (error: Error) => {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' });
@@ -501,7 +501,7 @@ export function useDeleteLicense() {
   });
 }
 
-// ── Archive license mutation (preserva dados, pode ser reativada) ──
+// â”€â”€ Archive license mutation (preserva dados, pode ser reativada) â”€â”€
 export function useArchiveLicense() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -511,12 +511,12 @@ export function useArchiveLicense() {
       if (error) throw error;
       await supabase.from('license_logs').insert({ license_id: licenseId, action: 'archived' });
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['licenses'] }); toast({ title: 'Arquivada', description: 'Licença arquivada. Pode ser reativada a qualquer momento.' }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['licenses'] }); toast({ title: 'Arquivada', description: 'LicenÃ§a arquivada. Pode ser reativada a qualquer momento.' }); },
     onError: (error: Error) => { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); },
   });
 }
 
-// ── Reactivate archived license mutation ──
+// â”€â”€ Reactivate archived license mutation â”€â”€
 export function useReactivateLicense() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -526,12 +526,12 @@ export function useReactivateLicense() {
       if (error) throw error;
       await supabase.from('license_logs').insert({ license_id: licenseId, action: 'reactivated' });
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['licenses'] }); toast({ title: 'Reativada', description: 'Licença está ativa novamente.' }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['licenses'] }); toast({ title: 'Reativada', description: 'LicenÃ§a estÃ¡ ativa novamente.' }); },
     onError: (error: Error) => { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); },
   });
 }
 
-// ── Set license plan mutation (admin) ──
+// â”€â”€ Set license plan mutation (admin) â”€â”€
 export function useSetLicensePlan() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -543,7 +543,7 @@ export function useSetLicensePlan() {
       if (error) throw error;
       await supabase.from('license_logs').insert({ license_id: licenseId, action: 'plan_changed', details: { plan, daily_limit } });
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['licenses'] }); toast({ title: 'Plano atualizado', description: 'Plano e limite diário atualizados.' }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['licenses'] }); toast({ title: 'Plano atualizado', description: 'Plano e limite diÃ¡rio atualizados.' }); },
     onError: (error: Error) => { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); },
   });
 }

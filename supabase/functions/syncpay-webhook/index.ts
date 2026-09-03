@@ -240,6 +240,7 @@ Deno.serve(async (req) => {
 
     // Determine plan from product_type
     const PLAN_MAP: Record<string, { plan: string; daily_limit: number }> = {
+      plan_starter: { plan: 'basico',   daily_limit: 25  },
       plan_basico:  { plan: 'basico',   daily_limit: 50  },
       plan_plus:    { plan: 'plus',     daily_limit: 100 },
       plan_pro:     { plan: 'pro',      daily_limit: 200 },
@@ -250,7 +251,7 @@ Deno.serve(async (req) => {
     // Only key products generate licenses. Account/credit products (combos, gemini_pro,
     // manus_credits, seedance_account, capcut_pro, etc.) are delivered manually and must NOT
     // generate free keys.
-    const KEY_PRODUCTS = ['standard', 'lifetime', 'combo_champion', 'plan_basico', 'plan_plus', 'plan_pro', 'plan_fundador']
+    const KEY_PRODUCTS = ['standard', 'lifetime', 'combo_champion', 'plan_starter', 'plan_basico', 'plan_plus', 'plan_pro', 'plan_fundador']
     if (!KEY_PRODUCTS.includes(order.product_type)) {
       console.log('[syncpay-webhook] Non-key product paid, no license generated:', order.product_type, order.id)
       return new Response(
