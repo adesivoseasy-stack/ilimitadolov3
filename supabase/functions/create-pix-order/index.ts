@@ -33,6 +33,7 @@ const BodySchema = z.object({
   planPlus: z.boolean().optional(),
   planPro: z.boolean().optional(),
   planFundador: z.boolean().optional(),
+  planStarter: z.boolean().optional(),
 })
 
 async function readResponseData(res: Response) {
@@ -153,7 +154,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro, seedanceAccount, capcutPro, lovableAccount, renewal, licenseId, planBasico, planPlus, planPro, planFundador } = bodyResult.data
+    let { quantity, customerName, customerEmail, customerPhone, customerDocument, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro, seedanceAccount, capcutPro, lovableAccount, renewal, licenseId, planBasico, planPlus, planPro, planFundador, planStarter } = bodyResult.data
     const userId = authUser.id
 
     const adminClient = createClient(
