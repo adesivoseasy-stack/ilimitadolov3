@@ -244,6 +244,7 @@ Deno.serve(async (req) => {
       plan_plus:    { plan: 'plus',     daily_limit: 100 },
       plan_pro:     { plan: 'pro',      daily_limit: 200 },
       plan_fundador:{ plan: 'fundador', daily_limit: 120 },
+      plan_starter: { plan: 'basico',   daily_limit: 25  },
     }
     const planInfo = PLAN_MAP[order.product_type] ?? null
 
