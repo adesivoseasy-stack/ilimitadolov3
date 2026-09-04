@@ -179,13 +179,14 @@ Deno.serve(async (req) => {
     let pricePerKey: number
     let renewalLicenseId: string | null = null
 
-    if (planBasico || planPlus || planPro || planFundador) {
+    if (planBasico || planPlus || planPro || planFundador || planStarter) {
       // Planos mensais — quantidade sempre 1
       quantity = 1
-      if (planPro)      { totalReais = 149.99; pricePerKey = 149.99 }
-      else if (planPlus){ totalReais = 99.99;  pricePerKey = 99.99  }
-      else if (planFundador){ totalReais = 79.90; pricePerKey = 79.90 }
-      else              { totalReais = 79.90;  pricePerKey = 79.90  } // planBasico
+      if (planPro)          { totalReais = 149.99; pricePerKey = 149.99 }
+      else if (planPlus)    { totalReais = 99.99;  pricePerKey = 99.99  }
+      else if (planFundador){ totalReais = 79.90;  pricePerKey = 79.90  }
+      else if (planStarter) { totalReais = 49.90;  pricePerKey = 49.90  } // Starter
+      else                  { totalReais = 79.90;  pricePerKey = 79.90  } // planBasico
       promo = false
     } else if (renewal) {
       // Renovação manual via PIX: R$ 34,90 para +30 dias na chave indicada.
@@ -396,7 +397,7 @@ Deno.serve(async (req) => {
         customer_email: email,
         customer_phone: phoneNumber,
         customer_document: document,
-        product_type: renewal ? 'renewal' : (planBasico ? 'plan_basico' : (planPlus ? 'plan_plus' : (planPro ? 'plan_pro' : (planFundador ? 'plan_fundador' : (lovableAccount ? 'lovable_account' : (capcutPro ? 'capcut_pro' : (seedanceAccount ? 'seedance_account' : (geminiPro ? 'gemini_pro' : (manusCredits ? 'manus_credits' : (comboAccount ? 'combo_account' : (comboChampion ? 'combo_champion' : (combo ? 'combo' : ((lifetime || lifetimeBulk) ? 'lifetime' : 'standard'))))))))))))),
+        product_type: renewal ? 'renewal' : (planStarter ? 'plan_starter' : (planBasico ? 'plan_basico' : (planPlus ? 'plan_plus' : (planPro ? 'plan_pro' : (planFundador ? 'plan_fundador' : (lovableAccount ? 'lovable_account' : (capcutPro ? 'capcut_pro' : (seedanceAccount ? 'seedance_account' : (geminiPro ? 'gemini_pro' : (manusCredits ? 'manus_credits' : (comboAccount ? 'combo_account' : (comboChampion ? 'combo_champion' : (combo ? 'combo' : ((lifetime || lifetimeBulk) ? 'lifetime' : 'standard')))))))))))))),
         target_license_id: renewalLicenseId,
       })
       .select()
