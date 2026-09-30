@@ -1,39 +1,14 @@
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, FileCode, Package, CheckCircle, Loader2, Shield, Lock, MessageCircle, Check, Sparkles, GitBranch, Zap, Globe, RefreshCw, ChevronRight, AlertCircle, Code } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Download, CheckCircle, Loader2, Shield, MessageCircle, Check, Sparkles, GitBranch, Zap, Globe, ChevronRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useExtensionDownload } from '@/hooks/useExtensionDownload';
-import { useExtensionV7Download } from '@/hooks/useExtensionV7Download';
-import { toast } from 'sonner';
-import { useState } from 'react';
 
 export default function ExtensionDownload() {
   const v5 = useExtensionDownload();
-  const v7 = useExtensionV7Download();
-  const [devDownloading, setDevDownloading] = useState(false);
-
-  const downloadDevVersion = async () => {
-    if (devDownloading) return;
-    setDevDownloading(true);
-    try {
-      const res = await fetch(`/LOV3.8.zip?t=${Date.now()}`);
-      if (!res.ok) throw new Error(`ZIP não encontrado (${res.status})`);
-      const blob = await res.blob();
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'LOV3.8.zip';
-      a.click();
-      URL.revokeObjectURL(a.href);
-      toast.success('Extensão LOV3.8 baixada com sucesso.');
-    } catch (err: any) {
-      toast.error('Falha ao baixar: ' + (err?.message || 'erro'));
-    } finally {
-      setDevDownloading(false);
-    }
-  };
 
   const getButtonContent = (hook: typeof v5, label: string) => {
     if (hook.status === 'done') return <><Check className="mr-2 h-5 w-5" />Download Concluído!</>;
@@ -140,14 +115,14 @@ export default function ExtensionDownload() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Extensões do Chrome</h1>
-            <p className="text-muted-foreground mt-1">Baixe e instale as extensões para integrar com o Lovable</p>
+            <h1 className="text-2xl font-bold tracking-tight">Extensão do Chrome</h1>
+            <p className="text-muted-foreground mt-1">Baixe e instale a extensão para integrar com o Lovable</p>
           </div>
-          <a 
-            href="https://w.app/lovableilimitado" 
-            target="_blank" 
+          <a
+            href="https://w.app/lovableilimitado"
+            target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-colors text-sm font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors text-sm font-medium"
           >
             <MessageCircle className="h-4 w-4" />
             Precisa de ajuda?
@@ -155,84 +130,36 @@ export default function ExtensionDownload() {
           </a>
         </div>
 
-        {/* Main Cards */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* v5 Card */}
-          <Card className="relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+        {/* Main Card */}
+        <div className="max-w-lg mx-auto">
+          <Card className="relative overflow-hidden border-purple-500/20">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-purple-500/5 rounded-full -translate-y-1/2 translate-x-1/2" />
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-green-500/10">
-                    <Lock className="h-5 w-5 text-green-500" />
+                  <div className="p-2.5 rounded-xl bg-purple-500/10">
+                    <Zap className="h-5 w-5 text-purple-400" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">Thin Client</CardTitle>
-                    <p className="text-xs text-muted-foreground mt-0.5">Arquitetura segura com UI remota</p>
+                    <CardTitle className="text-lg">LOV3 Reborn XI</CardTitle>
+                    <p className="text-xs text-muted-foreground mt-0.5">Última versão disponível</p>
                   </div>
                 </div>
-                <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-lg shadow-green-500/20">
-                  v5.0.0
+                <Badge className="bg-gradient-to-r from-purple-600 to-purple-400 text-white border-0 shadow-lg shadow-purple-500/20">
+                  XI
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-2">
-                <FeatureItem icon={Shield} text="API Lovable 100% server-side" />
-                <FeatureItem icon={Shield} text="Validação de licença e sessão obrigatória" />
-                <FeatureItem icon={Shield} text="UI remota carregada via iframe" />
-                <FeatureItem icon={CheckCircle} text="Chat com anexos + Templates" />
-                <FeatureItem icon={CheckCircle} text="Captura automática de respostas" />
+                <FeatureItem icon={Shield} text="Validação de licença obrigatória" />
+                <FeatureItem icon={GitBranch} text="Integração com GitHub" />
+                <FeatureItem icon={Globe} text="Detecta o repo automaticamente" />
+                <FeatureItem icon={CheckCircle} text="Chat com anexos + Modo Plano" />
+                <FeatureItem icon={Zap} text="LOV Boost integrado" />
               </div>
 
-              {renderDownloadButton(v5, 'Baixar Extensão v5.0.0', false)}
-            </CardContent>
-          </Card>
-
-          {/* v7 Card */}
-          <Card className="relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-amber-500/10">
-                    <Zap className="h-5 w-5 text-amber-500" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">GitHub AI</CardTitle>
-                    <p className="text-xs text-muted-foreground mt-0.5">Integração com IA + GitHub</p>
-                  </div>
-                </div>
-                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg shadow-amber-500/20">
-                  v7.0.0
-                </Badge>
-              </div>
-              <CardDescription className="text-xs">
-                Detecta automaticamente o repo do projeto aberto no Lovable. Edita via AI + GitHub sem usar créditos.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                <FeatureItem icon={Globe} text="Detecta o repo GitHub automaticamente" />
-                <FeatureItem icon={Zap} text="AI modifica o código via AgentRouter" highlight />
-                <FeatureItem icon={GitBranch} text="Commit automático no GitHub" />
-                <FeatureItem icon={RefreshCw} text="Lovable sincroniza em tempo real" />
-              </div>
-
-              {renderDownloadButton(v7, 'Baixar Extensão v7.0.0', true)}
-
-              <Button
-                variant="outline"
-                className="w-full mt-2 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
-                onClick={downloadDevVersion}
-                disabled={devDownloading}
-              >
-                {devDownloading ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Baixando...</>
-                ) : (
-                  <><Code className="mr-2 h-4 w-4" />Baixar v8.1.0 (Sem Ofuscação)</>
-                )}
-              </Button>
+              {renderDownloadButton(v5, 'Baixar LOV3 Reborn XI')}
             </CardContent>
           </Card>
         </div>

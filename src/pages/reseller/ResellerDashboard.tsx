@@ -284,7 +284,7 @@ export default function ResellerDashboard() {
     if (!pendingPixAction) return;
     const { qty, promo, lifetime, lifetimeBulk, combo, comboChampion, comboAccount, manusCredits, geminiPro, seedanceAccount, capcutPro, lovableAccount, planBasico, planPlus, planPro, planFundador, planStarter } = pendingPixAction;
     setPixCustomerOpen(false);
-    setLoadingQty(planPro ? -12 : planPlus ? -11 : planBasico ? -10 : planStarter ? -13 : lovableAccount ? -11 : capcutPro ? -10 : seedanceAccount ? -9 : geminiPro ? -8 : lifetimeBulk ? -7 : manusCredits ? -6 : comboAccount ? -5 : comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
+    setLoadingQty(planPro ? -12 : planPlus ? -11 : planBasico ? -10 : planFundador ? -13 : planStarter ? -14 : lovableAccount ? -11 : capcutPro ? -10 : seedanceAccount ? -9 : geminiPro ? -8 : lifetimeBulk ? -7 : manusCredits ? -6 : comboAccount ? -5 : comboChampion ? -4 : combo ? -3 : lifetime ? -2 : promo ? -1 : qty);
     const order = await createOrder(qty, customerData, promo, lifetime, combo, comboChampion, undefined, comboAccount, manusCredits, lifetimeBulk, geminiPro, seedanceAccount, capcutPro, lovableAccount, planBasico, planPlus, planPro, planFundador, planStarter);
     setLoadingQty(null);
     if (order) {
@@ -593,7 +593,7 @@ export default function ResellerDashboard() {
                           onClick={() => { setPendingPixAction({ qty: 1, planStarter: true }); setPixCustomerOpen(true); }}
                         >
                           <ShoppingCart className="mr-2 h-4 w-4" />
-                          {loadingQty === -11 ? 'Gerando PIX...' : 'Comprar Starter'}
+                          {loadingQty === -14 ? 'Gerando PIX...' : 'Comprar Starter'}
                         </Button>
                       </div>
                     </div>

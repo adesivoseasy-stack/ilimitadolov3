@@ -181,7 +181,7 @@ export default function ResellerLicenses() {
       notes: newNotes || undefined, isTestLicense: false,
       isLifetime: newLifetime,
       customerName: newCustomerName || undefined,
-      dailyLimit: planLimits[newPlan],
+      dailyLimit: newLifetime ? undefined : planLimits[newPlan],
     });
     setIsCreateOpen(false);
     setNewEmail(''); setNewDuration('30'); setNewPrice(''); setNewNotes(''); setNewCustomerName(''); setNewLifetime(false); setNewPlan('basico');
@@ -411,13 +411,13 @@ export default function ResellerLicenses() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <ExpiryInfo expiresAt={license.expires_at} durationHours={license.duration_hours} firstActivatedAt={license.first_activated_at} />
-                        {license.status === 'expired' && !license.license_key.startsWith('TESTE-') && (
+                        {license.status === 'expired' && !license.license_key.startsWith('TESTE-') && license.plan && (
                           <Button
                             size="sm"
                             onClick={() => openRenewPix(license.id, license.license_key)}
                             className="h-7 px-3 bg-gradient text-primary-foreground font-display text-[11px] font-bold shadow-md shadow-primary/20 hover:shadow-primary/30"
                           >
-                            <RefreshCw className="h-3 w-3 mr-1" /> Renovar R$34,90
+                            <RefreshCw className="h-3 w-3 mr-1" /> Renovar R${license.price ? Number(license.price).toFixed(2).replace('.', ',') : '—'}
                           </Button>
                         )}
                       </div>
@@ -432,11 +432,11 @@ export default function ResellerLicenses() {
                           {!license.license_key.startsWith('TESTE-') && (
                             <>
                               <DropdownMenuItem onClick={() => { setEditNameLicense({ id: license.id, currentName: license.customer_name || '' }); setEditNameValue(license.customer_name || ''); }}><UserPen className="mr-2 h-4 w-4" />Editar cliente</DropdownMenuItem>
-                              {license.status === 'expired' && (
+                              {license.status === 'expired' && license.plan && (
                                 <>
                                   <DropdownMenuSeparator className="bg-border/20" />
                                   <DropdownMenuItem onClick={() => openRenewPix(license.id, license.license_key)}>
-                                    <RefreshCw className="mr-2 h-4 w-4" />Renovar via PIX (R$ 34,90)
+                                    <RefreshCw className="mr-2 h-4 w-4" />Renovar via PIX (R$ {license.price ? Number(license.price).toFixed(2).replace('.', ',') : '—'})
                                   </DropdownMenuItem>
                                 </>
                               )}
@@ -587,7 +587,7 @@ export default function ResellerLicenses() {
           onConfirm={handleRenewPixConfirm}
           loading={pixLoading}
           title={`Renovar ${renewPixLicense?.key || ''}`}
-          description="R$ 34,90 por +30 dias. Informe seus dados para gerar o QR Code PIX."
+          description={`Renovação da chave. Informe seus dados para gerar o QR Code PIX.`}
           defaultEmail={user?.email || ''}
         />
 
