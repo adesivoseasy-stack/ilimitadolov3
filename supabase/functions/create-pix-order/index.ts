@@ -190,13 +190,13 @@ Deno.serve(async (req) => {
       else                 { totalReais = 49.90;  pricePerKey = 49.90  } // planStarter
       promo = false
     } else if (renewal) {
-      // Renovação manual via PIX: R$ 34,90 para +30 dias na chave indicada.
+      // Renovação via PIX: usa o preço real da licença (campo price no banco).
       if (!licenseId) {
         return new Response(JSON.stringify({ error: 'licenseId obrigatório para renovação' }), { status: 400, headers: corsHeaders })
       }
       const { data: lic, error: licErr } = await adminClient
         .from('licenses')
-        .select('id, created_by, status, is_wildcard, license_key')
+        .select('id, created_by, status, is_wildcard, license_key, price')
         .eq('id', licenseId)
         .single()
       if (licErr || !lic) {
@@ -208,9 +208,12 @@ Deno.serve(async (req) => {
       if (lic.is_wildcard) {
         return new Response(JSON.stringify({ error: 'Chaves coringa não são renováveis' }), { status: 400, headers: corsHeaders })
       }
+      if (!lic.price || Number(lic.price) <= 0) {
+        return new Response(JSON.stringify({ error: 'Esta licença não possui preço definido para renovação. Contate o administrador.' }), { status: 400, headers: corsHeaders })
+      }
       quantity = 1
-      totalReais = 34.90
-      pricePerKey = 34.90
+      totalReais = Number(lic.price)
+      pricePerKey = Number(lic.price)
       renewalLicenseId = lic.id
       promo = false
     } else if (manusCredits) {
